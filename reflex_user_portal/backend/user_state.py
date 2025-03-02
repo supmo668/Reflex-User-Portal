@@ -8,6 +8,7 @@ from sqlmodel import Session, select
 from reflex_user_portal.config import ADMIN_USER_EMAIL
 from reflex_user_portal.models.user import User, UserType
 from reflex_user_portal.models.database import engine
+from datetime import timezone
 
 
 class UserState(rx.State):
@@ -19,10 +20,11 @@ class UserState(rx.State):
     display_name: str = "Guest"
     avatar_url: str = ""
 
-    def on_load(self) -> None:
+    @rx.event
+    async def on_load(self) -> None:
         """Initialize state when component loads."""
         self.is_signed_in = clerk.ClerkState.is_signed_in
-        self.get_or_create_user()
+        await self.get_or_create_user()
         self.update_user_info()
 
     def update_user_info(self) -> None:
@@ -39,12 +41,13 @@ class UserState(rx.State):
             self.display_name = "Guest"
             self.avatar_url = ""
 
-    def get_or_create_user(self) -> None:
+    @rx.event
+    async def get_or_create_user(self) -> None:
         """Get or create user from Clerk data."""
         try:
             with Session(engine) as session:
                 # Check if Clerk user exists
-                if clerk.ClerkState.user is None:
+                if not self.is_signed_in or clerk.ClerkState.user is None:
                     self.current_user = None
                     return
 
@@ -70,16 +73,20 @@ class UserState(rx.State):
                         user_type=UserType.ADMIN if is_admin else UserType.USER,
                         first_name=clerk.ClerkState.user.first_name or "",
                         last_name=clerk.ClerkState.user.last_name or "",
-                        created_at=datetime.utcnow(),
-                        last_login=datetime.utcnow(),
+                        avatar_url=clerk.ClerkState.user.image_url,
+                        created_at=datetime.now(timezone.utc),
+                        last_login=datetime.now(timezone.utc),
                     )
                     
                     session.add(user)
                     session.commit()
                     session.refresh(user)
                 else:
-                    # Update last login time
-                    user.last_login = datetime.utcnow()
+                    # Update user info from Clerk
+                    user.first_name = clerk.ClerkState.user.first_name or user.first_name
+                    user.last_name = clerk.ClerkState.user.last_name or user.last_name
+                    user.avatar_url = clerk.ClerkState.user.image_url or user.avatar_url
+                    user.last_login = datetime.now(timezone.utc)
                     session.add(user)
                     session.commit()
                     session.refresh(user)
@@ -89,20 +96,10 @@ class UserState(rx.State):
             print(f"Error getting/creating user: {e}")
             self.current_user = None
 
+    @rx.var
     def is_admin(self) -> bool:
         """Check if current user is admin."""
-        try:
-            with Session(engine) as session:
-                # Get user by clerk ID
-                if clerk.ClerkState.user is None:
-                    return False
-                clerk_id = clerk.ClerkState.user.id
-                user = session.exec(
-                    select(User).where(User.clerk_id == clerk_id)
-                ).first()
-                return user is not None and user.user_type == UserType.ADMIN
-        except:
-            return False
+        return self.current_user is not None and self.current_user.user_type == UserType.ADMIN
 
     @rx.var
     def is_authenticated(self) -> bool:
@@ -119,7 +116,7 @@ class UserState(rx.State):
     def load_users(self) -> None:
         """Get all users from the database."""
         try:
-            if not self.is_admin():
+            if not self.is_admin:
                 self.users = []
                 return
                 

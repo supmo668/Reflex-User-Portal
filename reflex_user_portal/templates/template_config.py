@@ -6,6 +6,7 @@ from typing import List, Type
 import reflex as rx
 
 from ..backend.user_state import UserState
+from ..models import UserType  # Import UserType from models
 
 
 @dataclass
@@ -31,10 +32,10 @@ class NavItem:
         return rx.cond(
             self.requires_auth,
             # Auth required
-            state.is_signed_in & rx.cond(
+            rx.cond(
                 self.admin_only,
-                state.is_admin,  # Admin check if needed
-                True,  # Regular auth is enough
+                (state.current_user.user_type == UserType.ADMIN) & state.is_signed_in,  # Admin check
+                state.is_signed_in,  # Regular auth is enough
             ),
             True,  # No auth required
         )
@@ -56,21 +57,22 @@ NAV_ITEMS = [
     ),
     NavItem(
         title="App Settings",
-        route="/settings",
+        route="/app-settings",
         icon="settings",
         requires_auth=False,
     ),
     NavItem(
         title="Admin Config",
-        route="/admin",
+        route="/admin/settings",
         icon="shield",
         requires_auth=True,
         admin_only=True,
     ),
     NavItem(
-        title="Table",
-        route="/table",
+        title="User Management",
+        route="/admin/users",
         icon="table",
         requires_auth=True,
+        admin_only=True,
     ),
 ]

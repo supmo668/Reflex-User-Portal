@@ -23,68 +23,69 @@ def show_user(user: User):
 @template(route="/admin/users", title="User Management")
 def user_table() -> rx.Component:
     """User management table page."""
-    if not UserState.is_admin():
-        return rx.vstack(
+    return rx.cond(
+        UserState.is_admin,
+        rx.vstack(
             rx.heading("Access Denied", size="3"),
             rx.text("You do not have permission to view this page."),
             width="100%",
             spacing="4",
-        )
-
-    return rx.vstack(
-        rx.heading("User Management", size="3"),
-        rx.hstack(
-            rx.select(
-                ["first_name", "last_name", "email", "user_type", "created_at"],
-                placeholder="Sort by...",
-                on_change=TableState.sort_values,
-                value=TableState.sort_value,
-            ),
-            rx.input(
-                placeholder="Search users...",
-                on_change=TableState.filter_values,
-                value=TableState.search_value,
-                width="300px",
-            ),
-            width="100%",
-            justify="between",
-            padding="4",
         ),
-        rx.table.root(
-            rx.table.header(
-                rx.table.row(
-                    rx.table.column_header_cell("Name"),
-                    rx.table.column_header_cell("Email"),
-                    rx.table.column_header_cell("Role"),
-                    rx.table.column_header_cell("Active"),
-                    rx.table.column_header_cell("Created"),
-                    rx.table.column_header_cell("Last Login"),
+        rx.vstack(
+            rx.heading("User Management", size="3"),
+            rx.hstack(
+                rx.select(
+                    ["first_name", "last_name", "email", "user_type", "created_at"],
+                    placeholder="Sort by...",
+                    on_change=TableState.sort_values,
+                    value=TableState.sort_value,
                 ),
+                rx.input(
+                    placeholder="Search users...",
+                    on_change=TableState.filter_values,
+                    value=TableState.search_value,
+                    width="300px",
+                ),
+                width="100%",
+                justify="between",
+                padding="4",
             ),
-            rx.table.body(
-                rx.foreach(
-                    TableState.users,
-                    show_user,
-                )
+            rx.table.root(
+                rx.table.header(
+                    rx.table.row(
+                        rx.table.column_header_cell("Name"),
+                        rx.table.column_header_cell("Email"),
+                        rx.table.column_header_cell("Role"),
+                        rx.table.column_header_cell("Active"),
+                        rx.table.column_header_cell("Created"),
+                        rx.table.column_header_cell("Last Login"),
+                    ),
+                ),
+                rx.table.body(
+                    rx.foreach(
+                        TableState.users,
+                        show_user,
+                    )
+                ),
+                on_mount=TableState.load_entries,
+                width="100%",
             ),
-            on_mount=TableState.load_entries,
+            rx.hstack(
+                rx.button(
+                    "Prev",
+                    on_click=TableState.prev_page,
+                ),
+                rx.text(
+                    f"Page {TableState.page_number} / {TableState.total_pages}"
+                ),
+                rx.button(
+                    "Next",
+                    on_click=TableState.next_page,
+                ),
+                padding="4",
+                justify="center",
+            ),
             width="100%",
-        ),
-        rx.hstack(
-            rx.button(
-                "Prev",
-                on_click=TableState.prev_page,
-            ),
-            rx.text(
-                f"Page {TableState.page_number} / {TableState.total_pages}"
-            ),
-            rx.button(
-                "Next",
-                on_click=TableState.next_page,
-            ),
-            padding="4",
-            justify="center",
-        ),
-        width="100%",
-        spacing="4",
+            spacing="4",
+        )
     )

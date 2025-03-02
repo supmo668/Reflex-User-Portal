@@ -8,3 +8,6 @@ assets/external/
 .web
 __pycache__/
 venv/
+
+.env
+!.env.template
