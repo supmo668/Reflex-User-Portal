@@ -9,6 +9,7 @@ import reflex as rx
 from reflex_user_portal import styles
 from reflex_user_portal.components.navbar import navbar
 from reflex_user_portal.components.sidebar import sidebar
+from reflex_user_portal.backend.user_state import UserState
 
 # Meta tags for the app.
 default_meta = [
@@ -67,6 +68,17 @@ def template(
     Returns:
         The template with the page content.
     """
+    # Get the meta tags for the page.
+    all_meta = [*default_meta, *(meta or [])]
+
+    # Ensure on_load is a list of events
+    if on_load is None:
+        on_load = []
+    elif not isinstance(on_load, list):
+        on_load = [on_load]
+    
+    # Add UserState sync to on_load events
+    on_load.append(UserState.sync_with_clerk)
 
     def decorator(page_content: Callable[[], rx.Component]) -> rx.Component:
         """The template for each page of the app.
@@ -77,9 +89,6 @@ def template(
         Returns:
             The template with the page content.
         """
-        # Get the meta tags for the page.
-        all_meta = [*default_meta, *(meta or [])]
-
         def templated_page():
             return rx.vstack(
                 navbar(),  # Navbar at the top
@@ -124,7 +133,7 @@ def template(
                 gray_color=ThemeState.gray_color,
                 radius=ThemeState.radius,
                 scaling=ThemeState.scaling,
-        )
+            )
 
         return theme_wrap
 

@@ -8,7 +8,7 @@ from reflex_user_portal.views.color_picker import primary_color_picker, secondar
 from reflex_user_portal.views.radius_picker import radius_picker
 from reflex_user_portal.views.scaling_picker import scaling_picker
 
-@template(route="/app-settings", title="App Settings")
+@template(route="/settings", title="App Settings")
 def app_settings() -> rx.Component:
     """The settings page content.
 

@@ -16,8 +16,8 @@ app = rx.App(
 )
 
 # Add pages
-# app.add_page(landing)
-# app.add_page(table, route="/admin/users", title="User Management")  
+app.add_page(landing, route="/", title="Home")
+app.add_page(table, route="/admin/users", title="User Management")  
 app.add_page(profile)
 app.add_page(admin_settings)
 app.add_page(about)
