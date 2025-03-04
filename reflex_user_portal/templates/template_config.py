@@ -68,9 +68,10 @@ NAV_ITEMS = [
         admin_only=True,
     ),
     NavItem(
-        title="Table",
-        route="/table",
+        title="User Table",
+        route="/admin/users",
         icon="table",
         requires_auth=True,
+        admin_only=True,
     ),
 ]

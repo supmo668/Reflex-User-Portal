@@ -1,5 +1,6 @@
 import reflex as rx
-
+import reflex_user_portal.config as CONFIG
+from reflex_user_portal.backend.user_state import UserState
 
 rx.page(route="/", title="Home")
 def landing() -> rx.Component:
@@ -31,7 +32,7 @@ def landing() -> rx.Component:
                                     color="#374151",
                                 ),
                                 rx.heading(
-                                    "SpyGlass Trends",
+                                    CONFIG.APP_DISPLAY_NAME,
                                     font_weight="600",
                                     color="#111827",
                                     font_size="1.25rem",

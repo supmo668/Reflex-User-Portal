@@ -3,6 +3,7 @@ import reflex as rx
 from sqlmodel import Session, select, desc, asc, or_
 import reflex_clerk as clerk
 from datetime import datetime
+from typing import Optional
 
 from reflex_user_portal.config import ADMIN_USER_EMAIL
 from reflex_user_portal.models.user import User, UserType
@@ -10,31 +11,41 @@ from reflex_user_portal.models.database import engine
 
 
 class UserState(rx.State):
-    """The user state."""
+    """User state for the application."""
     
     # User state
-    current_user: User | None = None
-    users: list[User] = []
-    
-    # Pagination state
-    total_items: int = 0
-    offset: int = 0
-    limit: int = 10
-    
+    current_user: Optional[User] = None
+
     # Filtering and sorting state
     search_value: str = ""
     sort_value: str = ""
     sort_direction: str = "asc"
 
-    @rx.var
+    # Pagination state
+    total_items: int = 0
+    offset: int = 0
+    limit: int = 10
+
+    # Users list
+    users: list[User] = []
+
+    @rx.var(cache=True)
     def is_authenticated(self) -> bool:
         """Check if user is authenticated."""
-        return (self.current_user is not None) & clerk.ClerkState.is_signed_in
+        return rx.cond(
+            clerk.ClerkState.is_signed_in, True, False)
 
     @rx.var
     def is_admin(self) -> bool:
-        """Check if current user is admin."""
-        return (self.current_user is not None) & self.current_user.user_type == UserType.ADMIN
+        """Check if current user is admin by primary email address."""
+        return rx.cond(
+            self.is_authenticated,
+            clerk.ClerkState.user.user_type == UserType.ADMIN, False )
+
+    @rx.var
+    def check_user_change(self) -> bool:
+        """Check if user has changed."""
+        return rx.cond(clerk.ClerkState.user.id != self.current_user.id, True, False) if self.current_user else False
 
     @rx.var(cache=True)
     def page_number(self) -> int:
@@ -46,27 +57,18 @@ class UserState(rx.State):
         """Get total number of pages."""
         return max(1, (self.total_items + self.limit - 1) // self.limit)
 
-    @rx.var(cache=True)
-    def should_create_user(self) -> bool:
-        """Check if we should create a new user."""
-        return (clerk.ClerkState.is_signed_in & (clerk.ClerkState.user is not None))
-
-    @rx.var(cache=True)
-    def clerk_user_email(self) -> str:
-        """Get the clerk user's email address."""
-        return rx.cond(
-            clerk.ClerkState.user.email_addresses | None,
-            clerk.ClerkState.user.email_addresses[0].email_address,
-            ""
-        )
-
     @rx.event
-    def sync_with_clerk(self) -> None:
-        """Synchronize user state with Clerk."""
-        if clerk.ClerkState.is_signed_in:
-            self.current_user = None
-            return
-
+    async def sync_auth_state(self):
+        """Update user state based on Clerk authentication state."""
+        if self.check_user_change:
+            await self.handle_sign_in()
+        
+    
+    @rx.event
+    async def handle_sign_in(self):
+        """Handle user sign in.
+        sync Clerk user info to internal user database 
+        """
         try:
             with rx.session() as session:
                 clerk_id = clerk.ClerkState.user.id
@@ -75,20 +77,20 @@ class UserState(rx.State):
                 ).first()
 
                 if user is None:
-                    self._create_new_user(session)
+                    await self._create_new_user(session)
                 else:
-                    self._update_existing_user(session, user)
+                    await self._update_existing_user(session, user)
         except Exception as e:
-            print(f"Error syncing with Clerk: {e}")
+            print(f"Error handling sign in: {e}")
             self.current_user = None
 
-    def _create_new_user(self, session) -> None:
+    async def _create_new_user(self, session) -> None:
         """Create a new user in the database."""
         if not clerk.ClerkState.user.email_addresses:
             self.current_user = None
             return
 
-        user_email = clerk.ClerkState.user.email_addresses[0].email_address
+        user_email = clerk.ClerkState.user.primary_email_address_id
         is_admin = user_email == ADMIN_USER_EMAIL
         
         user = User(
@@ -106,7 +108,7 @@ class UserState(rx.State):
         session.refresh(user)
         self.current_user = user
 
-    def _update_existing_user(self, session, user: User) -> None:
+    async def _update_existing_user(self, session, user: User) -> None:
         """Update an existing user in the database."""
         user.first_name = clerk.ClerkState.user.first_name or user.first_name
         user.last_name = clerk.ClerkState.user.last_name or user.last_name
@@ -117,12 +119,8 @@ class UserState(rx.State):
         self.current_user = user
 
     @rx.event
-    def load_users(self):
+    async def load_users(self):
         """Load users with current pagination, sorting, and filtering."""
-        if not self.is_admin:
-            self.users = []
-            return
-
         try:
             with rx.session() as session:
                 query = select(User)
@@ -162,20 +160,20 @@ class UserState(rx.State):
             self.users = []
 
     @rx.event
-    def prev_page(self):
+    async def prev_page(self):
         """Go to previous page."""
         self.offset = max(self.offset - self.limit, 0)
-        return self.load_users()
+        yield self.load_users()
 
     @rx.event
-    def next_page(self):
+    async def next_page(self):
         """Go to next page."""
         if self.offset + self.limit < self.total_items:
             self.offset += self.limit
-        return self.load_users()
+        yield self.load_users()
 
     @rx.event
-    def sort_values(self, value: str):
+    async def sort_values(self, value: str):
         """Sort users by the specified column.
         
         Args:
@@ -190,10 +188,10 @@ class UserState(rx.State):
         
         # Reset pagination when sort changes
         self.offset = 0
-        return self.load_users()
+        yield self.load_users()
 
     @rx.event
-    def filter_values(self, value: str):
+    async def filter_values(self, value: str):
         """Filter users by search value.
         
         Args:
@@ -202,4 +200,4 @@ class UserState(rx.State):
         self.search_value = value
         # Reset pagination when filter changes
         self.offset = 0
-        return self.load_users()
+        yield self.load_users()

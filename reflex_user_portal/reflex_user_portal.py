@@ -3,7 +3,7 @@ import reflex as rx
 import reflex_clerk as clerk
 
 from reflex_user_portal.pages.landing import landing, sign_in
-from reflex_user_portal.pages.admin import admin_settings, table
+from reflex_user_portal.pages.admin import admin_settings, users_table
 from reflex_user_portal.pages.portal import about, profile, app_settings
 import reflex_user_portal.styles as styles
 
@@ -17,7 +17,7 @@ app = rx.App(
 
 # Add pages
 app.add_page(landing, route="/", title="Home")
-app.add_page(table, route="/admin/users", title="User Management")  
+app.add_page(users_table, route="/admin/users", title="User Management")  
 app.add_page(profile)
 app.add_page(admin_settings)
 app.add_page(about)
