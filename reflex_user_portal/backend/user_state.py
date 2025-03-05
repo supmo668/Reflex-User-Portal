@@ -29,23 +29,22 @@ class UserState(rx.State):
     # Users list
     users: list[User] = []
 
-    @rx.var(cache=True)
-    def is_authenticated(self) -> bool:
-        """Check if user is authenticated."""
-        return rx.cond(
-            clerk.ClerkState.is_signed_in, True, False)
-
     @rx.var
     def is_admin(self) -> bool:
         """Check if current user is admin by primary email address."""
         return rx.cond(
-            self.is_authenticated,
+            clerk.ClerkState.is_signed_in,
             clerk.ClerkState.user.user_type == UserType.ADMIN, False )
 
     @rx.var
     def check_user_change(self) -> bool:
         """Check if user has changed."""
-        return rx.cond(clerk.ClerkState.user.id != self.current_user.id, True, False) if self.current_user else False
+        return rx.cond(
+            self.current_user,
+            rx.cond(
+                clerk.ClerkState.user.id != self.current_user.id, True, False),
+            False
+            )
 
     @rx.var(cache=True)
     def page_number(self) -> int:
@@ -56,16 +55,9 @@ class UserState(rx.State):
     def total_pages(self) -> int:
         """Get total number of pages."""
         return max(1, (self.total_items + self.limit - 1) // self.limit)
-
-    @rx.event
-    async def sync_auth_state(self):
-        """Update user state based on Clerk authentication state."""
-        if self.check_user_change:
-            await self.handle_sign_in()
-        
     
     @rx.event
-    async def handle_sign_in(self):
+    async def sync_auth_state(self):
         """Handle user sign in.
         sync Clerk user info to internal user database 
         """

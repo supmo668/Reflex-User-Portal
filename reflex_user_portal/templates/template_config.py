@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from typing import List, Type
 
 import reflex as rx
+import reflex_clerk as clerk
 
-from ..backend.user_state import UserState
+from reflex_user_portal.backend.user_state import UserState
 
 
 @dataclass
@@ -15,10 +16,10 @@ class NavItem:
     title: str
     route: str
     icon: str
-    requires_auth: bool = True  # Whether this item requires authentication
+    requires_auth: bool = False  # Whether this item requires authentication
     admin_only: bool = False  # Whether this item is only for admins
 
-    def should_show(self, state: Type[UserState]) -> rx.Var[bool]:
+    def should_show(self, user_state: Type[UserState]) -> rx.Var[bool]:
         """Check if this item should be shown based on auth state.
 
         Args:
@@ -27,17 +28,12 @@ class NavItem:
         Returns:
             A Var[bool] indicating if the item should be shown.
         """
-        # For auth-required items, check auth and admin status
+        # For admin-required items, check admin status
         return rx.cond(
-            self.requires_auth,
-            # Auth required
-            state.is_authenticated & rx.cond(
                 self.admin_only,
-                state.is_admin,  # Admin check if needed
+                user_state.is_admin,  # Admin check if needed
                 True,  # Regular auth is enough
-            ),
-            True,  # No auth required
-        )
+            )
 
 
 # Define all navigation items in specified order
@@ -46,7 +42,6 @@ NAV_ITEMS = [
         title="About",
         route="/about",
         icon="info",
-        requires_auth=False,  # Accessible to all
     ),
     NavItem(
         title="Profile",
@@ -58,7 +53,6 @@ NAV_ITEMS = [
         title="App Settings",
         route="/settings",
         icon="settings",
-        requires_auth=False,
     ),
     NavItem(
         title="Admin Config",

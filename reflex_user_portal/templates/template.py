@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Callable, Optional, Union, List
 
 import reflex as rx
+import reflex_clerk as clerk
 
 from reflex_user_portal import styles
 from reflex_user_portal.components.navbar import navbar
@@ -54,7 +55,7 @@ def template(
     description: Optional[str] = None,
     meta: Optional[str] = None,
     script_tags: Optional[List[rx.Component]] = None,
-    on_load: Optional[Union[rx.EventHandler, List[rx.EventHandler]]] = None,
+    on_load: Optional[Union[rx.EventHandler, List[rx.EventHandler]]] = [None],
 ) -> Callable[[Callable[[], rx.Component]], rx.Component]:
     """The template for each page of the app.
 
@@ -72,12 +73,6 @@ def template(
     # Get the meta tags for the page.
     all_meta = [*default_meta, *(meta or [])]
 
-    # Convert on_load to a list if it's not already
-    if on_load is None:
-        on_load = []
-    elif not isinstance(on_load, list):
-        on_load = [on_load]
-
     # Get auth requirements from route
     requires_auth, requires_admin = get_route_requirements(route)
 
@@ -92,20 +87,16 @@ def template(
         """
         def templated_page():
             # Handle authentication requirements
-            if requires_auth:
+            if requires_auth or requires_admin:
                 if requires_admin:
                     content = rx.cond(
                         UserState.is_admin,
                         page_content(),
-                        rx.cond(
-                            UserState.is_authenticated,
-                            page_content(),
-                            access_denied_page(),
-                        )
+                        access_denied_page()
                     )
                 else:
                     content = rx.cond(
-                        UserState.is_authenticated,
+                        clerk.ClerkState.is_signed_in,
                         page_content(),
                         signin_page()
                     )
