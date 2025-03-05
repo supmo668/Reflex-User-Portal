@@ -3,7 +3,7 @@
 import reflex as rx
 from datetime import datetime
 
-from reflex_user_portal.backend.user_state import UserState
+from reflex_user_portal.backend.table_state import TableState
 from reflex_user_portal.models.user import User
 from reflex_user_portal.templates.template import template
 
@@ -55,13 +55,13 @@ def users_table() -> rx.Component:
                     rx.select(
                         ["first_name", "last_name", "email", "user_type", "created_at"],
                         placeholder="Sort by...",
-                        on_change=UserState.sort_values,
-                        value=UserState.sort_value,
+                        on_change=TableState.sort_values,
+                        value=TableState.sort_value,
                     ),
                     rx.input(
                         placeholder="Search users...",
-                        on_change=UserState.filter_values,
-                        value=UserState.search_value,
+                        on_change=TableState.filter_values,
+                        value=TableState.search_value,
                         width="300px",
                     ),
                     width="100%",
@@ -79,24 +79,24 @@ def users_table() -> rx.Component:
                     ),
                     rx.table.body(
                         rx.foreach(
-                            UserState.users,
+                            TableState.users,
                             show_user,
                         )
                     ),
-                    on_mount=UserState.load_users,
+                    on_mount=TableState.load_users,
                     width="100%",
                 ),
                 rx.hstack(
                     rx.button(
                         "Prev",
-                        on_click=UserState.prev_page,
+                        on_click=TableState.prev_page,
                     ),
                     rx.text(
-                        f"Page {UserState.page_number} / {UserState.total_pages}"
+                        f"Page {TableState.page_number} / {TableState.total_pages}"
                     ),
                     rx.button(
                         "Next",
-                        on_click=UserState.next_page,
+                        on_click=TableState.next_page,
                     ),
                     padding="4",
                     justify="center",

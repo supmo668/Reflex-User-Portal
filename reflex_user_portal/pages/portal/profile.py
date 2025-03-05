@@ -65,7 +65,4 @@ def profile() -> rx.Component:
     Returns:
         The protected profile page component.
     """
-    return clerk.protect(
-        profile_content(),
-        fallback=clerk.redirect_to_sign_in(),
-    )
+    return profile_content()

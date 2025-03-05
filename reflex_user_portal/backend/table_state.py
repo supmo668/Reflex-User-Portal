@@ -80,45 +80,46 @@ class TableState(rx.State):
         self.total_items = session.exec(query).one()
 
     @rx.event
-    def load_entries(self) -> list[User]:
-        """Get all users from the database."""
+    async def load_users(self):
+        """Load users with current pagination, sorting, and filtering."""
         try:
             with rx.session() as session:
                 query = select(User)
-                
-                # Apply search filter if search value exists
+
+                # Apply search filter if present
                 if self.search_value:
-                    search_value = f"%{self.search_value.lower()}%"
+                    search = f"%{self.search_value.lower()}%"
                     query = query.where(
                         or_(
-                            User.first_name.ilike(search_value),
-                            User.last_name.ilike(search_value),
-                            User.email.ilike(search_value),
+                            User.email.ilike(search),
+                            User.first_name.ilike(search),
+                            User.last_name.ilike(search)
                         )
                     )
-                
-                # Apply sorting if sort value exists
+
+                # Apply sorting
                 if self.sort_value:
                     sort_column = getattr(User, self.sort_value)
-                    if self.sort_reverse:
+                    if self.sort_direction == "desc":
                         query = query.order_by(desc(sort_column))
                     else:
                         query = query.order_by(asc(sort_column))
-                
+
+                # Get total count for pagination
+                self.total_items = session.exec(
+                    select(rx.sql.func.count()).select_from(query.subquery())
+                ).one()
+
                 # Apply pagination
                 query = query.offset(self.offset).limit(self.limit)
                 
-                # Get users and total count
+                # Execute query
                 self.users = session.exec(query).all()
-                self._get_total_items(session)
-                
+
         except Exception as e:
             print(f"Error loading users: {e}")
             self.users = []
-            self.total_items = 0
             
-        return self.users
-
     @rx.event
     def prev_page(self):
         """Go to previous page."""

@@ -2,7 +2,7 @@ import reflex_user_portal.config as config
 import reflex as rx
 import reflex_clerk as clerk
 
-from reflex_user_portal.pages.landing import landing, sign_in
+from reflex_user_portal.pages.landing import landing
 from reflex_user_portal.pages.admin import admin_settings, users_table
 from reflex_user_portal.pages.portal import about, profile, app_settings
 import reflex_user_portal.styles as styles

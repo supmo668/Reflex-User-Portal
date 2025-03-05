@@ -1,13 +1,12 @@
 """User state management."""
 import reflex as rx
-from sqlmodel import Session, select, desc, asc, or_
+from sqlmodel import select
 import reflex_clerk as clerk
 from datetime import datetime
 from typing import Optional
 
 from reflex_user_portal.config import ADMIN_USER_EMAIL
 from reflex_user_portal.models.user import User, UserType
-from reflex_user_portal.models.database import engine
 
 
 class UserState(rx.State):
@@ -16,45 +15,10 @@ class UserState(rx.State):
     # User state
     current_user: Optional[User] = None
 
-    # Filtering and sorting state
-    search_value: str = ""
-    sort_value: str = ""
-    sort_direction: str = "asc"
-
-    # Pagination state
-    total_items: int = 0
-    offset: int = 0
-    limit: int = 10
-
-    # Users list
-    users: list[User] = []
-
     @rx.var
     def is_admin(self) -> bool:
         """Check if current user is admin by primary email address."""
-        return rx.cond(
-            clerk.ClerkState.is_signed_in,
-            clerk.ClerkState.user.user_type == UserType.ADMIN, False )
-
-    @rx.var
-    def check_user_change(self) -> bool:
-        """Check if user has changed."""
-        return rx.cond(
-            self.current_user,
-            rx.cond(
-                clerk.ClerkState.user.id != self.current_user.id, True, False),
-            False
-            )
-
-    @rx.var(cache=True)
-    def page_number(self) -> int:
-        """Get current page number."""
-        return (self.offset // self.limit) + 1
-
-    @rx.var(cache=True)
-    def total_pages(self) -> int:
-        """Get total number of pages."""
-        return max(1, (self.total_items + self.limit - 1) // self.limit)
+        return self.current_user.user_type == UserType.ADMIN if self.current_user else False
     
     @rx.event
     async def sync_auth_state(self):
@@ -109,87 +73,3 @@ class UserState(rx.State):
         session.commit()
         session.refresh(user)
         self.current_user = user
-
-    @rx.event
-    async def load_users(self):
-        """Load users with current pagination, sorting, and filtering."""
-        try:
-            with rx.session() as session:
-                query = select(User)
-
-                # Apply search filter if present
-                if self.search_value:
-                    search = f"%{self.search_value.lower()}%"
-                    query = query.where(
-                        or_(
-                            User.email.ilike(search),
-                            User.first_name.ilike(search),
-                            User.last_name.ilike(search)
-                        )
-                    )
-
-                # Apply sorting
-                if self.sort_value:
-                    sort_column = getattr(User, self.sort_value)
-                    if self.sort_direction == "desc":
-                        query = query.order_by(desc(sort_column))
-                    else:
-                        query = query.order_by(asc(sort_column))
-
-                # Get total count for pagination
-                self.total_items = session.exec(
-                    select(rx.sql.func.count()).select_from(query.subquery())
-                ).one()
-
-                # Apply pagination
-                query = query.offset(self.offset).limit(self.limit)
-                
-                # Execute query
-                self.users = session.exec(query).all()
-
-        except Exception as e:
-            print(f"Error loading users: {e}")
-            self.users = []
-
-    @rx.event
-    async def prev_page(self):
-        """Go to previous page."""
-        self.offset = max(self.offset - self.limit, 0)
-        yield self.load_users()
-
-    @rx.event
-    async def next_page(self):
-        """Go to next page."""
-        if self.offset + self.limit < self.total_items:
-            self.offset += self.limit
-        yield self.load_users()
-
-    @rx.event
-    async def sort_values(self, value: str):
-        """Sort users by the specified column.
-        
-        Args:
-            value: The column to sort by.
-        """
-        if self.sort_value == value:
-            # Toggle direction if same column
-            self.sort_direction = "desc" if self.sort_direction == "asc" else "asc"
-        else:
-            self.sort_value = value
-            self.sort_direction = "asc"
-        
-        # Reset pagination when sort changes
-        self.offset = 0
-        yield self.load_users()
-
-    @rx.event
-    async def filter_values(self, value: str):
-        """Filter users by search value.
-        
-        Args:
-            value: The search string to filter by.
-        """
-        self.search_value = value
-        # Reset pagination when filter changes
-        self.offset = 0
-        yield self.load_users()

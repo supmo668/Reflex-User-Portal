@@ -12,7 +12,7 @@ from reflex_user_portal.components.navbar import navbar
 from reflex_user_portal.components.sidebar import sidebar
 from reflex_user_portal.backend.user_state import UserState
 
-from reflex_user_portal.pages.landing.sign_in import signin_page
+from reflex_user_portal.pages.landing.sign_in import to_signin_page
 from .access_denied import access_denied_page
 from .template_config import NAV_ITEMS
 
@@ -56,6 +56,7 @@ def template(
     meta: Optional[str] = None,
     script_tags: Optional[List[rx.Component]] = None,
     on_load: Optional[Union[rx.EventHandler, List[rx.EventHandler]]] = [None],
+
 ) -> Callable[[Callable[[], rx.Component]], rx.Component]:
     """The template for each page of the app.
 
@@ -85,49 +86,51 @@ def template(
         Returns:
             The template with the page content.
         """
-        def templated_page():
-            # Handle authentication requirements
-            if requires_auth or requires_admin:
-                if requires_admin:
-                    content = rx.cond(
-                        UserState.is_admin,
-                        page_content(),
-                        access_denied_page()
-                    )
-                else:
-                    content = rx.cond(
-                        clerk.ClerkState.is_signed_in,
-                        page_content(),
-                        signin_page()
-                    )
+        # Handle authentication requirements
+        if requires_auth or requires_admin:
+            if requires_admin:
+                content = rx.cond(
+                    UserState.is_hydrated & UserState.is_admin,
+                    page_content(),
+                    access_denied_page()
+                )
             else:
-                content = page_content()
-
-            return rx.vstack(
-                navbar(),  # Navbar at the top
-                rx.flex(
-                    sidebar(),  # Sidebar on the left
+                content = rx.cond(
+                    UserState.is_hydrated & clerk.ClerkState.is_signed_in,
+                    page_content(),
+                    to_signin_page()
+                )
+        else:
+            content = page_content()
+        def templated_page():
+            return clerk.clerk_provider(
+                rx.vstack(
+                    navbar(),  # Navbar at the top
                     rx.flex(
-                        rx.vstack(
-                            content,
+                        sidebar(),  # Sidebar on the left
+                        rx.flex(
+                            rx.vstack(
+                                # wrap content in templated page
+                                content,
+                                width="100%",
+                                **styles.template_content_style,
+                            ),
                             width="100%",
-                            **styles.template_content_style,
+                            **styles.template_page_style,
+                            max_width=[
+                                "100%",
+                                "100%",
+                                "100%",
+                                "100%",
+                                styles.max_width,
+                            ],
                         ),
                         width="100%",
-                        **styles.template_page_style,
-                        max_width=[
-                            "100%",
-                            "100%",
-                            "100%",
-                            "100%",
-                            styles.max_width,
-                        ],
                     ),
                     width="100%",
-                ),
-                width="100%",
-                spacing="0",
-                align_items="stretch",
+                    spacing="0",
+                    align_items="stretch",
+                )
             )
 
         @rx.page(
