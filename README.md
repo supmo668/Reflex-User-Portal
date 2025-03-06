@@ -30,7 +30,7 @@ APP_NAME=           # Your application name
 APP_ENV=DEV        # DEV or PROD
 
 # ADMIN
-ADMIN_USER_EMAIL=  # Email of the default admin user
+ADMIN_USER_EMAILS=  # Email of the default admin user
 
 # CLERK
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=  # Your Clerk publishable key
@@ -110,7 +110,7 @@ The application uses a `.env` file for configuration. Copy `.env.template` to ge
 #### App Configuration
 - `APP_NAME`: Your application name
 - `APP_ENV`: Environment (DEV/PROD)
-- `ADMIN_USER_EMAIL`: Email address for the default admin user
+- `ADMIN_USER_EMAILS`: Email addresses for the default admin users
 
 #### Authentication
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key

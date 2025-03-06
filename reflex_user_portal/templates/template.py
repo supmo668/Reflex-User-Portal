@@ -55,7 +55,7 @@ def template(
     description: Optional[str] = None,
     meta: Optional[str] = None,
     script_tags: Optional[List[rx.Component]] = None,
-    on_load: Optional[Union[rx.EventHandler, List[rx.EventHandler]]] = None,
+    on_load: Optional[Union[rx.EventHandler, List[rx.EventHandler]]] = [UserState.sync_auth_state],
 
 ) -> Callable[[Callable[[], rx.Component]], rx.Component]:
     """The template for each page of the app.
@@ -67,13 +67,14 @@ def template(
         meta: Additional meta tags to add to the page.
         script_tags: Additional script tags to add to the page.
         on_load: The event handler(s) called when the page loads.
+    default:
+        on_load: [UserState.sync_auth_state] sync clerk state to internal user state
 
     Returns:
         The decorated page.
     """
     # Get the meta tags for the page.
     all_meta = [*default_meta, *(meta or [])]
-
     # Get auth requirements from route
     requires_auth, requires_admin = get_route_requirements(route)
 
@@ -101,7 +102,7 @@ def template(
                     to_signin_page()
                 )
         else:
-            content = page_content()
+            content = clerk.clerk_loaded(page_content())
         def templated_page():
             return (
                 rx.vstack(

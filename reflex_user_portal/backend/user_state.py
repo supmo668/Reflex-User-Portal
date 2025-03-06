@@ -5,7 +5,7 @@ import reflex_clerk as clerk
 from datetime import datetime, timezone
 from typing import Optional
 
-from reflex_user_portal.config import ADMIN_USER_EMAIL
+from reflex_user_portal.config import ADMIN_USER_EMAILS
 from reflex_user_portal.models.user import User, UserType
 
 
@@ -20,6 +20,12 @@ class UserState(rx.State):
         """Check if current user is admin by primary email address."""
         return self.current_user.user_type == UserType.ADMIN if self.current_user else False
     
+    @rx.var
+    def clerk_user_id(self) -> str:
+        """Get the Clerk user ID."""
+        return rx.cond(
+            self.current_user, self.current_user.clerk_id, clerk.ClerkState.user.id)
+    
     @rx.event
     async def sync_auth_state(self):
         """Handle user sign in.
@@ -27,9 +33,8 @@ class UserState(rx.State):
         """
         try:
             with rx.session() as session:
-                clerk_id = clerk.ClerkState.user.id
                 user = session.exec(
-                    select(User).where(User.clerk_id == clerk_id)
+                    select(User).where(User.clerk_id == self.clerk_user_id)
                 ).first()
                 if user is None:
                     await self._create_new_user(session)
@@ -44,12 +49,12 @@ class UserState(rx.State):
         if clerk.ClerkState.user:
             return rx.redirect(rx.url("/overview"))
         else:
-            return rx.redirect(rx.url("/profile"))
+            return rx.redirect(rx.url("/sign-in"))
         
     async def _create_new_user(self, session) -> None:
         """Create a new user in the database."""
         user_email = clerk.ClerkState.user.primary_email_address_id
-        is_admin = user_email == ADMIN_USER_EMAIL
+        is_admin = user_email in ADMIN_USER_EMAILS
         
         user = User(
             email=user_email,
@@ -71,7 +76,7 @@ class UserState(rx.State):
         user.first_name = clerk.ClerkState.user.first_name or user.first_name
         user.last_name = clerk.ClerkState.user.last_name or user.last_name
         user.last_login = datetime.now(timezone.utc)
-        session.add(user)
+        # No need for session.add() since the user is already tracked
         session.commit()
         session.refresh(user)
         self.current_user = user

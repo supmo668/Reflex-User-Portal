@@ -22,7 +22,7 @@ def auth_components():
                                         rx.avatar(
                                             src=clerk.ClerkState.user.image_url,
                                             name=clerk.ClerkState.user.first_name,
-                                            size="5",
+                                            size="3",
                                         ),
                                         rx.avatar(
                                             name=clerk.ClerkState.user.first_name,
@@ -30,7 +30,7 @@ def auth_components():
                                         ),
                                     ),
                                 ),
-                                rx.icon("chevron-down", size=14),
+                                rx.icon("chevron-down", size=16),
                                 align="center",
                                 height="100%",
                             ),
