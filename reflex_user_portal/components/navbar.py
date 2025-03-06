@@ -26,7 +26,7 @@ def auth_components():
                                         ),
                                         rx.avatar(
                                             name=clerk.ClerkState.user.first_name,
-                                            size="5",
+                                            size="3",
                                         ),
                                     ),
                                 ),
@@ -95,7 +95,7 @@ def navbar(with_clerk_wrapper: bool = False) -> rx.Component:
             ),
             rx.spacer(),
             # Right side - Auth buttons
-            clerk.clerk_provider(auth_components()) if with_clerk_wrapper else auth_components(),
+            auth_components(),
             width="100%",
             padding_x="4",
             height="100%",

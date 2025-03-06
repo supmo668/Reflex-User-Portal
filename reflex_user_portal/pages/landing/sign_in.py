@@ -4,6 +4,21 @@ import reflex as rx
 import reflex_clerk as clerk
 import os
 
+def signin_page() -> rx.Component:
+    return clerk.clerk_provider(
+        rx.center(
+            rx.vstack(
+                clerk.sign_in(
+                    path="/sign-in",
+                ),
+                align="center",
+                spacing="7",
+            ),
+            height="100vh",
+        ),
+    )
+
+
 def signin_component() -> rx.Component:
     return rx.hstack(
         rx.flex(
@@ -65,6 +80,4 @@ def signin_component() -> rx.Component:
     )
 
 def to_signin_page(with_clerk_wrapper: bool = False) -> rx.Component:
-    return clerk.clerk_provider(
-        signin_component()
-        ) if with_clerk_wrapper else signin_component()
+    return clerk.clerk_provider(signin_component()) if with_clerk_wrapper else signin_component()

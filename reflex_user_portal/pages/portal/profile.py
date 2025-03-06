@@ -59,10 +59,10 @@ def profile_content() -> rx.Component:
 
 
 @template(route="/profile", title="Profile")
-def profile() -> rx.Component:
+def profile(with_clerk_wrapper: bool = False) -> rx.Component:
     """The protected profile page.
 
     Returns:
         The protected profile page component.
     """
-    return profile_content()
+    return clerk.clerk_provider(profile_content()) if with_clerk_wrapper else profile_content()

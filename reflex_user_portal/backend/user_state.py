@@ -2,7 +2,7 @@
 import reflex as rx
 from sqlmodel import select
 import reflex_clerk as clerk
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from reflex_user_portal.config import ADMIN_USER_EMAIL
@@ -31,7 +31,6 @@ class UserState(rx.State):
                 user = session.exec(
                     select(User).where(User.clerk_id == clerk_id)
                 ).first()
-
                 if user is None:
                     await self._create_new_user(session)
                 else:
@@ -40,12 +39,15 @@ class UserState(rx.State):
             print(f"Error handling sign in: {e}")
             self.current_user = None
 
+    @rx.event
+    async def auth_redirect(self):
+        if clerk.ClerkState.user:
+            return rx.redirect(rx.url("/overview"))
+        else:
+            return rx.redirect(rx.url("/profile"))
+        
     async def _create_new_user(self, session) -> None:
         """Create a new user in the database."""
-        if not clerk.ClerkState.user.email_addresses:
-            self.current_user = None
-            return
-
         user_email = clerk.ClerkState.user.primary_email_address_id
         is_admin = user_email == ADMIN_USER_EMAIL
         
@@ -55,8 +57,8 @@ class UserState(rx.State):
             user_type=UserType.ADMIN if is_admin else UserType.USER,
             first_name=clerk.ClerkState.user.first_name or "",
             last_name=clerk.ClerkState.user.last_name or "",
-            created_at=datetime.utcnow(),
-            last_login=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
+            last_login=datetime.now(timezone.utc),
         )
         
         session.add(user)
@@ -68,7 +70,7 @@ class UserState(rx.State):
         """Update an existing user in the database."""
         user.first_name = clerk.ClerkState.user.first_name or user.first_name
         user.last_name = clerk.ClerkState.user.last_name or user.last_name
-        user.last_login = datetime.utcnow()
+        user.last_login = datetime.now(timezone.utc)
         session.add(user)
         session.commit()
         session.refresh(user)

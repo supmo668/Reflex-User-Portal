@@ -55,7 +55,7 @@ def template(
     description: Optional[str] = None,
     meta: Optional[str] = None,
     script_tags: Optional[List[rx.Component]] = None,
-    on_load: Optional[Union[rx.EventHandler, List[rx.EventHandler]]] = [None],
+    on_load: Optional[Union[rx.EventHandler, List[rx.EventHandler]]] = None,
 
 ) -> Callable[[Callable[[], rx.Component]], rx.Component]:
     """The template for each page of the app.
@@ -103,7 +103,7 @@ def template(
         else:
             content = page_content()
         def templated_page():
-            return clerk.clerk_provider(
+            return (
                 rx.vstack(
                     navbar(),  # Navbar at the top
                     rx.flex(
@@ -129,7 +129,7 @@ def template(
                     ),
                     width="100%",
                     spacing="0",
-                    align_items="stretch",
+                    align_items="center",
                 )
             )
 
@@ -142,15 +142,16 @@ def template(
             on_load=on_load,
         )
         def theme_wrap():
-            return rx.theme(
-                templated_page(),
+            themed_page = rx.theme(
+                clerk.clerk_provider(templated_page()),
                 has_background=True,
                 accent_color=ThemeState.accent_color,
                 gray_color=ThemeState.gray_color,
                 radius=ThemeState.radius,
                 scaling=ThemeState.scaling,
             )
-
+            return themed_page
+        
         return theme_wrap
 
     return decorator

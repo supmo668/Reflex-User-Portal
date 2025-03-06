@@ -313,7 +313,8 @@ def landing() -> rx.Component:
                                     type="text",
                                     placeholder="Search trends...",
                                     aria_label="Search trends...",
-                                    value=True,
+                                    value="Your Search...",
+                                    read_only=True,
                                     background_color="transparent",
                                     border_style="none",
                                     flex="1 1 0%",
@@ -335,6 +336,7 @@ def landing() -> rx.Component:
                                 border_radius="0.5rem",
                                 transition_property="all",
                                 transition_timing_function="cubic-bezier(0.4, 0, 0.2, 1)",
+                                read_only=True,
                             ),
                             rx.box(
                                 "Try searching for AI, Healthcare, Blockchain...",
@@ -370,29 +372,7 @@ def landing() -> rx.Component:
                 background_color="#F9FAFB",
                 min_height="100vh",
             ),
-            rx.script(
-                src="/_next/static/chunks/webpack-1e037fdc96d674db.js",
-                strategy="afterInteractive",
-            ),
-            rx.script(
-                """(self.__next_f=self.__next_f||[]).push([0]);self.__next_f.push([2,null])"""
-            ),
-            rx.script(
-                """self.__next_f.push([1,"1:HL[\"/_next/static/media/e11418ac562b8ac1-s.p.woff2\",\"font\",{\"crossOrigin\":\"\",\"type\":\"font/woff2\"}]\n2:HL[\"/_next/static/css/070b68d383b0d950.css\",\"style\"]\n3:HL[\"/_next/static/css/e4f64c78e7c73b05.css\",\"style\"]\n"])"""
-            ),
-            rx.script(
-                """self.__next_f.push([1,"4:I[2846,[],\"\"]\n6:I[9107,[],\"ClientPageRoot\"]\n7:I[6778,[\"415\",\"static/chunks/415-8c523922821b0baa.js\",\"931\",\"static/chunks/app/page-42684194f535faca.js\"],\"default\",1]\n8:I[4707,[],\"\"]\n9:I[6423,[],\"\"]\nb:I[1060,[],\"\"]\nc:[]\n"])"""
-            ),
-            rx.script(
-                """self.__next_f.push([1,"0:[\"$\",\"$L4\",null,{\"buildId\":\"FXJ1t7dK3wx9XfhoIxOIc\",\"assetPrefix\":\"\",\"urlParts\":[\"\",\"\"],\"initialTree\":[\"\",{\"children\":[\"__PAGE__\",{}]},\"$undefined\",\"$undefined\",true],\"initialSeedData\":[\"\",{\"children\":[\"__PAGE__\",{},[[\"$L5\",[\"$\",\"$L6\",null,{\"props\":{\"params\":{},\"searchParams\":{}},\"Component\":\"$7\"}],[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/css/e4f64c78e7c73b05.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\"}]]],null],null]},[[[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/css/070b68d383b0d950.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\"}]],[\"$\",\"html\",null,{\"lang\":\"en\",\"suppressHydrationWarning\":true,\"children\":[\"$\",\"body\",null,{\"className\":\"min-h-screen bg-background font-sans antialiased __className_3a0388\",\"children\":[\"$\",\"$L8\",null,{\"parallelRouterKey\":\"children\",\"segmentPath\":[\"children\"],\"error\":\"$undefined\",\"errorStyles\":\"$undefined\",\"errorScripts\":\"$undefined\",\"template\":[\"$\",\"$L9\",null,{}],\"templateStyles\":\"$undefined\",\"templateScripts\":\"$undefined\",\"notFound\":[[\"$\",\"title\",null,{\"children\":\"404: This page could not be found.\"}],[\"$\",\"div\",null,{\"style\":{\"fontFamily\":\"system-ui,\\\"Segoe UI\\\",Roboto,Helvetica,Arial,sans-serif,\\\"Apple Color Emoji\\\",\\\"Segoe UI Emoji\\\"\",\"height\":\"100vh\",\"textAlign\":\"center\",\"display\":\"flex\",\"flexDirection\":\"column\",\"alignItems\":\"center\",\"justifyContent\":\"center\"},\"children\":[\"$\",\"div\",null,{\"children\":[[\"$\",\"style\",null,{\"dangerouslySetInnerHTML\":{\"__html\":\"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}\"}}],[\"$\",\"h1\",null,{\"className\":\"next-error-h1\",\"style\":{\"display\":\"inline-block\",\"margin\":\"0 20px 0 0\",\"padding\":\"0 23px 0 0\",\"fontSize\":24,\"fontWeight\":500,\"verticalAlign\":\"top\",\"lineHeight\":\"49px\"},\"children\":\"404\"}],[\"$\",\"div\",null,{\"style\":{\"display\":\"inline-block\"},\"children\":[\"$\",\"h2\",null,{\"style\":{\"fontSize\":14,\"fontWeight\":400,\"lineHeight\":\"49px\",\"margin\":0},\"children\":\"This page could not be found.\"}]}]]}]}]],\"notFoundStyles\":[]}]}]}]],null],null],\"couldBeIntercepted\":false,\"initialHead\":[null,\"$La\"],\"globalErrorComponent\":\"$b\",\"missingSlots\":\"$Wc\"}]\n"])"""
-            ),
-            rx.script(
-                """self.__next_f.push([1,"a:[[\"$\",\"meta\",\"0\",{\"name\":\"viewport\",\"content\":\"width=device-width, initial-scale=1\"}],[\"$\",\"meta\",\"1\",{\"charSet\":\"utf-8\"}],[\"$\",\"link\",\"2\",{\"rel\":\"icon\",\"href\":\"/favicon.ico\",\"type\":\"image/x-icon\",\"sizes\":\"16x16\"}],[\"$\",\"meta\",\"3\",{\"name\":\"next-size-adjust\"}]]\n5:null\n"])"""
-            ),
-            class_name="__className_3a0388 bg-background",
-            _webkit_font_smoothing="antialiased",
-            _moz_osx_font_smoothing="grayscale",
             font_family='system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
             min_height="100vh",
-        ),
+        )
     )

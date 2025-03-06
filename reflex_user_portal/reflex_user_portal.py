@@ -1,10 +1,11 @@
 import reflex_user_portal.config as config
 import reflex as rx
 import reflex_clerk as clerk
+import os
 
-from reflex_user_portal.pages.landing import landing
+from reflex_user_portal.pages.landing import landing, signin_page
 from reflex_user_portal.pages.admin import admin_settings, users_table
-from reflex_user_portal.pages.portal import about, profile, app_settings
+from reflex_user_portal.pages.portal import about, profile, app_settings, index
 import reflex_user_portal.styles as styles
 
 # Create app instance
@@ -17,10 +18,22 @@ app = rx.App(
 
 # Add pages
 app.add_page(landing, route="/", title="Home")
+
+# Portal pages
+app.add_page(index, route="/overview", title="Overview")  
 app.add_page(users_table, route="/admin/users", title="User Management")  
 app.add_page(profile)
 app.add_page(admin_settings)
 app.add_page(about)
 app.add_page(app_settings)
 
-clerk.install_signin_page(app, route="/sign-in")
+app.add_page(signin_page, route="/sign-in")
+app.add_page(signin_page, route="/sign-up")
+
+clerk.install_pages(
+    app,
+    publishable_key=os.getenv("CLERK_PUBLISHABLE_KEY"),
+    force_redirect_url="/auth/redirect",
+    signin_route="/sign-in",
+    signup_route="/sign-up"
+)

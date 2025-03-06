@@ -39,9 +39,14 @@ class NavItem:
 # Define all navigation items in specified order
 NAV_ITEMS = [
     NavItem(
+        title="Overview",
+        route="/overview",
+        icon="Home"
+    ),
+    NavItem(
         title="About",
         route="/about",
-        icon="info",
+        icon="book-open",
     ),
     NavItem(
         title="Profile",
@@ -51,7 +56,7 @@ NAV_ITEMS = [
     ),
     NavItem(
         title="App Settings",
-        route="/settings",
+        route="/app-settings",
         icon="settings",
     ),
     NavItem(
@@ -64,7 +69,7 @@ NAV_ITEMS = [
     NavItem(
         title="User Table",
         route="/admin/users",
-        icon="table",
+        icon="table-2",
         requires_auth=True,
         admin_only=True,
     ),
