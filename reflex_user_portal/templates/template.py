@@ -56,7 +56,7 @@ def template(
     meta: Optional[str] = None,
     script_tags: Optional[List[rx.Component]] = None,
     on_load: Optional[Union[rx.EventHandler, List[rx.EventHandler]]] = [
-        UserState.set_redirect
+        UserState.sync_auth_state
     ]
 ) -> Callable[[Callable[[], rx.Component]], rx.Component]:
     """The template for each page of the app.
@@ -78,8 +78,8 @@ def template(
     all_meta = [*default_meta, *(meta or [])]
     # Get auth requirements from route
     requires_auth, requires_admin = get_route_requirements(route)
-    if requires_auth or requires_admin:
-        on_load.append(UserState.sync_auth_state)
+    # if requires_auth or requires_admin:
+    #     on_load.append(UserState.sync_auth_state)
         
     def decorator(page_content: Callable[[], rx.Component]) -> rx.Component:
         """The template for each page of the app.

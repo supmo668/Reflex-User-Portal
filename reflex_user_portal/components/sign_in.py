@@ -60,28 +60,11 @@ def profile_content() -> rx.Component:
                     border_radius="md",
                     padding="4",
                 ),
-                rx.vstack(
-                    rx.text("Role", weight="bold"),
-                    rx.text(UserState.user_role),
-                    border="1px solid var(--gray-200)",
-                    border_radius="md",
-                    padding="4",
-                ),
-                clerk.signed_out(
-                    rx.button(
-                        clerk.sign_in_button(),
-                        size="3",
-                        color_scheme="gray",
-                        background="black"
-                    ),
-                ),
-                clerk.signed_in(
-                    rx.button(
-                        clerk.sign_out_button(),
-                        size="3",
-                        color_scheme="gray",
-                        background="black"
-                    )
+                rx.button(
+                    clerk.sign_out_button(),
+                    size="3",
+                    color_scheme="gray",
+                    background="black"
                 ),
                 width="100%",
                 max_width="400px",
@@ -89,6 +72,21 @@ def profile_content() -> rx.Component:
                 align_items="center",
             ),
             rx.text("You are not signed in.", size="3"),
+        ),
+        rx.vstack(
+            rx.text("Role", weight="bold"),
+            rx.text(UserState.user_role),
+            border="1px solid var(--gray-200)",
+            border_radius="md",
+            padding="4",
+        ),
+        clerk.signed_out(
+            rx.button(
+                clerk.sign_in_button(),
+                size="3",
+                color_scheme="gray",
+                background="black"
+            ),
         ),
         spacing="8",
         width="100%",

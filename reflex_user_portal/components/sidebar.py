@@ -65,7 +65,9 @@ def sidebar_item(item: NavItem) -> rx.Component:
         The sidebar item component.
     """
     # Whether the item is active: currently selected or default page
-    active = (rx.State.router.page.path == item.route.lower()) | (rx.State.router.page.path == "/overview") & (rx.State.router.page.path == "/")
+    active = UserState.is_hydrated & (
+        (rx.State.router.page.path == item.route.lower()) | (rx.State.router.page.path == "/overview") & (rx.State.router.page.path == "/")
+    )
 
     return rx.cond(
         item.should_show(UserState),
