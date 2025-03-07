@@ -61,7 +61,7 @@ NAV_ITEMS = [
     ),
     NavItem(
         title="Admin Config",
-        route="/admin",
+        route="/admin/settings",
         icon="shield",
         requires_auth=True,
         admin_only=True,

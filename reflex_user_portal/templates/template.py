@@ -81,8 +81,6 @@ def template(
     all_meta = [*default_meta, *(meta or [])]
     # Get auth requirements from route
     requires_auth, requires_admin = get_route_requirements(route)
-    # if requires_auth or requires_admin:
-    #     on_load.append(UserState.sync_auth_state)
         
     def decorator(page_content: Callable[[], rx.Component]) -> rx.Component:
         """The template for each page of the app.
@@ -95,6 +93,7 @@ def template(
         """
         # Handle authentication requirements
         if requires_auth or requires_admin:
+            # since these routes are hidden based on template_config.py, it shows access denied if directly accessed
             if requires_admin:
                 content = rx.cond(
                     UserState.is_hydrated & UserState.is_admin,
