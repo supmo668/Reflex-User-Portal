@@ -65,7 +65,7 @@ def sidebar_item(item: NavItem) -> rx.Component:
         The sidebar item component.
     """
     # Whether the item is active: currently selected or default page
-    active = (rx.State.router.page.path == item.route.lower()) | (rx.State.router.page.path == "/overview")
+    active = (rx.State.router.page.path == item.route.lower()) | (rx.State.router.page.path == "/overview") & (rx.State.router.page.path == "/")
 
     return rx.cond(
         item.should_show(UserState),
@@ -135,7 +135,7 @@ def sidebar() -> rx.Component:
             padding="1em",
             spacing="0",
         ),
-        display=["none", "none", "none", "none", "none", "flex"],
+        display=["none"]*(len(NAV_ITEMS)-1)+ ["flex"],
         max_width=styles.sidebar_width,
         width="auto",
         height="100%",

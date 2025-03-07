@@ -14,7 +14,7 @@ class UserState(rx.State):
     
     # User state
     user_role: str = UserType.GUEST.value
-    redirect_after_login: str = "/"
+    redirect_after_login: Optional[str] = None
     
     @rx.var
     async def is_admin(self) -> bool:
@@ -22,13 +22,9 @@ class UserState(rx.State):
         return self.user_role == UserType.ADMIN.value
 
     @rx.event
-    async def check_auth(self) -> Optional[rx.event]:
-        """Check if user is authenticated and store current path for redirect."""
-        clerk_state = await self.get_state(clerk.ClerkState)
-        if not clerk_state.is_signed_in:
-            self.redirect_after_login = self.router.page.raw_path
-            return rx.redirect("/sign-in")
-
+    async def set_redirect(self):
+        self.redirect_after_login = self.router.page.raw_path
+        
     @rx.event
     async def sync_auth_state(self):
         """Handle user sign in.
@@ -36,11 +32,9 @@ class UserState(rx.State):
         """
         # Fetch clerk state
         clerk_state = await self.get_state(clerk.ClerkState)
-        
         try:
             if clerk_state.is_signed_in:
                 with rx.session() as session:
-                
                     # Find existing user
                     user = session.exec(
                         select(User).where(User.clerk_id == clerk_state.user.id)
@@ -67,25 +61,17 @@ class UserState(rx.State):
                     
                     # Store role and handle redirect
                     self.user_role = user.user_type.value
-                    redirect_url = self.redirect_after_login or "/overview"
-                    return rx.redirect(redirect_url)
+                    if self.redirect_after_login:
+                        redirect_url = self.redirect_after_login
+                        self.redirect_after_login = None
+                        return rx.redirect(redirect_url)
             else:
-                # Clear state on sign-out
+                # Not signed in
                 self.user_role = UserType.GUEST.value
-                self.redirect_after_login = ""
+                self.redirect_after_login = None
+                return rx.redirect("/sign-in")
 
         except Exception as e:
             print(f"Error handling auth state change: {e}")
             self.user_role = UserType.GUEST.value
-            self.redirect_after_login = ""
-
-    @rx.event
-    async def auth_redirect(self):
-        """Handle authentication redirect."""
-        clerk_state = await self.get_state(clerk.ClerkState)
-        if clerk_state.is_signed_in:
-            redirect_url = self.redirect_after_login or "/overview"
-            self.redirect_after_login = ""  # Clear stored URL
-            return rx.redirect(redirect_url)
-        else:
-            return rx.redirect(rx.url("/sign-in"))
+            self.redirect_after_login = None

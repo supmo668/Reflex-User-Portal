@@ -8,8 +8,7 @@ from reflex_user_portal.models.user import User
 from reflex_user_portal.templates.template import template
 
 
-@template(route="/auth/redirect", title="Redirecting...", on_load=[
-        ])
+@template(route="/auth/redirect", title="Redirecting...", on_load=[])
 def auth_redirect() -> rx.Component:
     """Auth redirect page that syncs user state and redirects to overview."""
     return rx.vstack(

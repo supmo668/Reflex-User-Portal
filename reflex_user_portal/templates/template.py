@@ -12,9 +12,9 @@ from reflex_user_portal.components.navbar import navbar
 from reflex_user_portal.components.sidebar import sidebar
 from reflex_user_portal.backend.user_state import UserState
 
-from reflex_user_portal.pages.landing.sign_in import to_signin_page
 from .access_denied import access_denied_page
 from .template_config import NAV_ITEMS
+from reflex_user_portal.components.sign_in import profile_content
 
 # Meta tags for the app.
 default_meta = [
@@ -56,7 +56,7 @@ def template(
     meta: Optional[str] = None,
     script_tags: Optional[List[rx.Component]] = None,
     on_load: Optional[Union[rx.EventHandler, List[rx.EventHandler]]] = [
-        UserState.sync_auth_state,
+        UserState.set_redirect
     ]
 ) -> Callable[[Callable[[], rx.Component]], rx.Component]:
     """The template for each page of the app.
@@ -79,7 +79,7 @@ def template(
     # Get auth requirements from route
     requires_auth, requires_admin = get_route_requirements(route)
     if requires_auth or requires_admin:
-        on_load.insert(0, UserState.check_auth)
+        on_load.append(UserState.sync_auth_state)
         
     def decorator(page_content: Callable[[], rx.Component]) -> rx.Component:
         """The template for each page of the app.
@@ -102,7 +102,7 @@ def template(
                 content = rx.cond(
                     UserState.is_hydrated & clerk.ClerkState.is_signed_in,
                     page_content(),
-                    to_signin_page()
+                    profile_content()
                 )
         else:
             content = page_content()
@@ -148,7 +148,7 @@ def template(
         )
         def theme_wrap():
             themed_page = rx.theme(
-                clerk.clerk_provider(clerk.clerk_loaded(templated_page())),
+                clerk.clerk_provider(templated_page()),
                 has_background=True,
                 accent_color=ThemeState.accent_color,
                 gray_color=ThemeState.gray_color,
