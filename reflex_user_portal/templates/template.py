@@ -11,10 +11,13 @@ from reflex_user_portal import styles
 from reflex_user_portal.components.navbar import navbar
 from reflex_user_portal.components.sidebar import sidebar
 from reflex_user_portal.backend.user_state import UserState
+from reflex_user_portal.utils.logger import get_logger
 
 from .access_denied import access_denied_page
 from .template_config import NAV_ITEMS
 from reflex_user_portal.components.sign_in import profile_content
+
+logger = get_logger(__name__)
 
 # Meta tags for the app.
 default_meta = [

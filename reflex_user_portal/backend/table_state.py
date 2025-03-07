@@ -4,13 +4,16 @@ from sqlmodel import select, func, asc, desc, or_
 from datetime import datetime, timezone
 
 from reflex_user_portal.models.user import User
+from reflex_user_portal.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class TableState(rx.State):
     """Table state for managing user data."""
     
     users: list[User] = []
-    total_items: int = 0
+    total_table_entries: int = 0
     offset: int = 0
     limit: int = 3  # Smaller page size like the example
     
@@ -34,8 +37,8 @@ class TableState(rx.State):
     @rx.var(cache=True)
     def total_pages(self) -> int:
         """Get total number of pages."""
-        return self.total_items // self.limit + (
-            1 if self.total_items % self.limit else 0
+        return self.total_table_entries // self.limit + (
+            1 if self.total_table_entries % self.limit else 0
         )
 
     def _format_datetime(self, dt: datetime | None) -> str:
@@ -62,7 +65,7 @@ class TableState(rx.State):
             return "Never"
         return self._format_datetime(self._current_user.last_login)
 
-    def _get_total_items(self, session) -> None:
+    def _get_total_table_entries(self, session) -> None:
         """Return the total number of items in the User table."""
         query = select(func.count(User.id))
         
@@ -77,7 +80,7 @@ class TableState(rx.State):
                 )
             )
             
-        self.total_items = session.exec(query).one()
+        self.total_table_entries = session.exec(query).one()
 
     @rx.event
     async def load_users(self):
@@ -106,7 +109,7 @@ class TableState(rx.State):
                         query = query.order_by(asc(sort_column))
 
                 # Get total count for pagination
-                self.total_items = session.exec(
+                self.total_table_entries = session.exec(
                     select(rx.sql.func.count()).select_from(query.subquery())
                 ).one()
 
@@ -117,7 +120,7 @@ class TableState(rx.State):
                 self.users = session.exec(query).all()
 
         except Exception as e:
-            print(f"Error loading users: {e}")
+            logger.error(f"Failed to load users: {e}", exc_info=True)
             self.users = []
             
     @rx.event
@@ -129,7 +132,7 @@ class TableState(rx.State):
     @rx.event
     def next_page(self):
         """Go to next page."""
-        if self.offset + self.limit < self.total_items:
+        if self.offset + self.limit < self.total_table_entries:
             self.offset += self.limit
         self.load_entries()
 

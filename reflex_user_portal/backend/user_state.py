@@ -7,6 +7,9 @@ from typing import Optional
 
 from reflex_user_portal.config import ADMIN_USER_EMAILS
 from reflex_user_portal.models.user import User, UserType
+from reflex_user_portal.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class UserState(rx.State):
@@ -35,7 +38,7 @@ class UserState(rx.State):
         """
         # Fetch clerk state
         clerk_state = await self.get_state(clerk.ClerkState)
-        print(f"Clerk state: {clerk_state.is_signed_in}")
+        logger.debug(f"Clerk state: {clerk_state.is_signed_in}")
         try:
             if clerk_state.is_signed_in:
                 with rx.session() as session:
@@ -75,6 +78,6 @@ class UserState(rx.State):
                 self.redirect_after_login = self.router.page.raw_path
 
         except Exception as e:
-            print(f"Error handling auth state change: {e}")
+            logger.error(f"Error handling auth state change: {e}", exc_info=True)
             self.user_role = UserType.GUEST.value
             self.redirect_after_login = None
