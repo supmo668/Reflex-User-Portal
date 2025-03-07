@@ -43,25 +43,58 @@ def _show_user(user: User, index: int) -> rx.Component:
     Returns:
         Table row component
     """
-    bg_color = rx.cond(
-        index % 2 == 0,
-        rx.color("gray", 1),
-        rx.color("accent", 2),
-    )
-    hover_color = rx.cond(
-        index % 2 == 0,
-        rx.color("gray", 3),
-        rx.color("accent", 3),
-    )
-    return rx.table.row(
-        rx.table.row_header_cell(user.full_name),
-        rx.table.cell(user.email),
-        rx.table.cell(str(user.user_type)),
-        rx.table.cell(user.created_at.strftime("%Y-%m-%d %H:%M") if user.created_at else "Never"),
-        rx.table.cell(user.last_login.strftime("%Y-%m-%d %H:%M") if user.last_login else "Never"),
-        style={"_hover": {"bg": hover_color}, "bg": bg_color},
-        align="center",
-    )
+    try:
+        logger.debug(f"Rendering user row for index {index}")
+        
+        bg_color = rx.cond(
+            index % 2 == 0,
+            rx.color("gray", 1),
+            rx.color("accent", 2),
+        )
+        hover_color = rx.cond(
+            index % 2 == 0,
+            rx.color("gray", 3),
+            rx.color("accent", 3),
+        )
+        
+        # Format dates using rx.text to avoid state var issues
+        created_at = rx.text(
+            rx.cond(
+                user.created_at != None,
+                user.created_at,
+                "Never"
+            )
+        )
+        
+        last_login = rx.text(
+            rx.cond(
+                user.last_login != None,
+                user.last_login,
+                "Never"
+            )
+        )
+        
+        return rx.table.row(
+            rx.table.row_header_cell(rx.text(user.full_name)),
+            rx.table.cell(rx.text(user.email)),
+            rx.table.cell(rx.text(user.user_type)),
+            rx.table.cell(created_at),
+            rx.table.cell(last_login),
+            style={"_hover": {"bg": hover_color}, "bg": bg_color},
+            align="center",
+        )
+    except Exception as e:
+        logger.error(f"Error rendering user row: {e}", exc_info=True)
+        # Return a fallback row with error indication
+        return rx.table.row(
+            rx.table.row_header_cell("Error"),
+            rx.table.cell("Error loading user data"),
+            rx.table.cell(""),
+            rx.table.cell(""),
+            rx.table.cell(""),
+            style={"color": "red"},
+            align="center",
+        )
 
 def _pagination_view() -> rx.Component:
     """Create pagination controls.
