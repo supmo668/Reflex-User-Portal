@@ -55,8 +55,9 @@ def template(
     description: Optional[str] = None,
     meta: Optional[str] = None,
     script_tags: Optional[List[rx.Component]] = None,
-    on_load: Optional[Union[rx.EventHandler, List[rx.EventHandler]]] = [UserState.sync_auth_state],
-
+    on_load: Optional[Union[rx.EventHandler, List[rx.EventHandler]]] = [
+        UserState.sync_auth_state,
+    ]
 ) -> Callable[[Callable[[], rx.Component]], rx.Component]:
     """The template for each page of the app.
 
@@ -77,7 +78,9 @@ def template(
     all_meta = [*default_meta, *(meta or [])]
     # Get auth requirements from route
     requires_auth, requires_admin = get_route_requirements(route)
-
+    if requires_auth or requires_admin:
+        on_load.insert(0, UserState.check_auth)
+        
     def decorator(page_content: Callable[[], rx.Component]) -> rx.Component:
         """The template for each page of the app.
 
@@ -102,7 +105,8 @@ def template(
                     to_signin_page()
                 )
         else:
-            content = clerk.clerk_loaded(page_content())
+            content = page_content()
+            
         def templated_page():
             return (
                 rx.vstack(
@@ -144,7 +148,7 @@ def template(
         )
         def theme_wrap():
             themed_page = rx.theme(
-                clerk.clerk_provider(templated_page()),
+                clerk.clerk_provider(clerk.clerk_loaded(templated_page())),
                 has_background=True,
                 accent_color=ThemeState.accent_color,
                 gray_color=ThemeState.gray_color,

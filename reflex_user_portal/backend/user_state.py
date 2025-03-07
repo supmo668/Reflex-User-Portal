@@ -13,70 +13,79 @@ class UserState(rx.State):
     """User state for the application."""
     
     # User state
-    current_user: Optional[User] = None
+    user_role: str = UserType.GUEST.value
+    redirect_after_login: str = "/"
+    
+    @rx.var
+    async def is_admin(self) -> bool:
+        """Check if current user is admin."""
+        return self.user_role == UserType.ADMIN.value
 
-    @rx.var
-    def is_admin(self) -> bool:
-        """Check if current user is admin by primary email address."""
-        return self.current_user.user_type == UserType.ADMIN if self.current_user else False
-    
-    @rx.var
-    def clerk_user_id(self) -> str:
-        """Get the Clerk user ID."""
-        return rx.cond(
-            self.current_user, self.current_user.clerk_id, clerk.ClerkState.user.id)
-    
+    @rx.event
+    async def check_auth(self) -> Optional[rx.event]:
+        """Check if user is authenticated and store current path for redirect."""
+        clerk_state = await self.get_state(clerk.ClerkState)
+        if not clerk_state.is_signed_in:
+            self.redirect_after_login = self.router.page.raw_path
+            return rx.redirect("/sign-in")
+
     @rx.event
     async def sync_auth_state(self):
         """Handle user sign in.
-        sync Clerk user info to internal user database 
+        sync Clerk user info to internal user database.
         """
+        # Fetch clerk state
+        clerk_state = await self.get_state(clerk.ClerkState)
+        
         try:
-            with rx.session() as session:
-                user = session.exec(
-                    select(User).where(User.clerk_id == self.clerk_user_id)
-                ).first()
-                if user is None:
-                    await self._create_new_user(session)
-                else:
-                    await self._update_existing_user(session, user)
+            if clerk_state.is_signed_in:
+                with rx.session() as session:
+                
+                    # Find existing user
+                    user = session.exec(
+                        select(User).where(User.clerk_id == clerk_state.user.id)
+                    ).first()
+                    
+                    if user is None:
+                        # Create new user
+                        user = User(
+                            email=clerk_state.user.primary_email_address_id,
+                            clerk_id=clerk_state.user.id,
+                            first_name=clerk_state.user.first_name,
+                            last_name=clerk_state.user.last_name,
+                            created_at=datetime.now(timezone.utc)
+                        )
+                        session.add(user)
+                    
+                    # Update user attributes
+                    user.user_type = UserType.ADMIN if clerk_state.user.primary_email_address_id in ADMIN_USER_EMAILS else UserType.USER
+                    user.last_login = datetime.now(timezone.utc)
+
+                    # commit changes
+                    session.commit()
+                    session.refresh(user)
+                    
+                    # Store role and handle redirect
+                    self.user_role = user.user_type.value
+                    redirect_url = self.redirect_after_login or "/overview"
+                    return rx.redirect(redirect_url)
+            else:
+                # Clear state on sign-out
+                self.user_role = UserType.GUEST.value
+                self.redirect_after_login = ""
+
         except Exception as e:
-            print(f"Error handling sign in: {e}")
-            self.current_user = None
+            print(f"Error handling auth state change: {e}")
+            self.user_role = UserType.GUEST.value
+            self.redirect_after_login = ""
 
     @rx.event
     async def auth_redirect(self):
-        if clerk.ClerkState.user:
-            return rx.redirect(rx.url("/overview"))
+        """Handle authentication redirect."""
+        clerk_state = await self.get_state(clerk.ClerkState)
+        if clerk_state.is_signed_in:
+            redirect_url = self.redirect_after_login or "/overview"
+            self.redirect_after_login = ""  # Clear stored URL
+            return rx.redirect(redirect_url)
         else:
             return rx.redirect(rx.url("/sign-in"))
-        
-    async def _create_new_user(self, session) -> None:
-        """Create a new user in the database."""
-        user_email = clerk.ClerkState.user.primary_email_address_id
-        is_admin = user_email in ADMIN_USER_EMAILS
-        
-        user = User(
-            email=user_email,
-            clerk_id=clerk.ClerkState.user.id,
-            user_type=UserType.ADMIN if is_admin else UserType.USER,
-            first_name=clerk.ClerkState.user.first_name or "",
-            last_name=clerk.ClerkState.user.last_name or "",
-            created_at=datetime.now(timezone.utc),
-            last_login=datetime.now(timezone.utc),
-        )
-        
-        session.add(user)
-        session.commit()
-        session.refresh(user)
-        self.current_user = user
-
-    async def _update_existing_user(self, session, user: User) -> None:
-        """Update an existing user in the database."""
-        user.first_name = clerk.ClerkState.user.first_name or user.first_name
-        user.last_name = clerk.ClerkState.user.last_name or user.last_name
-        user.last_login = datetime.now(timezone.utc)
-        # No need for session.add() since the user is already tracked
-        session.commit()
-        session.refresh(user)
-        self.current_user = user

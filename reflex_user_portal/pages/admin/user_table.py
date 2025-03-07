@@ -1,6 +1,8 @@
 """Admin user table page."""
 
 import reflex as rx
+import reflex_clerk as clerk
+
 from datetime import datetime
 
 from reflex_user_portal.backend.table_state import TableState
@@ -41,9 +43,7 @@ def show_user(user: User) -> rx.Component:
         ),
     )
 
-
-@template(route="/admin/users", title="User Management")
-def users_table() -> rx.Component:
+def users_table_content() -> rx.Component:
     """The users admin page.
 
     Returns:
@@ -104,3 +104,14 @@ def users_table() -> rx.Component:
                 width="100%",
                 spacing="4",
             )
+
+
+@template(route="/admin/users", title="User Management")
+def users_table() -> rx.Component:
+    """The users admin page.
+
+    Returns:
+        The page component.
+    """
+    page_content = clerk.protect(users_table_content())
+    return page_content

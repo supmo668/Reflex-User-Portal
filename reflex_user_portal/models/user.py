@@ -10,14 +10,15 @@ class UserType(str, Enum):
     """User type enumeration."""
     ADMIN = "admin"
     USER = "user"
+    GUEST = "guest"
 
 
 class User(rx.Model, table=True):
     """Base user model."""
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(unique=True, index=True)
-    clerk_id: str = Field(unique=True)
-    user_type: Optional[UserType] = None
+    clerk_id: str = Field(unique=True, default="")
+    user_type: UserType = UserType.USER
     
     # User information
     first_name: Optional[str] = None
@@ -26,7 +27,7 @@ class User(rx.Model, table=True):
     
     # Account status
     is_active: bool = Field(default=True)
-    created_at: datetime = Field(default_factory=datetime.now(timezone.utc))
+    created_at: Optional[datetime] = Field(default=datetime.now(timezone.utc))
     last_login: Optional[datetime] = None
     
     @property

@@ -51,7 +51,7 @@ def auth_components():
                         rx.menu.item(
                             clerk.signed_in(
                                 rx.button(
-                                    clerk.sign_out_button(),
+                                    clerk.sign_out_button(redirect_url="/auth/redirect"),
                                     size="3",
                                     color_scheme="gray",
                                     background="black",
@@ -62,7 +62,7 @@ def auth_components():
                 ),
                 clerk.signed_out(
                     rx.button(
-                        clerk.sign_in_button(),
+                        clerk.sign_in_button(force_redirect_url="/auth/redirect"),
                         size="3",
                         color_scheme="gray",
                         background="black",

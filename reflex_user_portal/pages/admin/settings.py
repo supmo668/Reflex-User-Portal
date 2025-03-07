@@ -13,7 +13,7 @@ from reflex_user_portal.components.api_admin_panel.query import render_query_com
 from reflex_user_portal.backend.api_admin_dashboard.queries import QueryAPI
 
 
-@template(route="/admin/settings", title="Admin Config", on_load=QueryAPI.run_get_request)
+@template(route="/admin/settings", title="Admin Config", on_load=[QueryAPI.run_get_request])
 def admin_settings() -> rx.Component:
     """The settings page.
 

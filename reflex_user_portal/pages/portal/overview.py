@@ -55,7 +55,7 @@ def index() -> rx.Component:
     """
     name = rx.cond(
         clerk.ClerkState.is_signed_in,
-        UserState.current_user.first_name,
+        clerk.ClerkState.user.first_name,
         "Guest",
     )
     return rx.vstack(

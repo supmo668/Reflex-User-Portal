@@ -79,5 +79,6 @@ def signin_component() -> rx.Component:
         ),
     )
 
-def to_signin_page(with_clerk_wrapper: bool = False) -> rx.Component:
-    return clerk.clerk_provider(signin_component()) if with_clerk_wrapper else signin_component()
+def to_signin_page() -> rx.Component:
+    page_content = signin_component()
+    return page_content

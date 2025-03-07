@@ -17,7 +17,6 @@ app = rx.App(
 
 # Add pages
 app.add_page(landing, route="/", title="Home")
-app.add_page(auth_redirect, route="/auth/redirect")
 
 # Portal pages
 app.add_page(index, route="/overview", title="Overview")  
@@ -27,12 +26,15 @@ app.add_page(admin_settings)
 app.add_page(about)
 app.add_page(app_settings)
 
+# sign-ins
 app.add_page(signin_page, route="/sign-in")
 app.add_page(signin_page, route="/sign-up")
+app.add_page(auth_redirect, route="/auth/redirect")
 
 clerk.install_pages(
     app,
     publishable_key=CONFIG.CLERK_PUBLISHABLE_KEY,
+    force_redirect_url="/auth/redirect",
     signin_route="/sign-in",
     signup_route="/sign-up"
 )
