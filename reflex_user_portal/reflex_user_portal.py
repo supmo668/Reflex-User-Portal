@@ -2,7 +2,7 @@ import reflex_user_portal.config as CONFIG
 import reflex as rx
 import reflex_clerk as clerk
 
-from reflex_user_portal.pages.landing import landing, signin_page, auth_redirect
+from reflex_user_portal.pages.landing import landing, signin_page
 from reflex_user_portal.pages.admin import admin_settings, users_table
 from reflex_user_portal.pages.portal import about, profile, app_settings, index
 import reflex_user_portal.styles as styles
@@ -29,7 +29,6 @@ app.add_page(app_settings)
 # sign-ins
 app.add_page(signin_page, route="/sign-in")
 app.add_page(signin_page, route="/sign-up")
-# app.add_page(auth_redirect, route="/auth/redirect")
 
 clerk.install_pages(
     app,
