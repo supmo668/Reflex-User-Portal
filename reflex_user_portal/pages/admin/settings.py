@@ -7,13 +7,13 @@ from reflex_user_portal.templates import template
 
     
 
-from reflex_user_portal.components.api_admin_panel.navbar import render_navbar
-from reflex_user_portal.components.api_admin_panel.output import render_output
-from reflex_user_portal.components.api_admin_panel.query import render_query_component
-from reflex_user_portal.backend.api_admin_dashboard.queries import QueryAPI
+from reflex_user_portal.components.admin_api_panel.navbar import render_navbar
+from reflex_user_portal.components.admin_api_panel.output import render_output
+from reflex_user_portal.components.admin_api_panel.query import render_query_component
+from reflex_user_portal.backend.admin_api_panel_state import QueryAPI
 
 
-@template(route="/admin/settings", title="Admin Config", on_load=[QueryAPI.run_get_request])
+@template(route="/admin/settings", title="Admin Config", on_load=[])
 def admin_settings() -> rx.Component:
     """The settings page.
 

@@ -30,7 +30,7 @@ class NavItem:
         """
         # For admin-required items, check admin status
         return rx.cond(
-                self.admin_only,
+                user_state.is_hydrated & self.admin_only,
                 user_state.is_admin,  # Admin check if needed
                 True,  # Regular auth is enough
             )

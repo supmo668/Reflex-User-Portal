@@ -1,6 +1,6 @@
 import reflex as rx
 
-from reflex_user_portal.backend.api_admin_dashboard.base import BaseState
+from reflex_user_portal.backend.admin_api_panel_state import BaseState
 
 navbar: dict[str, str] = {
     "width": "100%",
