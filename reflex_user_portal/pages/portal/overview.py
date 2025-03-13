@@ -6,8 +6,8 @@ import reflex as rx
 import reflex_clerk as clerk
 
 from reflex_user_portal import styles
-from reflex_user_portal.components.card import card
-from reflex_user_portal.components.notification import notification
+from reflex_user_portal.components.portal.card import card
+from reflex_user_portal.components.portal.notification import notification
 from reflex_user_portal.templates import template
 from reflex_user_portal.views.acquisition_view import acquisition
 from reflex_user_portal.views.charts import (
