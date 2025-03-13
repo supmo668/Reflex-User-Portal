@@ -10,10 +10,10 @@ from reflex_user_portal.templates import template
 from reflex_user_portal.components.admin_api_panel.navbar import render_navbar
 from reflex_user_portal.components.admin_api_panel.output import render_output
 from reflex_user_portal.components.admin_api_panel.query import render_query_component
-from reflex_user_portal.backend.admin_api_panel_state import QueryAPI
+from reflex_user_portal.backend.admin_api_panel_state import QueryAPI, QueryState
 
 
-@template(route="/admin/settings", title="Admin Config", on_load=[])
+@template(route="/admin/settings", title="Admin Config", on_load=[QueryAPI.refresh_table_data])
 def admin_settings() -> rx.Component:
     """The settings page.
 

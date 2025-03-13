@@ -45,7 +45,7 @@ def tab_content_header() -> rx.Component:
     )
 
 
-@template(route="/", title="Overview", on_load=StatsState.randomize_data)
+@template(route="/", title="Overview")
 def index_overview() -> rx.Component:
     """The overview page.
 

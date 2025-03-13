@@ -47,26 +47,21 @@ class QueryState(BaseState):
     
     # Connection status
     is_connected: bool = False
-    
-    @rx.var
-    def connection_status(self) -> str:
-        """Get the connection status message."""
-        if not self.supabase_url or not self.supabase_token:
-            return "Not configured"
-        return "Connected to Supabase" if self.is_connected else "Connecting..."
 
-    async def check_connection(self) -> None:
-        """Check if connection to Supabase is successful."""
+    @rx.var
+    async def connection_status(self) -> str:
+        """Check if connection to Supabase is successful. (only API client)"""
+        if not self.supabase_url or not self.supabase_token:
+            self.is_connected = False
+            return "Not configured"
         try:
-            if not self.supabase_url or not self.supabase_token:
-                self.is_connected = False
-                return
-                
             client = create_client(self.supabase_url, self.supabase_token)
             # If client creation succeeds without error, we're connected
             self.is_connected = True
+            return "Connected to Supabase via API: {self.supabase_url} "
         except Exception:
             self.is_connected = False
+            return "Connecting..."
     
     @rx.event
     async def update_db_url(self, value: str):

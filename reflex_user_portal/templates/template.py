@@ -59,7 +59,6 @@ def template(
     meta: Optional[str] = None,
     script_tags: Optional[List[rx.Component]] = None,
     on_load: Optional[Union[rx.EventHandler, List[rx.EventHandler]]] = [
-        UserState.sync_auth_state
     ]
 ) -> Callable[[Callable[[], rx.Component]], rx.Component]:
     """The template for each page of the app.
@@ -77,6 +76,10 @@ def template(
     Returns:
         The decorated page.
     """
+    if isinstance(on_load, list):
+        on_load = [UserState.sync_auth_state, *on_load]
+    elif isinstance(on_load, [rx.EventHandler, Callable]):
+        on_load = [UserState.sync_auth, *on_load]
     # Get the meta tags for the page.
     all_meta = [*default_meta, *(meta or [])]
     # Get auth requirements from route
