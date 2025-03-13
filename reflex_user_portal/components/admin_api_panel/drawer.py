@@ -127,12 +127,13 @@ def render_drawer() -> rx.Component:
                 top="auto",
                 left="auto",
                 height="100%",
-                width="25em",
+                width="30em",
                 on_interact_outside=QueryAPI.delta_drawer,
                 role="dialog",
                 aria_label="Edit entry",
             ),
         ),
+        handle_only=True,  # Add this line
         direction="right",
         open=QueryAPI.is_open,
     )

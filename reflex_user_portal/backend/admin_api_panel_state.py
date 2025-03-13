@@ -89,29 +89,10 @@ class QueryState(BaseState):
             return [column.name for column in model.__table__.columns]
         return []
 
-    async def get_request(self, method: str):
-        self.current_req = method
-
-    async def add_header(self):
-        self.headers.append(
-            {"id": str(uuid.uuid4()), "identifier": "headers", "key": "", "value": ""}
-        )
-
-    async def add_body(self):
-        self.body.append(
-            {"id": str(uuid.uuid4()), "identifier": "body", "key": "", "value": ""}
-        )
-
-    async def update_key(self, key: str, data: dict[str, str]):
-        await self.update_attribute(data, "key", key)
-
-    async def update_value(self, value: str, data: dict[str, str]):
-        await self.update_attribute(data, "value", value)
-
-
 class QueryAPI(QueryState):
     # Row editing state
     is_open: bool = False
+    readonly_fields: list[str] = ["id", "created_at", "last_updated"]
     selected_entry: Dict[str, str] = {}
     original_entry: Dict[str, str] = {}
     error_message: str = ""
@@ -136,6 +117,7 @@ class QueryAPI(QueryState):
         Args:
             message: Error message to display
         """
+        print(f"Error: {message}")
         self.error_message = str(message)
         self.show_error = True
         
@@ -146,6 +128,7 @@ class QueryAPI(QueryState):
         self.original_entry = {}
         await self.clear_error()
     
+    @rx.event
     async def refresh_table_data(self):
         """Refresh table data from database."""
         with rx.session() as session:
@@ -214,7 +197,7 @@ class QueryAPI(QueryState):
     async def delta_drawer(self) -> None:
         """Toggle drawer state."""
         if self.is_open:
-            self.reset_state()
+            await self.reset_state()
         else:
             await self.clear_error()
             self.is_open = True
@@ -226,10 +209,11 @@ class QueryAPI(QueryState):
             return
             
         await self.clear_error()
-        self.selected_entry = data.copy()
+        self.selected_entry = {k: v for k, v in data.copy().items() if k not in self.readonly_fields}
         self.original_entry = data.copy()
         await self.delta_drawer()
 
+    @rx.event
     async def update_data(self, value: str, field_name: rx.Var) -> None:
         """Update a field in the selected entry.
         
@@ -246,43 +230,50 @@ class QueryAPI(QueryState):
 
     async def commit_changes(self) -> None:
         """Commit changes to the database."""
+        with rx.session() as session:
+            model = MODEL_FACTORY.get(self.current_table)
+            if model:
+                item = session.exec(
+                    model.select().where(
+                        model.id == self.original_entry["id"]
+                    )
+                ).first()
+                if not item:
+                    await self.show_error_message(f"No {self.current_table} found with id {self.selected_entry['id']}")
+                    return
+                # Update fields
+                for key, value in self.selected_entry.items():
+                    if hasattr(item, key) and key != 'id':
+                        try:
+                            if key == 'configuration':
+                                converted_value = yaml.safe_load(value)
+                            else:
+                                converted_value = value
+                            setattr(item, key, converted_value)
+                        except Exception as e:
+                            await self.show_error_message(f"Error updating {key}: {str(e)}")
+                            return
+                # Commit changes
+                try:
+                    item.last_updated = datetime.now().isoformat()
+                    session.add(item)
+                    session.commit()
+                    session.refresh(item)
+                    await self.clear_error()
+                except Exception as e:
+                    session.rollback()
+                    await self.show_error_message(f"Error committing changes: {str(e)}")
+                    return
         try:
-            with rx.session() as session:
-                model = MODEL_FACTORY.get(self.current_table)
-                if model:
-                    item = session.query(model).filter_by(id=self.selected_entry["id"]).first()
-                    if not item:
-                        await self.show_error_message(f"No {self.current_table} found with id {self.selected_entry['id']}")
-                        return
-                    # Update fields
-                    for key, value in self.selected_entry.items():
-                        if hasattr(item, key):
-                            try:
-                                if key == 'configuration':
-                                    converted_value = yaml.safe_load(value)
-                                else:
-                                    converted_value = value
-                                setattr(item, key, converted_value)
-                            except Exception as e:
-                                await self.show_error_message(f"Error updating {key}: {str(e)}")
-                                return
-                    item.last_updated = datetime.now()
-                    # Commit changes
-                    try:
-                        session.add(item)
-                        session.commit()
-                        await self.clear_error()
-                    except Exception as e:
-                        session.rollback()
-                        await self.show_error_message(f"Error committing changes: {str(e)}")
-                        return
-            
-            # Update local data
+            # Update local data while preserving unmodified fields
             self.table_data = [
-                self.selected_entry if item == self.original_entry else item
-                for item in self.table_data
+                {**entry, **self.selected_entry} if entry["id"] == self.original_entry["id"] else entry 
+                for entry in self.table_data
             ]
-            self.paginate()
-            self.reset_state()
+            await self.paginate()
+            await self.reset_state()
+            return
         except Exception as e:
-            await self.show_error_message(f"Unexpected error: {str(e)}")
+            await self.show_error_message(f"Error updating local data: {str(e)}")
+            return
+
