@@ -45,8 +45,8 @@ def tab_content_header() -> rx.Component:
     )
 
 
-@template(route="/", title="Overview")
-def index_overview() -> rx.Component:
+@template(route="/overview", title="Overview")
+def overview() -> rx.Component:
     """The overview page.
 
     Returns:
