@@ -267,7 +267,17 @@ class QueryAPI(QueryState):
             ]
             await self.paginate()
             await self.reset_state()
-            return
+            return rx.toast(
+                "Changes saved successfully.",
+                duration=3000,  # 3 seconds
+                position="bottom-right",
+                style={
+                    "background-color": "rgba(0, 128, 0, 0.8)",  # Green with 0.8 opacity
+                    "color": "white",
+                    "border": "1px solid green",
+                    "border-radius": "0.53m",
+                }
+            )
         except Exception as e:
             await self.show_error_message(f"Error updating local data: {str(e)}")
             return

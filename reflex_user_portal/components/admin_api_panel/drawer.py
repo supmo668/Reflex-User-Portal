@@ -1,6 +1,6 @@
 import reflex as rx
 from datetime import datetime
-from typing import Any, Dict, Tuple
+from typing import Callable, List, Union
 
 from reflex_user_portal.backend.admin_api_panel_state import QueryAPI
 
@@ -57,7 +57,7 @@ def render_entry_fields() -> rx.Component:
     )
 
 
-def render_drawer_buttons(name: str, color: str, function: callable) -> rx.Component:
+def render_drawer_buttons(name: str, color: str, function: Union[Callable, List[Callable]]) -> rx.Component:
     """Render a drawer action button.
     
     Args:
@@ -113,7 +113,7 @@ def render_drawer() -> rx.Component:
                     rx.vstack(
                         render_drawer_buttons(
                             "Commit", "grass", 
-                            QueryAPI.commit_changes
+                            [QueryAPI.commit_changes, QueryAPI.refresh_table_data]
                         ),
                         render_drawer_buttons("Close", "ruby", QueryAPI.delta_drawer),
                         padding="1em 0.5em",
