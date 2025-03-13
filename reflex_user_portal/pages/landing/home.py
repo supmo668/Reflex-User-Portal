@@ -1,6 +1,4 @@
 import reflex as rx
-import reflex_user_portal.config as CONFIG
-from reflex_user_portal.backend.user_state import UserState
 
 rx.page(route="/home", title="Home")
 def home() -> rx.Component:

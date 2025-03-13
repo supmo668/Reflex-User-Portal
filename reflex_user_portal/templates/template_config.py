@@ -6,7 +6,7 @@ from typing import List, Type
 import reflex as rx
 import reflex_clerk as clerk
 
-from reflex_user_portal.backend.user_state import UserState
+from reflex_user_portal.backend.states.user_state import UserState
 
 
 @dataclass

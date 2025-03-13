@@ -5,7 +5,7 @@ import reflex_clerk as clerk
 
 from datetime import datetime
 
-from reflex_user_portal.backend.table_state import TableState
+from reflex_user_portal.backend.states.table_state import TableState
 from reflex_user_portal.models.user import User
 from reflex_user_portal.utils.logger import get_logger
 

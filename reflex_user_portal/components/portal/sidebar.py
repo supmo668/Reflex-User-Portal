@@ -3,7 +3,7 @@
 import reflex as rx
 
 from reflex_user_portal import styles
-from reflex_user_portal.backend.user_state import UserState
+from reflex_user_portal.backend.states.user_state import UserState
 from reflex_user_portal.templates.template_config import NavItem, NAV_ITEMS
 
 from reflex_user_portal.views.logo import logo

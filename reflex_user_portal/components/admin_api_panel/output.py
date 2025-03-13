@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any, Dict, Tuple
 
 from reflex_user_portal.components.admin_api_panel.drawer import render_drawer
-from reflex_user_portal.backend.admin_api_panel_state import QueryAPI
+from reflex_user_portal.backend.states.admin_api_panel_state import QueryAPI
 
 
 def create_table_header(title: rx.Var) -> rx.Component:

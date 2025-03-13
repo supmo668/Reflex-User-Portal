@@ -3,8 +3,8 @@ import reflex as rx
 
 from reflex_user_portal.templates import template
 from reflex_user_portal.models.user import User
-from reflex_user_portal.backend.table_state import TableState
-from reflex_user_portal.backend.user_state import UserState
+from reflex_user_portal.backend.states.table_state import TableState
+from reflex_user_portal.backend.states.user_state import UserState
 
 
 def show_user(user: User):

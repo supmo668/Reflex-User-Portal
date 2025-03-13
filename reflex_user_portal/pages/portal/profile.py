@@ -4,7 +4,7 @@ import reflex as rx
 import reflex_clerk as clerk
 
 from reflex_user_portal.templates import template
-from reflex_user_portal.components.sign_in import profile_content
+from reflex_user_portal.components.portal.profile import profile_content
 
 @template(route="/profile", title="Profile")
 def profile() -> rx.Component:

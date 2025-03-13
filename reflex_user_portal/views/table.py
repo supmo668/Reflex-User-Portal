@@ -2,7 +2,7 @@
 import reflex as rx
 
 from reflex_user_portal.models.user import User
-from reflex_user_portal.backend.table_state import TableState
+from reflex_user_portal.backend.states.table_state import TableState
 
 
 def show_user(user: User) -> rx.Component:

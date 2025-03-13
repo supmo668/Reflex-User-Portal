@@ -10,7 +10,7 @@ from reflex_user_portal.templates import template
 from reflex_user_portal.components.admin_api_panel.navbar import render_navbar
 from reflex_user_portal.components.admin_api_panel.output import render_output
 from reflex_user_portal.components.admin_api_panel.query import render_query_component
-from reflex_user_portal.backend.admin_api_panel_state import QueryAPI, QueryState
+from reflex_user_portal.backend.states.admin_api_panel_state import QueryAPI, QueryState
 
 
 @template(route="/admin/settings", title="Admin Config", on_load=[QueryAPI.refresh_table_data])
