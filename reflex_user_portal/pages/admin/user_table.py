@@ -3,7 +3,7 @@
 import reflex as rx
 import reflex_clerk as clerk
 
-from datetime import datetime
+from reflex_user_portal.templates.portal import portal_template
 
 from reflex_user_portal.backend.states.table_state import TableState
 from reflex_user_portal.models.user import User
