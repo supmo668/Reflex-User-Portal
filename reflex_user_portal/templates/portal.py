@@ -52,7 +52,7 @@ class ThemeState(rx.State):
     scaling: str = "100%"
 
 
-def template(
+def portal_template(
     route: Optional[str] = None,
     title: Optional[str] = None,
     description: Optional[str] = None,

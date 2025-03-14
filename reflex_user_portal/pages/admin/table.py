@@ -1,7 +1,7 @@
 """Admin table page."""
 import reflex as rx
 
-from reflex_user_portal.templates import template
+from reflex_user_portal.templates import portal_template
 from reflex_user_portal.models.user import User
 from reflex_user_portal.backend.states.table_state import TableState
 from reflex_user_portal.backend.states.user_state import UserState
@@ -20,7 +20,7 @@ def show_user(user: User):
     )
 
 
-@template(route="/admin/users", title="User Management")
+@portal_template(route="/admin/users", title="User Management")
 def user_table() -> rx.Component:
     """User management table page."""
     if not UserState.is_admin():

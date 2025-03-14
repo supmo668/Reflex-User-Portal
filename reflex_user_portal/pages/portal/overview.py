@@ -8,7 +8,7 @@ import reflex_clerk as clerk
 from reflex_user_portal import styles
 from reflex_user_portal.components.portal.card import card
 from reflex_user_portal.components.portal.notification import notification
-from reflex_user_portal.templates import template
+from reflex_user_portal.templates import portal_template
 from reflex_user_portal.views.acquisition_view import acquisition
 from reflex_user_portal.views.charts import (
     StatsState,
@@ -45,7 +45,7 @@ def tab_content_header() -> rx.Component:
     )
 
 
-@template(route="/overview", title="Overview")
+@portal_template(route="/overview", title="Overview")
 def overview() -> rx.Component:
     """The overview page.
 

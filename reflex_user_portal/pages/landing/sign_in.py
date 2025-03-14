@@ -4,7 +4,7 @@ import reflex as rx
 import reflex_clerk as clerk
 import os
 
-from reflex_user_portal.templates import template
+from reflex_user_portal.templates import portal_template
 
 def signin_page_content() -> rx.Component:
     return (
@@ -20,6 +20,6 @@ def signin_page_content() -> rx.Component:
         )
     )
 
-@template(route="/sign-in", title="Sign In")
+@portal_template(route="/sign-in", title="Sign In")
 def signin_page() -> rx.Component:
     return signin_page_content()

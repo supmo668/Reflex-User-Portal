@@ -2,7 +2,7 @@ import reflex as rx
 from reflex.components.radix.themes.base import LiteralAccentColor, LiteralGrayColor
 
 from .. import styles
-from ..templates.template import ThemeState
+from ..templates.portal import ThemeState
 
 primary_color_dict: dict[str, str] = {
     color.capitalize(): f"linear-gradient(45deg, {rx.color(color, 10)}, {rx.color(color, 8)})"

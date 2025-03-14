@@ -11,7 +11,7 @@ from reflex_user_portal.utils.logger import get_logger
 
 logger = get_logger(__name__)
 from reflex_user_portal.models.user import User
-from reflex_user_portal.templates.template import template
+from reflex_user_portal.templates.portal import portal_template
 
 def _header_cell(text: str, icon: str) -> rx.Component:
     """Create a header cell with icon and text.
@@ -258,7 +258,7 @@ def users_table_content() -> rx.Component:
     )
 
 
-@template(route="/admin/users", title="User Management")
+@portal_template(route="/admin/users", title="User Management")
 def users_table() -> rx.Component:
     """The users admin page.
 

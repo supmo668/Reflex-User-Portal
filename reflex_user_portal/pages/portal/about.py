@@ -5,10 +5,10 @@ from pathlib import Path
 import reflex as rx
 
 from reflex_user_portal import styles
-from reflex_user_portal.templates import template
+from reflex_user_portal.templates import portal_template
 
 
-@template(route="/about", title="About")
+@portal_template(route="/about", title="About")
 def about() -> rx.Component:
     """The about page.
 

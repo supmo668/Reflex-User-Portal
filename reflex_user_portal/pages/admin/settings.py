@@ -3,7 +3,7 @@
 import reflex as rx
 import reflex_clerk as clerk
 
-from reflex_user_portal.templates import template
+from reflex_user_portal.templates import portal_template
 
     
 
@@ -13,7 +13,7 @@ from reflex_user_portal.components.admin_api_panel.query import render_query_com
 from reflex_user_portal.backend.states.admin_api_panel_state import QueryAPI, QueryState
 
 
-@template(route="/admin/settings", title="Admin Config", on_load=[QueryAPI.refresh_table_data])
+@portal_template(route="/admin/settings", title="Admin Config", on_load=[QueryAPI.refresh_table_data])
 def admin_settings() -> rx.Component:
     """The settings page.
 

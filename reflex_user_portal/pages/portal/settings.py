@@ -3,12 +3,12 @@
 import reflex as rx
 import reflex_clerk as clerk
 
-from reflex_user_portal.templates import template
+from reflex_user_portal.templates import portal_template
 from reflex_user_portal.views.color_picker import primary_color_picker, secondary_color_picker
 from reflex_user_portal.views.radius_picker import radius_picker
 from reflex_user_portal.views.scaling_picker import scaling_picker
 
-@template(route="/app-settings", title="App Settings")
+@portal_template(route="/app-settings", title="App Settings")
 def app_settings() -> rx.Component:
     """The settings page content.
 
