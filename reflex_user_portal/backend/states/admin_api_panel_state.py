@@ -1,13 +1,13 @@
 import os
-import uuid, yaml
-
-import reflex as rx
+import uuid, yaml, json
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional, Tuple
+
+import reflex as rx
 from supabase import create_client, Client
-import yaml
-from reflex_user_portal.models.admin_config import AdminConfig, MODEL_FACTORY
-import json
+
+from reflex_user_portal.models.admin_config import MODEL_FACTORY
+import reflex_user_portal.config as CONFIG
 
 class BaseState(rx.State):
     query_component_toggle: str = "none"
@@ -92,6 +92,7 @@ class QueryAPI(QueryState):
     original_entry: Dict[str, str] = {}
     error_message: str = ""
     show_error: bool = False
+    admin_config_last_update: Optional[datetime] = datetime.fromtimestamp(0)
     
     async def get_supabase_client(self) -> Client:
         """Get Supabase client instance."""
@@ -224,7 +225,9 @@ class QueryAPI(QueryState):
             await self.show_error_message(f"Error updating {field_name_str}: {str(e)}")
 
     async def commit_changes(self) -> None:
-        """Commit changes to the database."""
+        """Commit changes to the database.
+        + update admin config last update time
+        """
         with rx.session() as session:
             model = MODEL_FACTORY.get(self.current_table)
             if model:
@@ -240,7 +243,7 @@ class QueryAPI(QueryState):
                 for key, value in self.selected_entry.items():
                     if hasattr(item, key) and key != 'id':
                         try:
-                            if key == 'configuration':
+                            if key == CONFIG.ADMIN_CONFIG_TABLE_JSON_CONFIG_COL:
                                 converted_value = yaml.safe_load(value)
                             else:
                                 converted_value = value
@@ -254,6 +257,8 @@ class QueryAPI(QueryState):
                     session.add(item)
                     session.commit()
                     session.refresh(item)
+                    if self.current_table == CONFIG.ADMIN_CONFIG_TABLE_NAME:
+                        self.admin_config_last_update = datetime.now()
                     await self.clear_error()
                 except Exception as e:
                     session.rollback()

@@ -5,7 +5,8 @@ import reflex as rx
 from sqlmodel import Field, Column, JSON
 from enum import Enum
 from datetime import datetime, timezone
-from pydantic import validator, field_serializer, field_validator
+
+import reflex_user_portal.config as CONFIG
 
 
 class AdminConfig(rx.Model, table=True):
@@ -35,5 +36,5 @@ class AdminConfig(rx.Model, table=True):
 
 # Factory mapping for models
 MODEL_FACTORY = {
-    "admin_config": AdminConfig,
+    CONFIG.ADMIN_CONFIG_TABLE_NAME: AdminConfig,
 }

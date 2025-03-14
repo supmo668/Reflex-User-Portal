@@ -23,3 +23,7 @@ DB_LOCAL_URI = os.getenv("DB_LOCAL_URI", "sqlite:///app.db")
 
 # Use local database in development, otherwise use production database
 DATABASE_URL = DB_LOCAL_URI if APP_ENV == "DEV" else DB_CONN_URI
+
+# Admin Config table name registered in models/ at MODEL_FACTORY
+ADMIN_CONFIG_TABLE_NAME = "admin_config"
+ADMIN_CONFIG_TABLE_JSON_CONFIG_COL = "configuration"
