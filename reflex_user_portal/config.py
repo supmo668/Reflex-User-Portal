@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # App configuration
-APP_DISPLAY_NAME = os.getenv("APP_DISPLAY_NAME", "SpyGlass Portal")
+APP_DISPLAY_NAME = os.getenv("APP_DISPLAY_NAME", "App Portal")
 APP_ENV = os.getenv("APP_ENV", "DEV")
 
 # Admin configuration

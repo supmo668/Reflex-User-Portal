@@ -1,5 +1,5 @@
 """Sidebar component for the app."""
-
+import os
 import reflex as rx
 
 from reflex_user_portal import styles
@@ -35,7 +35,7 @@ def sidebar_footer() -> rx.Component:
         rx.hstack(
             rx.link(
                 rx.text("Site", size="3"),
-                href="https://spyglasstrends.com",
+                href=os.getenv("SITE_URL", "/"),
                 color=styles.text_color,
                 _hover={"color": styles.accent_text_color},
             ),
