@@ -10,8 +10,6 @@ from reflex_user_portal.models.user import User
 from reflex_user_portal.utils.logger import get_logger
 
 logger = get_logger(__name__)
-from reflex_user_portal.models.user import User
-from reflex_user_portal.templates.portal import portal_template
 
 def _header_cell(text: str, icon: str) -> rx.Component:
     """Create a header cell with icon and text.
