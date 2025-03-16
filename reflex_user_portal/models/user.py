@@ -5,6 +5,8 @@ from sqlmodel import Field, SQLModel
 from enum import Enum
 from datetime import datetime, timezone
 
+import sqlmodel
+from .user_attribute import UserAttribute
 
 class UserType(str, Enum):
     """User type enumeration."""
@@ -29,6 +31,11 @@ class User(rx.Model, table=True):
     is_active: bool = Field(default=True)
     created_at: Optional[datetime] = Field(default=datetime.now(timezone.utc))
     last_login: Optional[datetime] = None
+
+    # custom user attributes
+    user_attribute: UserAttribute = sqlmodel.Relationship(
+        back_populates="user"
+    )
     
     @property
     def full_name(self) -> str:
