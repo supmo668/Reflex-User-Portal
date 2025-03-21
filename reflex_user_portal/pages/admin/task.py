@@ -1,13 +1,15 @@
 """Welcome to Reflex! This file outlines the steps to create a basic app."""
+import os
 
 import reflex as rx
-import os
+from reflex_user_portal.templates import portal_template
+
 from reflex_user_portal.backend.states.task import MonitorState
 
 API_URL = os.getenv("API_URL", "{API_URL}")
 WS_URL = f"{API_URL}/ws"
 
-# Frontend components
+@portal_template(route="/admin/tasks", title="Task Dashboard")
 def task_status_display():
     websocket_command = f"wscat -c {WS_URL}/tasks/{MonitorState.client_token}"
     tasks_command = f"curl {API_URL}/tasks/{MonitorState.client_token}"

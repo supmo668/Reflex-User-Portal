@@ -1,6 +1,7 @@
 """Styles for the app."""
 
 import reflex as rx
+from reflex_clerk.lib.appearance import Appearance, AppearanceVariables
 
 # Colors
 border_radius = "var(--radius-2)"
@@ -25,6 +26,39 @@ color_box_size = ["2.25rem", "2.25rem", "2.5rem"]
 bg_color = gray_bg_color
 border_color = rx.color("gray", 4)
 danger_color = rx.color("red", 9)
+
+# Clerk sign-in appearance
+
+# Create appearance config using Clerk's models
+ORANGE = {
+    "50": "#FFF5EE",
+    "100": "#FFE5B4", 
+    "500": "#FF6347",  # Main orange
+    "600": "#FF4500",
+    "700": "#FF3300",
+}
+CLERK_STYLES = Appearance(
+    baseTheme="default",  # Can be "default", "dark", "shadesOfPurple", "neobrutalism"
+    variables=AppearanceVariables(
+        colorPrimary=ORANGE["500"]
+    ),
+    elements={
+        "formButtonPrimary": {
+            "backgroundColor": ORANGE["500"],
+            "color": "white",
+            "hover": {
+                "backgroundColor": ORANGE["600"]
+            }
+        },
+        "card": {
+            "borderColor": ORANGE["100"],
+            "backgroundColor": ORANGE["50"]
+        },
+        "headerTitle": {
+            "color": ORANGE["500"]
+        }
+    }
+)
 
 # Base style for the app
 base_style = {

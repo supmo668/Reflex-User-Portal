@@ -17,7 +17,7 @@ class UserBaseState(rx.State):
     """User state for the application."""
     
     # User state
-    user: Optional[User] = None
+    user: Optional[User] = User(user_type=UserType.GUEST)
     redirect_after_login: Optional[str] = None
     
     @rx.var
@@ -27,9 +27,10 @@ class UserBaseState(rx.State):
             return self.user.user_type == UserType.ADMIN.value
         return False
     
-    async def get_or_create_user(self):
+    async def get_or_create_user(self, clerk_state: dict = None) -> User:
         """Get or create user based on Clerk info."""
-        clerk_state = await self.get_state(clerk.ClerkState)
+        if not clerk_state:
+            clerk_state = await self.get_state(clerk.ClerkState)
         with rx.session() as session:
             # Find existing user
             user = session.exec(
@@ -67,7 +68,7 @@ class UserAuthState(UserBaseState):
         logger.debug("Clerk state: %s", clerk_state.is_signed_in)
         try:
             if clerk_state.is_signed_in:
-                user = self.get_or_create_user()
+                user = self.get_or_create_user(clerk_state=clerk_state)
                 with rx.session() as session:
                     # Update user attributes
                     self.user.user_type = UserType.ADMIN if clerk_state.user.email_addresses[0].email_address in ADMIN_USER_EMAILS else UserType.USER

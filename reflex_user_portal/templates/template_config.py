@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import List, Type
 
 import reflex as rx
-import reflex_clerk as clerk
 
 from reflex_user_portal.backend.states.user import UserAuthState
 
@@ -73,4 +72,11 @@ NAV_ITEMS = [
         requires_auth=True,
         admin_only=True,
     ),
+    # NavItem(
+    #     title="Task Monitor",
+    #     route="/admin/tasks",
+    #     icon="monitor",
+    #     requires_auth=True,
+    #     admin_only=True,
+    # ),
 ]

@@ -2,10 +2,12 @@ import reflex_user_portal.config as CONFIG
 import reflex as rx
 import reflex_clerk as clerk
 
-from reflex_user_portal.pages.landing import home, signin_page
-from reflex_user_portal.pages.admin import admin_settings, users_table
-from reflex_user_portal.pages.portal import about, profile, app_settings, overview
+from reflex_user_portal.pages.landing import setup_pages as setup_landing_pages
+from reflex_user_portal.pages.portal import setup_pages as setup_portal_pages
+from reflex_user_portal.pages.admin import setup_pages as setup_admin_pages
+
 import reflex_user_portal.styles as styles
+
 
 # Create app instance
 app = rx.App(
@@ -16,19 +18,12 @@ app = rx.App(
 )
 
 # Add pages
-app.add_page(home, route="/", title="Home")
-
+setup_landing_pages(app)
 # Portal pages
-app.add_page(overview)
-app.add_page(users_table)
-app.add_page(profile)
-app.add_page(admin_settings)
-app.add_page(about)
-app.add_page(app_settings)
+setup_portal_pages(app)
 
-# sign-ins
-app.add_page(signin_page, route="/sign-in")
-app.add_page(signin_page, route="/sign-up")
+# Admin pages
+setup_admin_pages(app)
 
 clerk.install_pages(
     app,

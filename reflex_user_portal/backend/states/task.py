@@ -1,8 +1,8 @@
 import reflex as rx
 import asyncio
 from typing import Dict, List, Any
-from reflex_user_portal.backend.wrappers.models import TaskStatus, TaskData
-from reflex_user_portal.backend.wrappers.task import monitored_background_task
+from reflex_user_portal.backend.wrapper.models import TaskStatus, TaskData
+from reflex_user_portal.backend.wrapper.task import monitored_background_task
 
 # Define state
 class MonitorState(rx.State):
