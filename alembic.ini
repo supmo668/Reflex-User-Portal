@@ -92,12 +92,12 @@ keys = console
 keys = generic
 
 [logger_root]
-level = WARNING
+level = WARN
 handlers = console
 qualname =
 
 [logger_sqlalchemy]
-level = WARNING
+level = WARN
 handlers =
 qualname = sqlalchemy.engine
 

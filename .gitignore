@@ -1,3 +1,5 @@
+# reflex dev stuff
+*.db
 # Environment files
 .env
 !.env.template

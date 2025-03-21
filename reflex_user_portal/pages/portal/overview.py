@@ -20,7 +20,6 @@ from reflex_user_portal.views.charts import (
     users_chart,
 )
 from reflex_user_portal.views.stats_cards import stats_cards
-from reflex_user_portal.backend.states.user_state import UserState
 
 def _time_data() -> rx.Component:
     return rx.hstack(

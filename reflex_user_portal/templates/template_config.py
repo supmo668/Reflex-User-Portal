@@ -6,7 +6,7 @@ from typing import List, Type
 import reflex as rx
 import reflex_clerk as clerk
 
-from reflex_user_portal.backend.states.user_state import UserState
+from reflex_user_portal.backend.states.user import UserAuthState
 
 
 @dataclass
@@ -19,7 +19,7 @@ class NavItem:
     requires_auth: bool = False  # Whether this item requires authentication
     admin_only: bool = False  # Whether this item is only for admins
 
-    def should_show(self, user_state: Type[UserState]) -> rx.Var[bool]:
+    def should_show(self, UserAuth: Type[UserAuthState]) -> rx.Var[bool]:
         """Check if this item should be shown based on auth state.
 
         Args:
@@ -30,8 +30,8 @@ class NavItem:
         """
         # For admin-required items, check admin status
         return rx.cond(
-                user_state.is_hydrated & self.admin_only,
-                user_state.is_admin,  # Admin check if needed
+                UserAuth.is_hydrated & self.admin_only,
+                UserAuth.is_admin,  # Admin check if needed
                 True,  # Regular auth is enough
             )
 

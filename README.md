@@ -55,7 +55,7 @@ class UserType(str, Enum):
 
 #### Role Management
 - Define roles in `models/user.py`
-- Implement checks in `UserState`
+- Implement checks in `UserAuthState`
 - Configure access in `template_config.py`
 
 ### 2. Custom API & Admin Configuration
@@ -99,7 +99,7 @@ MODEL_FACTORY = {
 
 #### 1. Authentication System
 The authentication system uses Clerk with these key files:
-- `backend/user_state.py`: Auth state management
+- `backend/user.py`: Auth state management
 - `templates/template.py`: Route protection
 - `models/user.py`: User types and roles
 
@@ -116,7 +116,7 @@ def protected_page():
 
 **Role Management**
 - Define roles in `models/user.py`
-- Implement role checks in `UserState`
+- Implement role checks in `UserAuthState`
 - Configure access in `template_config.py`
 
 #### 2. Navigation System
@@ -142,7 +142,7 @@ The template system provides:
 
 #### 4. State Management
 
-**UserState** (`user_state.py`):
+**UserAuthState** (`user.py`):
 - Handles route protection logic
 - Manages data synchronization
 - Controls role-based permissions

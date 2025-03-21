@@ -3,7 +3,7 @@ import os
 import reflex as rx
 
 from reflex_user_portal import styles
-from reflex_user_portal.backend.states.user_state import UserState
+from reflex_user_portal.backend.states.user import UserAuthState
 from reflex_user_portal.templates.template_config import NavItem, NAV_ITEMS
 
 from reflex_user_portal.views.logo import logo
@@ -65,12 +65,12 @@ def sidebar_item(item: NavItem) -> rx.Component:
         The sidebar item component.
     """
     # Whether the item is active: currently selected or default page
-    active = UserState.is_hydrated & (
+    active = UserAuthState.is_hydrated & (
         (rx.State.router.page.path == item.route.lower()) | (rx.State.router.page.path == "/overview") & (rx.State.router.page.path == "/")
     )
 
     return rx.cond(
-        item.should_show(UserState),
+        item.should_show(UserAuthState),
         rx.link(
             rx.hstack(
                 rx.icon(item.icon, size=18),

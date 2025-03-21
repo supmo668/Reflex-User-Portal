@@ -1,7 +1,5 @@
 """Common templates used between pages in the app."""
 
-from __future__ import annotations
-
 from typing import Callable, Optional, Union, List
 
 import reflex as rx
@@ -10,7 +8,7 @@ import reflex_clerk as clerk
 from reflex_user_portal import styles
 from reflex_user_portal.components.portal.navbar import navbar
 from reflex_user_portal.components.portal.sidebar import sidebar
-from reflex_user_portal.backend.states.user_state import UserState
+from reflex_user_portal.backend.states.user import UserAuthState
 from reflex_user_portal.utils.logger import get_logger
 
 from .access_denied import access_denied_page
@@ -71,15 +69,15 @@ def portal_template(
         script_tags: Additional script tags to add to the page.
         on_load: The event handler(s) called when the page loads.
     default:
-        on_load: [UserState.sync_auth_state] sync clerk state to internal user state
+        on_load: [UserAuthState.sync_auth_state] sync clerk state to internal user state
 
     Returns:
         The decorated page.
     """
     if isinstance(on_load, list):
-        on_load = [UserState.sync_auth_state, *on_load]
+        on_load = [UserAuthState.sync_auth_state, *on_load]
     elif isinstance(on_load, [rx.EventHandler, Callable]):
-        on_load = [UserState.sync_auth, *on_load]
+        on_load = [UserAuthState.sync_auth, *on_load]
     # Get the meta tags for the page.
     all_meta = [*default_meta, *(meta or [])]
     # Get auth requirements from route
@@ -99,13 +97,13 @@ def portal_template(
             # since these routes are hidden based on template_config.py, it shows access denied if directly accessed
             if requires_admin:
                 content = rx.cond(
-                    UserState.is_hydrated & UserState.is_admin,
+                    UserAuthState.is_hydrated & UserAuthState.is_admin,
                     page_content(),
                     access_denied_page()
                 )
             else:
                 content = rx.cond(
-                    UserState.is_hydrated & clerk.ClerkState.is_signed_in,
+                    UserAuthState.is_hydrated & clerk.ClerkState.is_signed_in,
                     page_content(),
                     profile_content()
                 )

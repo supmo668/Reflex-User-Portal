@@ -1,12 +1,12 @@
 """User model for the application."""
-from typing import Optional
-import reflex as rx
-from sqlmodel import Field, SQLModel
+from typing import List, Optional, Dict, Any
 from enum import Enum
-from datetime import datetime, timezone
+from sqlmodel import Field, Column, JSON
 
 import sqlmodel
-from .user_attribute import UserAttribute
+import reflex as rx
+
+from datetime import datetime, timezone
 
 class UserType(str, Enum):
     """User type enumeration."""
@@ -14,13 +14,25 @@ class UserType(str, Enum):
     USER = "user"
     GUEST = "guest"
 
+class UserAttribute(rx.Model, table=True):
+    """
+    [Optional] User attribute model for storing user-specific data.
+    """
+    user_id: int = sqlmodel.Field(foreign_key="user.id")
+    user: Optional["User"] = sqlmodel.Relationship(
+        back_populates="user_attribute"
+    )
+    user_collections: Dict[str, Any] = Field(
+        default={},
+        sa_column=Column(JSON)
+    )
 
 class User(rx.Model, table=True):
     """Base user model."""
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(unique=True, index=True)
     clerk_id: str = Field(unique=True, default="")
-    user_type: UserType = UserType.USER
+    user_type: UserType = UserType.GUEST
     
     # User information
     first_name: Optional[str] = None

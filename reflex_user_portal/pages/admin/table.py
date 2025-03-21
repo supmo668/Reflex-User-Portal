@@ -4,7 +4,7 @@ import reflex as rx
 from reflex_user_portal.templates import portal_template
 from reflex_user_portal.models.user import User
 from reflex_user_portal.backend.states.table_state import TableState
-from reflex_user_portal.backend.states.user_state import UserState
+from reflex_user_portal.backend.states.user_state import UserAuthState
 
 
 def show_user(user: User):
@@ -23,7 +23,7 @@ def show_user(user: User):
 @portal_template(route="/admin/users", title="User Management")
 def user_table() -> rx.Component:
     """User management table page."""
-    if not UserState.is_admin():
+    if not UserAuthState.is_admin():
         return rx.vstack(
             rx.heading("Access Denied", size="3"),
             rx.text("You do not have permission to view this page."),
