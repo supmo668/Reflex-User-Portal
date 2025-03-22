@@ -4,6 +4,7 @@ from typing import Optional
 import asyncio
 
 from ..states.task import MonitorState
+from ..wrapper.task import TaskStatus
 from reflex_user_portal.reflex_user_portal import app
 
 # Function for both general task status and specific task status
@@ -81,6 +82,36 @@ async def stream_task_status(websocket: WebSocket, client_token: str, task_id: O
                 "message": f"Fatal error: {str(e)}"})
         finally:
             await websocket.close()
+
+async def get_task_result(client_token: str, task_id: str):
+    """
+    API endpoint to get task result.
+    
+    Args:
+        client_token: The client's session token
+        task_id: Task ID to retrieve result for
+        
+    Returns:
+        JSON response with task result
+    """
+    try:
+        async with app.state_manager.modify_state(client_token) as state_manager:
+            monitor_state = await state_manager.get_state(MonitorState)
+            
+            if task_id in monitor_state.tasks:
+                task = monitor_state.tasks[task_id]
+                if task.status == TaskStatus.FINISHED:
+                    return {"result": task.result}
+                else:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail=f"Task {task_id} not completed. Current status: {task.status}"
+                    )
+            else:
+                raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+                
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving task result: {str(e)}")
         
 def setup_api(app):
     """Set up API endpoints."""
@@ -90,3 +121,6 @@ def setup_api(app):
     
     # WebSocket endpoint for real-time updates
     app.api.websocket("/ws/tasks/{client_token}/{task_id}")(stream_task_status)
+    
+    # Add result endpoint
+    app.api.get("/tasks/{client_token}/{task_id}/result")(get_task_result)

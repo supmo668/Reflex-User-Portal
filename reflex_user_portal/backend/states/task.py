@@ -49,3 +49,4 @@ class MonitorState(rx.State):
                 status=TaskStatus.PROCESSING,
             )
             await asyncio.sleep(1)
+        return "<My Task Result>"

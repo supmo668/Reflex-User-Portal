@@ -11,8 +11,9 @@ WS_URL = f"{API_URL}/ws"
 
 @portal_template(route="/admin/tasks", title="Task Dashboard")
 def task_status_display():
+    """Display the status of tasks."""
     websocket_command = f"wscat -c {WS_URL}/tasks/{MonitorState.client_token}"
-    tasks_command = f"curl {API_URL}/tasks/{MonitorState.client_token}"
+    api_command = f"curl {API_URL}/tasks/{MonitorState.client_token}"
     
     return rx.center(
         rx.vstack(
@@ -20,7 +21,7 @@ def task_status_display():
             rx.text("Client Token: ", MonitorState.client_token),
             rx.text("API Access:"),
             rx.hstack(
-                rx.code_block(tasks_command, language="bash", can_copy=True),
+                rx.code_block(api_command, language="bash", can_copy=True),
             ),
             rx.text("WebSocket Connection:"),
             rx.code_block(websocket_command, language="bash", can_copy=True),
@@ -39,7 +40,7 @@ def task_status_display():
                     rx.progress(value=task.progress, max=100),
                     rx.text("Monitor this task:"),
                     rx.code_block(
-                        f"wscat -c {WS_URL}/tasks/{MonitorState.client_token}/{task.id}",
+                        f"{websocket_command}/{task.id}",
                         language="bash",
                         can_copy=True,
                     ),
@@ -53,8 +54,14 @@ def task_status_display():
                     rx.heading(task.name),
                     rx.text(f"Status: {task.status}"),
                     rx.text(f"Task ID: {task.id}"),
+                    rx.text("Get task result:"),
+                    rx.code_block(
+                        f"{api_command}/{task.id}/result",
+                        language="bash",
+                        can_copy=True,
+                    ),
                     padding="2",
-                )
+                ),
             ),
             spacing="4",
         )

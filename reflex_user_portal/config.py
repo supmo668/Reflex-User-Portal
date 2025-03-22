@@ -1,14 +1,16 @@
 """Configuration settings for the application."""
-import os
+import os, warnings
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+load_envar = load_dotenv()
+if not load_envar:
+    warnings.warn("Failed to load environment variables from .env file.")
 
 # App configuration
 APP_DISPLAY_NAME = os.getenv("APP_DISPLAY_NAME", "App Portal")
-APP_ENV = os.getenv("APP_ENV", "DEV")
-
+APP_ENV = os.getenv("APP_ENV", "DEV").upper()
+print(f"App environment: {APP_ENV}")
 # Admin configuration
 ADMIN_USER_EMAILS = os.getenv("ADMIN_USER_EMAILS", "").split(",")
 

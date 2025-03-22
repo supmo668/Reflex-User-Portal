@@ -29,11 +29,12 @@ def monitored_background_task():
             # Initialize task
             async with state:
                 state.tasks[task_id] = TaskData(
-                    id=task_id,  # Use same ID for both key and field
-                    name=func.__name__.replace('_', ' ').title(),  # Convert function name to title case
+                    id=task_id,
+                    name=func.__name__.replace('_', ' ').title(),
                     status=TaskStatus.STARTING,
                     active=True,
-                    progress=0
+                    progress=0,
+                    result=None
                 )
             
             try:
@@ -43,22 +44,25 @@ def monitored_background_task():
                         self.state = state
                         self.task_id = task_id
                     
-                    async def update(self, progress: int, status: str):
-                        """Update task progress and status"""
+                    async def update(self, progress: int, status: str, result: Any = None):
+                        """Update task progress, status and result"""
                         async with self.state:
                             self.state.tasks[self.task_id].progress = progress
                             self.state.tasks[self.task_id].status = status
                             self.state.tasks[self.task_id].active = True
+                            if result is not None:
+                                self.state.tasks[self.task_id].result = result
                 
                 # Call the original function with task context
                 task_ctx = TaskContext(state, task_id)
                 result = await func(state, task_ctx, *args, **kwargs)
                 
-                # Mark task as complete
+                # Mark task as complete with final result
                 async with state:
                     state.tasks[task_id].status = TaskStatus.FINISHED
                     state.tasks[task_id].progress = 100
                     state.tasks[task_id].active = False
+                    state.tasks[task_id].result = result
                 
                 return result
                 
@@ -67,6 +71,7 @@ def monitored_background_task():
                 async with state:
                     state.tasks[task_id].status = f"{TaskStatus.ERROR}: {str(e)}"
                     state.tasks[task_id].active = False
+                    state.tasks[task_id].result = {"error": str(e)}
                 raise
             
         return wrapper
