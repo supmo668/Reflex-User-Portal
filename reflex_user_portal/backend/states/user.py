@@ -68,15 +68,15 @@ class UserAuthState(UserBaseState):
         logger.debug("Clerk state: %s", clerk_state.is_signed_in)
         try:
             if clerk_state.is_signed_in:
-                user = self.get_or_create_user(clerk_state=clerk_state)
+                user = await self.get_or_create_user(clerk_state=clerk_state)
                 with rx.session() as session:
                     # Update user attributes
-                    self.user.user_type = UserType.ADMIN if clerk_state.user.email_addresses[0].email_address in ADMIN_USER_EMAILS else UserType.USER
-                    self.user.last_login = datetime.now(timezone.utc)
-                    session.add(self.user)
+                    user.user_type = UserType.ADMIN if clerk_state.user.email_addresses[0].email_address in ADMIN_USER_EMAILS else UserType.USER
+                    user.last_login = datetime.now(timezone.utc)
+                    session.add(user)
                     # commit changes
                     session.commit()
-                    session.refresh(self.user)
+                    session.refresh(user)
                     
                     # Store role and handle redirect
                     self.user = user
