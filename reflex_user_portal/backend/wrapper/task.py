@@ -64,8 +64,6 @@ def monitored_background_task():
                     state.tasks[task_id].active = False
                     state.tasks[task_id].result = result
                 
-                return result
-                
             except Exception as e:
                 # Handle errors
                 async with state:
