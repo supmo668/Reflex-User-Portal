@@ -6,7 +6,7 @@ from reflex_user_portal.templates import portal_template
 
 from reflex_user_portal.backend.states.task import MonitorState
 
-API_URL = os.getenv("API_URL", "{API_URL}")
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 WS_URL = f"{API_URL}/ws"
 
 @portal_template(route="/admin/tasks", title="Task Dashboard")
@@ -33,7 +33,8 @@ def task_status_display():
             rx.foreach(
                 MonitorState.current_active_tasks,
                 lambda task: rx.vstack(
-                    rx.text(f"Task ID: {task.id}"),  # Use task.id consistently
+                    rx.heading(task.name, size="2"),
+                    rx.text(f"Task ID: {task.id}"),
                     rx.text(f"Status: {task.status}"),
                     rx.progress(value=task.progress, max=100),
                     rx.text("Monitor this task:"),
@@ -49,6 +50,7 @@ def task_status_display():
             rx.foreach(
                 MonitorState.completed_tasks,
                 lambda task: rx.vstack(
+                    rx.heading(task.name, size="2"),
                     rx.text(f"Status: {task.status}"),
                     rx.text(f"Task ID: {task.id}"),
                     padding="2",

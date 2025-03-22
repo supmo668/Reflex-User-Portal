@@ -137,7 +137,7 @@ def sidebar() -> rx.Component:
             padding="1em",
             spacing="0",
         ),
-        display=["none"]*(len(NAV_ITEMS)-1)+ ["flex"],
+        display=["none", "flex"]+ ["flex"],
         max_width=styles.sidebar_width,
         width="auto",
         height="100%",

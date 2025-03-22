@@ -72,11 +72,11 @@ NAV_ITEMS = [
         requires_auth=True,
         admin_only=True,
     ),
-    # NavItem(
-    #     title="Task Monitor",
-    #     route="/admin/tasks",
-    #     icon="monitor",
-    #     requires_auth=True,
-    #     admin_only=True,
-    # ),
+    NavItem(
+        title="Task Monitor",
+        route="/admin/tasks",
+        icon="monitor",
+        requires_auth=True,
+        admin_only=True,
+    ),
 ]

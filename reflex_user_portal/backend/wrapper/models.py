@@ -13,6 +13,7 @@ class TaskStatus:
 class TaskData:
     """Data structure for task information"""
     id: str  # Primary identifier, matches dictionary key
+    name: str  # Task name
     status: TaskStatus = TaskStatus.NOT_STARTED
     active: bool = False
     progress: int = 0
@@ -23,6 +24,7 @@ class TaskData:
         """Convert task data to dictionary"""
         return {
             "id": self.id,
+            "name": self.name,
             "status": self.status,
             "progress": self.progress,
             "created_at": self.created_at

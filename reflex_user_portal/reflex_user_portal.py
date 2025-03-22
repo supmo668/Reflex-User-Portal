@@ -21,7 +21,6 @@ app = rx.App(
 setup_landing_pages(app)
 # Portal pages
 setup_portal_pages(app)
-
 # Admin pages
 setup_admin_pages(app)
 

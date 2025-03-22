@@ -30,6 +30,7 @@ def monitored_background_task():
             async with state:
                 state.tasks[task_id] = TaskData(
                     id=task_id,  # Use same ID for both key and field
+                    name=func.__name__.replace('_', ' ').title(),  # Convert function name to title case
                     status=TaskStatus.STARTING,
                     active=True,
                     progress=0
