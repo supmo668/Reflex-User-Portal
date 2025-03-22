@@ -50,7 +50,7 @@ def task_status_display():
             rx.foreach(
                 MonitorState.completed_tasks,
                 lambda task: rx.vstack(
-                    rx.heading(task.name, size="2"),
+                    rx.heading(task.name),
                     rx.text(f"Status: {task.status}"),
                     rx.text(f"Task ID: {task.id}"),
                     padding="2",

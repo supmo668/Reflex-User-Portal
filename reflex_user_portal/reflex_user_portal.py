@@ -30,3 +30,7 @@ clerk.install_pages(
     signin_route="/sign-in",
     signup_route="/sign-up"
 )
+
+# External API
+from reflex_user_portal.backend.api import setup_api
+setup_api(app)
