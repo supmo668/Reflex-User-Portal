@@ -8,8 +8,6 @@ from reflex_user_portal.backend.wrapper.models import TaskStatus, TaskData
 class MonitorState(rx.State):
     """Base Monitor State for task tracking."""    
     tasks: Dict[str, TaskData] = {}    
-    current_state_type: str = "ExampleTaskState"
-    current_task_function: str = "long_running_task"
     
     @rx.var
     def client_token(self) -> str:
@@ -19,14 +17,19 @@ class MonitorState(rx.State):
     @rx.var
     def active_tasks(self) -> List[TaskData]:
         """List of currently active tasks, sorted by creation time (newest first)."""
-        active_tasks = {k: v for k, v in self.tasks.items() if v.status in [TaskStatus.STARTING, TaskStatus.PROCESSING]}
-        return sorted(active_tasks.values(), key=lambda x: x.created_at, reverse=True)
-    
+        active_tasks = [
+            task for task in self.tasks.values() 
+            if task.status in [TaskStatus.STARTING, TaskStatus.PROCESSING]
+        ]
+        return sorted(active_tasks, key=lambda x: x.created_at, reverse=True)
     @rx.var
     def completed_tasks(self) -> List[TaskData]:
-        """List of completed tasks, sorted by completion time (newest first)."""
-        completed_tasks = {k: v for k, v in self.tasks.items() if v.status == TaskStatus.COMPLETED}
-        return sorted(completed_tasks.values(), key=lambda x: x.created_at, reverse=True)
+        """List of currently active tasks, sorted by creation time (newest first)."""
+        completed_tasks = [
+            task for task in self.tasks.values() 
+            if task.status in [TaskStatus.COMPLETED, TaskStatus.ERROR]
+        ]
+        return sorted(completed_tasks, key=lambda x: x.created_at, reverse=True)
     
     @classmethod
     def get_task_functions(cls) -> Dict[str, str]:
@@ -71,10 +74,3 @@ class MonitorState(rx.State):
                 current_method = current_method.__wrapped__
         
         return task_functions
-
-    def change_task_function(self, function_name: str):
-        """Change the current task function."""
-        if function_name in self.get_task_functions():
-            self.current_task_function = function_name
-        else:
-            raise ValueError(f"Invalid task function. Available functions: {list(self.get_task_functions().keys())}")

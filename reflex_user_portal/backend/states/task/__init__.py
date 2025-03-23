@@ -1,20 +1,23 @@
 import os
 import importlib
 import inspect
-from typing import Dict, Type, Callable
+from typing import Dict, Type, List
 
 import reflex as rx
+from reflex_user_portal.backend.wrapper.models import TaskData
+from reflex_user_portal.backend.wrapper.task import monitored_background_task, TaskContext
 from .base import MonitorState
+from .example_task import ExampleTaskState
 
-def discover_task_states() -> tuple[Dict[str, str], Dict[str, Type[MonitorState]]]:
+
+def discover_task_states() ->Dict[str, dict]:
     """
     Dynamically discover all task state classes in the task module directory.
     Returns:
-        Tuple of (state_mappings, available_states)
+        Tuple of (state_mappings)
     """
     states_dir = os.path.dirname(__file__)
     state_mappings: Dict[str, str] = {}
-    available_states: Dict[str, Type[MonitorState]] = {}
     
     # Skip these files when looking for state modules
     skip_files = {'__init__.py', '__pycache__', 'base.py'}
@@ -36,75 +39,91 @@ def discover_task_states() -> tuple[Dict[str, str], Dict[str, Type[MonitorState]
                     issubclass(obj, MonitorState) and 
                     obj != MonitorState):
                     # Generate API prefix from module and class name
-                    api_prefix = f"/api/{module_name}/{name.lower()}"
-                    state_mappings[obj.__name__] = api_prefix
-                    available_states[name] = obj
+                    # Optionally: api_prefix = f"/api/{module_name}/{name.lower()}"  for multiple state class in a module 
+                    api_prefix = f"/api/{module_name}"  
+                    state_mappings[obj.__name__] = {
+                        "api_prefix": api_prefix,
+                        "cls": obj
+                    }
+
                     
         except ImportError as e:
             print(f"Warning: Could not import module {module_name}: {e}")
             continue
             
-    return state_mappings, available_states
+    return state_mappings
 
 # Discover all task states
-STATE_MAPPINGS, AVAILABLE_STATES = discover_task_states()
-ExampleTaskState = AVAILABLE_STATES.get("ExampleTaskState")
+STATE_MAPPINGS = discover_task_states()
+ExampleTaskState = STATE_MAPPINGS.get("ExampleTaskState", {}).get("cls", ExampleTaskState)
+print(f"Discovered task states: {list(STATE_MAPPINGS.keys())}")
 
 class DisplayMonitorState(MonitorState):
     """Advanced Monitor State with built-in state type management."""
-    
+    current_state_type: str = "ExampleTaskState"
+    current_task_function: str = "long_running_task"
     # Class variables for state management
     state_mappings: Dict[str, str] = STATE_MAPPINGS
-    available_states: Dict[str, Type[MonitorState]] = AVAILABLE_STATES
-
-    # host variables
-    API_URL: str = os.getenv("API_URL", "http://localhost:8000")
-    WS_URL: str = f"{API_URL}/ws"
+    @rx.var
+    def current_state_class(self) -> Type[MonitorState]:
+        """Get the current state class based on the current state type."""
+        return self.state_mappings.get(self.current_state_type).get("cls", ExampleTaskState)
+    
+    # @rx.var
+    # async def active_tasks(self) -> List[TaskData]:
+    #     """Get active tasks from the current state."""
+    #     # Get an instance of the current state class
+    #     task_state = await self.get_state(self.current_state_class)
+    #     return task_state.active_tasks
+    
+    # @rx.var
+    # async def completed_tasks(self) -> List[TaskData]:
+    #     """Get active tasks from the current state."""
+    #     # Get an instance of the current state class
+    #     task_state = await self.get_state(self.current_state_class)
+    #     return task_state.completed_tasks
     
     @rx.var
     def task_functions(self) -> Dict[str, str]:
         """Get available task functions for current state type."""
-        current_state_class: Type[MonitorState] = self.available_states.get(self.current_state_type)
-        if current_state_class:
-            task_functions = current_state_class.get_task_functions()
+        if self.current_state_class and hasattr(self.current_state_class, "get_task_functions"):
+            task_functions = self.current_state_class.get_task_functions()
             print(f"Found {len(task_functions)} task functions")
             return task_functions
-        
         return {}
     
+    @rx.event
+    def change_task_function(self, function_name: str):
+        """Change the current task function."""
+        task_funcs = self.task_functions
+        if (function_name in task_funcs.keys()):
+            self.current_task_function = function_name
+        else:
+            raise ValueError(f"Invalid task function. Available functions: {list(task_funcs.keys())}")
+
     @rx.var
     def current_state_prefix(self) -> str:
         """Get the API prefix for the current state type."""
-        current_state_class = self.available_states.get(self.current_state_type)
-        if current_state_class:
-            return self.state_mappings.get(current_state_class.__name__, "/api/default")
+        if self.current_state_class is not None:
+            return self.state_mappings.get(self.current_state_type).get("api_prefix", "/api/default")
         return "/api/default"
     
+    @rx.event
     def change_state_type(self, state_type: str):
         """Change the current state type being monitored."""
-        if state_type not in self.available_states:
-            raise ValueError(f"Invalid state type. Available types: {list(self.available_states.keys())}")
-        super().change_state_type(state_type)
+        self.current_state_type = state_type
 
-    @classmethod
-    def get_available_states(cls) -> Dict[str, str]:
-        """Get a dictionary of available state types and their API prefixes."""
-        return {
-            name: cls.state_mappings.get(state_class.__name__, "/api/default")
-            for name, state_class in cls.available_states.items()
-        }
-
-    @rx.event
-    async def execute_current_task(self):
+    @monitored_background_task()
+    async def execute_current_task(self, task: TaskContext):
         """Execute the currently selected task function."""
-        current_state_class: Type[MonitorState] = self.available_states.get(self.current_state_type)
-        if current_state_class and self.current_task_function:
-            task_instance = current_state_class()
-            task_method: Callable = getattr(task_instance, self.current_task_function, None)
-            if task_method is not None:
-                return  task_method()
+        if self.current_state_class and self.current_task_function:
+            # Get the task method from the class
+            handler = getattr(self.current_state_class, self.current_task_function, None)
+            if handler:
+                # Execute the decorated task handler directly
+                return handler.fn
             else:
-                raise ValueError(f"Task function {self.current_task_function} not found in {self.current_state_type}")
+                raise ValueError(f"Task function {self.current_task_function} not found or not a monitored task in {self.current_state_type}")
         else:
             raise ValueError("No valid state type or task function selected")
 
@@ -113,5 +132,4 @@ __all__ = [
     "MonitorState",
     "DisplayMonitorState",
     "STATE_MAPPINGS",
-    "AVAILABLE_STATES"
 ]
