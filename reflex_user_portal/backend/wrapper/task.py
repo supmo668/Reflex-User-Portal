@@ -10,8 +10,15 @@ def monitored_background_task():
     Usage: @monitored_background_task()
     """
     def decorator(func: Callable) -> Callable:
-        @rx.event(background=True)
-        @functools.wraps(func)
+        # Mark the original function
+        func.is_monitored_background_task = True
+        
+        # Create the rx.event wrapper
+        event_wrapped = rx.event(background=True)(func)
+        
+        # Ensure the marker is preserved on the event wrapper
+        event_wrapped.is_monitored_background_task = True
+        @functools.wraps(event_wrapped)
         async def wrapper(state: rx.State, *args, **kwargs) -> Any:
             """
             Wrrapper function that initializes task data and handles task status updates.
@@ -22,7 +29,9 @@ def monitored_background_task():
             Class Variables created:
                 task_id: Unique identifier for the task
                 TaskContext: Context manager for updating task status
-            """
+            """            
+            # Pass through the marker to all wrapper layers
+            wrapper.is_monitored_background_task = True
             # Generate task ID
             task_id = str(uuid.uuid4())[:8]
             
@@ -55,14 +64,16 @@ def monitored_background_task():
                 
                 # Call the original function with task context
                 task_ctx = TaskContext(state, task_id)
-                result = await func(state, task_ctx, *args, **kwargs)
+                result = await event_wrapped(state, task_ctx, *args, **kwargs)
                 
                 # Mark task as complete with final result
                 async with state:
-                    state.tasks[task_id].status = TaskStatus.FINISHED
+                    state.tasks[task_id].status = TaskStatus.COMPLETED
                     state.tasks[task_id].progress = 100
                     state.tasks[task_id].active = False
                     state.tasks[task_id].result = result
+                
+                return result
                 
             except Exception as e:
                 # Handle errors
@@ -71,6 +82,5 @@ def monitored_background_task():
                     state.tasks[task_id].active = False
                     state.tasks[task_id].result = {"error": str(e)}
                 raise
-            
         return wrapper
     return decorator

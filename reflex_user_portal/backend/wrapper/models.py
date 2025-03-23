@@ -5,7 +5,7 @@ class TaskStatus:
     NOT_STARTED = "PENDING"
     STARTING = "Starting"
     PROCESSING = "Processing"
-    FINISHED = "Finished"
+    COMPLETED = "COMPLETED"
     ERROR = "Error"
 
 # Define TaskData dataclass
