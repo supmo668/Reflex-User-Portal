@@ -4,8 +4,9 @@ from typing import Optional, Type, Any, Dict
 import asyncio
 
 import reflex as rx
+from .commands import get_route
 
-from ..states.task.example_task import ExampleTaskState
+from ..states.task import STATE_MAPPINGS
 from ..wrapper.task import TaskStatus
 
 class TaskAPI:
@@ -18,13 +19,7 @@ class TaskAPI:
     async def start_task(self, client_token: str, session_id: str, task_name: str, parameters: Dict[str, Any] = Body(default=None)):
         """Start a task with optional parameters passed in request body."""
         try:
-            # Get state through Reflex's state manager
-            monitor_state = await self.app.state_manager.get_state(client_token)
-            # monitor_state = await state_manager.get_state(self.state_cls)
-            print("Got state:", monitor_state)
-            # monitor_state.task_arguments = parameters or {}
-            # Get the task method
-            task_method = getattr(monitor_state, task_name, None)
+            task_method = getattr(self.state_cls, task_name, None)
             print(f"Running task: {task_name} with parameters: {parameters}")
             if not task_method:
                 raise HTTPException(
@@ -35,7 +30,7 @@ class TaskAPI:
             return await self.app.event_namespace.emit_update(
                 update=rx.state.StateUpdate(
                     events=rx.event.fix_events([
-                        monitor_state.long_running_task], token=client_token),
+                        task_method], token=client_token),
                 ),
                 sid=session_id,
             )
@@ -159,22 +154,35 @@ class TaskAPI:
 
     def setup_routes(self, app_instance):
         """Set up API endpoints with optional prefix."""
-        api_base_path = f"{self.api_base_path}/tasks"
-        ws_base_path = f"{self.ws_base_path}/tasks"
         # Task management endpoints
-        app_instance.api.post(f"{api_base_path}/{{client_token}}/{{session_id}}/start/{{task_name}}")(self.start_task)
+        app_instance.api.post(
+            get_route("start", self.api_base_path, token="{client_token}", 
+                     session_id="{session_id}", task_name="{task_name}")
+        )(self.start_task)
         
         # Status endpoints
-        app_instance.api.get(f"{api_base_path}/{{client_token}}")(self.get_task_status)
-        app_instance.api.get(f"{api_base_path}/{{client_token}}/{{task_id}}")(self.get_task_status)
+        app_instance.api.get(
+            get_route("status", self.api_base_path, token="{client_token}")
+        )(self.get_task_status)
+        app_instance.api.get(
+            get_route("status_by_id", self.api_base_path, token="{client_token}", 
+                     task_id="{task_id}")
+        )(self.get_task_status)
         
         # Result endpoint
-        app_instance.api.get(f"{api_base_path}/{{client_token}}/{{task_id}}/result")(self.get_task_result)
+        app_instance.api.get(
+            get_route("result", self.api_base_path, token="{client_token}", 
+                     task_id="{task_id}")
+        )(self.get_task_result)
 
-        # WebSocket endpoints - now under /ws/ path
-        app_instance.api.websocket(f"{ws_base_path}/{{client_token}}")(self.stream_task_status)
-        app_instance.api.websocket(f"{ws_base_path}/{{client_token}}/{{task_id}}")(self.stream_task_status)
-        
+        # WebSocket endpoints
+        app_instance.api.websocket(
+            get_route("ws_monitor", self.ws_base_path, token="{client_token}")
+        )(self.stream_task_status)
+        app_instance.api.websocket(
+            get_route("ws_task", self.ws_base_path, token="{client_token}", 
+                     task_id="{task_id}")
+        )(self.stream_task_status)
         
 
 

@@ -1,61 +1,45 @@
 import os
 import importlib
 import inspect
-from typing import Dict, Type, List
+from typing import Dict, Type, ClassVar, Optional
 
 import reflex as rx
-from reflex_user_portal.backend.wrapper.models import TaskData
-from reflex_user_portal.backend.wrapper.task import monitored_background_task, TaskContext
 from .base import MonitorState
-from .example_task import ExampleTaskState
 
-
-def discover_task_states() ->Dict[str, dict]:
-    """
-    Dynamically discover all task state classes in the task module directory.
-    Returns:
-        Tuple of (state_mappings)
-    """
+def discover_task_states() -> Dict[str, dict]:
+    """Dynamically discover all task state classes."""
     states_dir = os.path.dirname(__file__)
-    state_mappings: Dict[str, str] = {}
+    state_mappings: Dict[str, dict] = {}
     
-    # Skip these files when looking for state modules
-    skip_files = {'__init__.py', '__pycache__', 'base.py'}
-    
-    # Scan directory for potential state modules
+    # First, collect all the mappings
     for item in os.listdir(states_dir):
-        if item in skip_files or not (item.endswith('.py') or os.path.isdir(os.path.join(states_dir, item))):
+        if item in {'__init__.py', '__pycache__', 'base.py'} or not item.endswith('.py'):
             continue
             
-        module_name = item[:-3] if item.endswith('.py') else item
+        module_name = item[:-3]
         try:
-            # Import the module using absolute import path
-            module_path = f"reflex_user_portal.backend.states.task.{module_name}"
-            module = importlib.import_module(module_path)
+            # Import using absolute path
+            module = importlib.import_module(f".{module_name}", package=__package__)
             
-            # Find all classes that inherit from MonitorState
+            # Find MonitorState subclasses
             for name, obj in inspect.getmembers(module):
                 if (inspect.isclass(obj) and 
                     issubclass(obj, MonitorState) and 
                     obj != MonitorState):
-                    # Generate API prefix from module and class name
-                    # Optionally: api_prefix = f"/api/{module_name}/{name.lower()}"  for multiple state class in a module 
-                    state_mappings[obj.__name__] = {
+                    state_mappings[name] = {
                         "api_prefix": f"/api/{module_name}",
                         "ws_prefix": f"/ws/{module_name}",
-                        "cls": obj
+                        "cls": obj,
                     }
-
-                    
+                    # Make the class available at package level
+                    globals()[name] = obj
         except ImportError as e:
-            print(f"Warning: Could not import module {module_name}: {e}")
-            continue
+            print(f"Warning: Could not import {module_name}: {e}")
             
     return state_mappings
 
-# Discover all task states
-STATE_MAPPINGS = discover_task_states()
-ExampleTaskState = STATE_MAPPINGS.get("ExampleTaskState", {}).get("cls", ExampleTaskState)
+# Discover states once at module load
+STATE_MAPPINGS: ClassVar[Dict[str, dict]] = discover_task_states()
 print(f"Discovered task states: {list(STATE_MAPPINGS.keys())}")
 
 class DisplayMonitorState(MonitorState):
@@ -63,10 +47,15 @@ class DisplayMonitorState(MonitorState):
     current_state_type: str = "ExampleTaskState"
     # Class variables for state management
     state_mappings: Dict[str, dict] = STATE_MAPPINGS
+
     @rx.var
-    def current_state_class(self) -> Type[MonitorState]:
+    def current_state_info(self) -> dict:
+        """Get the current state information."""
+        return self.state_mappings.get(self.current_state_type, {})
+    @rx.var
+    def current_state_class(self) -> Optional[Type[MonitorState]]:
         """Get the current state class based on the current state type."""
-        return self.state_mappings.get(self.current_state_type).get("cls", ExampleTaskState)
+        return self.current_state_info.get("cls")
     
     # @rx.var
     # async def active_tasks(self) -> List[TaskData]:
@@ -87,7 +76,7 @@ class DisplayMonitorState(MonitorState):
         """Get available task functions for current state type."""
         if self.current_state_class and hasattr(self.current_state_class, "get_task_functions"):
             task_functions = self.current_state_class.get_task_functions()
-            print(f"Found {len(task_functions)} task functions")
+            print(f"Found {len(task_functions)} task functions named {list(task_functions.keys())}")
             return task_functions
         return {}
     
@@ -95,7 +84,7 @@ class DisplayMonitorState(MonitorState):
     def current_state_prefix(self) -> str:
         """Get the API prefix for the current state type."""
         if self.current_state_class is not None:
-            return self.state_mappings.get(self.current_state_type).get("api_prefix", "/api/default")
+            return self.current_state_info.get("api_prefix", "/api/default")
         return "/api/default"
     
     @rx.event
@@ -108,19 +97,14 @@ class DisplayMonitorState(MonitorState):
         """Execute the currently selected task function."""
         if self.current_state_class and self.current_task_function:
             # Get the launcher method from the class
-            launcher_name = f"launch_{self.current_task_function}"
-            launcher = getattr(self.current_state_class, launcher_name, None)
+            launcher = getattr(self.current_state_class, self.current_task_function, None)
             if launcher:
                 # Return the launcher event which will properly handle the background task
-                return launcher(self)
+                yield launcher
             else:
-                raise ValueError(f"Launch handler {launcher_name} not found in {self.current_state_type}")
+                raise ValueError(f"Launch handler {self.current_task_function} not found in {self.current_state_type}")
         else:
             raise ValueError("No valid state type or task function selected")
 
-# Export the classes and mappings
-__all__ = [
-    "MonitorState",
-    "DisplayMonitorState",
-    "STATE_MAPPINGS",
-]
+# Export discovered classes
+__all__ = ["MonitorState", "DisplayMonitorState", "STATE_MAPPINGS"] + list(STATE_MAPPINGS.keys())

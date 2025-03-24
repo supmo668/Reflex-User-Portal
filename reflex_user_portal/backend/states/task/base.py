@@ -8,7 +8,7 @@ from reflex_user_portal.backend.wrapper.models import TaskStatus, TaskData
 class MonitorState(rx.State):
     """Base Monitor State for task tracking."""    
     tasks: Dict[str, TaskData] = {}    
-    current_task_function: Optional[str] = None
+    current_task_function: Optional[str] = "long_running_task"
     
     @rx.var
     def client_token(self) -> str:
