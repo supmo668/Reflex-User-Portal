@@ -15,18 +15,27 @@ class MonitorState(rx.State):
     def client_token(self) -> str:
         """Token for client identification."""
         return self.router.session.client_token
-    
+    @rx.var
+    def session_id(self) -> str:
+        """Session ID for client identification."""
+        return self.router.session.session_id
     @rx.var
     def active_tasks(self) -> List[TaskData]:
         """List of currently active tasks, sorted by creation time (newest first)."""
-        active_tasks = {k: v for k, v in self.tasks.items() if v.status in [TaskStatus.STARTING, TaskStatus.PROCESSING]}
-        return sorted(active_tasks.values(), key=lambda x: x.created_at, reverse=True)
-    
+        active_tasks = [
+            task for task in self.tasks.values() 
+            if task.status in [TaskStatus.STARTING, TaskStatus.PROCESSING]
+        ]
+        return sorted(active_tasks, key=lambda x: x.created_at, reverse=True)
     @rx.var
     def completed_tasks(self) -> List[TaskData]:
-        """List of completed tasks, sorted by completion time (newest first)."""
-        completed_tasks = {k: v for k, v in self.tasks.items() if v.status == TaskStatus.COMPLETED}
-        return sorted(completed_tasks.values(), key=lambda x: x.created_at, reverse=True)
+        """List of currently active tasks, sorted by creation time (newest first)."""
+        completed_tasks = [
+            task for task in self.tasks.values() 
+            if task.status in [TaskStatus.COMPLETED, TaskStatus.ERROR]
+        ]
+        return sorted(completed_tasks, key=lambda x: x.created_at, reverse=True)
+
     
     @classmethod
     def get_task_functions(cls) -> Dict[str, str]:

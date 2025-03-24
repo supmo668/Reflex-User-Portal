@@ -2,10 +2,10 @@ from dataclasses import dataclass, field
 import asyncio
 
 class TaskStatus:
-    NOT_STARTED = "PENDING"
+    PENDING = "PENDING"
     STARTING = "Starting"
     PROCESSING = "Processing"
-    COMPLETED = "COMPLETED"
+    COMPLETED = "Completed"
     ERROR = "Error"
 
 # Define TaskData dataclass
@@ -14,7 +14,7 @@ class TaskData:
     """Data structure for task information"""
     id: str  # Primary identifier, matches dictionary key
     name: str  # Task name
-    status: TaskStatus = TaskStatus.NOT_STARTED
+    status: TaskStatus = TaskStatus.PENDING
     active: bool = False
     progress: int = 0
     result: dict = field(default_factory=dict)

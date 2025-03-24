@@ -5,16 +5,16 @@ from typing import Dict, Type, Callable
 
 import reflex as rx
 from .base import MonitorState
+from .example_task import ExampleTaskState
 
 def discover_task_states() -> tuple[Dict[str, str], Dict[str, Type[MonitorState]]]:
     """
     Dynamically discover all task state classes in the task module directory.
     Returns:
-        Tuple of (state_mappings, available_states)
+        state_mappings
     """
     states_dir = os.path.dirname(__file__)
-    state_mappings: Dict[str, str] = {}
-    available_states: Dict[str, Type[MonitorState]] = {}
+    state_mappings: Dict[str, dict] = {}
     
     # Skip these files when looking for state modules
     skip_files = {'__init__.py', '__pycache__', 'base.py'}
@@ -36,26 +36,27 @@ def discover_task_states() -> tuple[Dict[str, str], Dict[str, Type[MonitorState]
                     issubclass(obj, MonitorState) and 
                     obj != MonitorState):
                     # Generate API prefix from module and class name
-                    api_prefix = f"/api/{module_name}/{name.lower()}"
-                    state_mappings[obj.__name__] = api_prefix
-                    available_states[name] = obj
+                    state_mappings[obj.__name__] = {
+                        "api_prefix": f"/api/tasks/",
+                        "module_name": module_name,
+                        "cls": obj
+                    }
                     
         except ImportError as e:
             print(f"Warning: Could not import module {module_name}: {e}")
             continue
             
-    return state_mappings, available_states
+    return state_mappings
 
 # Discover all task states
-STATE_MAPPINGS, AVAILABLE_STATES = discover_task_states()
-ExampleTaskState = AVAILABLE_STATES.get("ExampleTaskState")
+STATE_MAPPINGS = discover_task_states()
+ExampleTaskState = STATE_MAPPINGS.get("ExampleTaskState").get("cls", ExampleTaskState)
 
 class DisplayMonitorState(MonitorState):
     """Advanced Monitor State with built-in state type management."""
     
     # Class variables for state management
     state_mappings: Dict[str, str] = STATE_MAPPINGS
-    available_states: Dict[str, Type[MonitorState]] = AVAILABLE_STATES
 
     # host variables
     API_URL: str = os.getenv("API_URL", "http://localhost:8000")
@@ -113,5 +114,4 @@ __all__ = [
     "MonitorState",
     "DisplayMonitorState",
     "STATE_MAPPINGS",
-    "AVAILABLE_STATES"
 ]

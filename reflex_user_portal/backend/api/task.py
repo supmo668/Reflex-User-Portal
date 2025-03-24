@@ -14,21 +14,24 @@ class TaskAPI:
 
     async def start_task(self, client_token: str, task_name: str, parameters: Optional[Dict[str, Any]] = None):
         try:
-            async with app.state_manager.modify_state(client_token) as state_manager:
-                monitor_state = await state_manager.get_state(self.state_type)
-                
-                task_method = getattr(monitor_state, task_name, None)
-                if not task_method:
-                    raise HTTPException(
-                        status_code=404, 
-                        detail=f"Task {task_name} not found in {self.state_type.__name__}"
-                    )
-                
-                parameters = parameters or {}
-                yield task_method(**parameters)
-                
-                # latest_task = max(monitor_state.tasks.values(), key=lambda x: x.created_at)
-                # return latest_task.to_dict()
+            monitor_state = await app.state_manager.get_state(self.state_type)
+            
+            task_method = getattr(monitor_state, task_name, None)
+            if not task_method:
+                raise HTTPException(
+                    status_code=404, 
+                    detail=f"Task {task_name} not found in {self.state_type.__name__}"
+                )
+            
+            parameters = parameters or {}
+            yield task_method(**parameters)
+            
+            # await app.event_namespace.emit_update(
+            #     update=rx.state.StateUpdate(
+            #         events=rx.event.fix_events([rx.window_alert("You've done it")], token=token),
+            #     ),
+            #     sid=sid,
+            # )
                 
         except AttributeError as e:
             raise HTTPException(
@@ -50,7 +53,7 @@ class TaskAPI:
         try:
             async with app.state_manager.modify_state(client_token) as state_manager:
                 monitor_state = await state_manager.get_state(self.state_type)
-                
+                print(f"Monitor state: {monitor_state.tasks}")
                 if task_id:
                     if task_id in monitor_state.tasks:
                         return monitor_state.tasks[task_id].to_dict()
@@ -58,8 +61,7 @@ class TaskAPI:
                         raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
                 
                 return {
-                    "active_tasks": [task.to_dict() for task in monitor_state.current_active_tasks],
-                    "all_tasks": {tid: task.to_dict() for tid, task in monitor_state.tasks.items()}
+                    "all_tasks": monitor_state.tasks
                 }
                 
         except KeyError as e:
@@ -136,20 +138,19 @@ class TaskAPI:
 
     def setup_routes(self, app_instance):
         """Set up API endpoints with optional prefix."""
-        base_path = f"{self.prefix}/tasks"
         
         # Task management endpoints
-        app_instance.api.post(f"{base_path}/{{client_token}}/start/{{task_name}}")(self.start_task)
+        app_instance.api.post(f"{self.prefix}/{{client_token}}/start/{{task_name}}")(self.start_task)
         
         # Status endpoints
-        app_instance.api.get(f"{base_path}/{{client_token}}")(self.get_task_status)
-        app_instance.api.get(f"{base_path}/{{client_token}}/{{task_id}}")(self.get_task_status)
+        app_instance.api.get(f"{self.prefix}/{{client_token}}")(self.get_task_status)
+        app_instance.api.get(f"{self.prefix}/{{client_token}}/{{task_id}}")(self.get_task_status)
         
         # WebSocket endpoint
-        app_instance.api.websocket(f"{base_path}/ws/{{client_token}}/{{task_id}}")(self.stream_task_status)
+        app_instance.api.websocket(f"{self.prefix}/ws/{{client_token}}/{{task_id}}")(self.stream_task_status)
         
         # Result endpoint
-        app_instance.api.get(f"{base_path}/{{client_token}}/{{task_id}}/result")(self.get_task_result)
+        app_instance.api.get(f"{self.prefix}/{{client_token}}/{{task_id}}/result")(self.get_task_result)
 
 def setup_api(app_instance, state_mappings: dict[Type[MonitorState], str]):
     """
