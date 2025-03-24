@@ -46,7 +46,8 @@ def task_status_display():
                     rx.select.content(
                         rx.foreach(
                             DisplayMonitorState.task_functions,
-                            lambda item: rx.select.item(item[1], value=item[0])
+                            lambda item: rx.select.item(
+                                f"{item[0]}: {item[1]}", value=item[0])
                         )
                     ),
                     value=DisplayMonitorState.current_task_function,
@@ -54,13 +55,13 @@ def task_status_display():
                 ),
             ),
             rx.text("Client Token: ", ExampleTaskState.client_token),
+            rx.text("Session ID: ", ExampleTaskState.session_id),
             rx.text("Base API Path:"),
             rx.code_block(
                 get_command("base"),
                 language="bash",
                 can_copy=True
             ),
-            
             # API Commands Section
             rx.box(
                 rx.vstack(
@@ -71,32 +72,28 @@ def task_status_display():
                         language="bash",
                         can_copy=True
                     ),
-                    
                     rx.text("Get Single Task Status:"),
                     rx.code_block(
                         get_command("status_by_id", task_id="{task_id}"),
                         language="bash",
                         can_copy=True
                     ),
-                    
                     rx.text("Start Selected Task:"),
                     rx.code_block(
                         get_command(
                             "start",
-                            session_id="{session_id}",
+                            session_id=ExampleTaskState.session_id,
                             task_name=DisplayMonitorState.current_task_function  # Changed from task_function to task_name
                         ),
                         language="bash",
                         can_copy=True
                     ),
-                    
                     rx.text("Get Task Result:"),
                     rx.code_block(
                         get_command("result", task_id="{task_id}"),
                         language="bash",
                         can_copy=True
                     ),
-                    
                     rx.heading("WebSocket Commands", size="4"),
                     rx.text("Monitor All Tasks:"),
                     rx.code_block(
@@ -104,7 +101,6 @@ def task_status_display():
                         language="bash",
                         can_copy=True
                     ),
-                    
                     rx.text("Monitor Specific Task:"),
                     rx.code_block(
                         get_command("ws_task", task_id="{task_id}"),
@@ -116,7 +112,6 @@ def task_status_display():
                     border_radius="md",
                 ),
             ),
-            
             rx.button(
                 "Start Selected Task (Simulated)",
                 on_click=ExampleTaskState.long_running_task,

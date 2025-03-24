@@ -6,7 +6,6 @@ import asyncio
 import reflex as rx
 from .commands import get_route
 
-from ..states.task import STATE_MAPPINGS
 from ..wrapper.task import TaskStatus
 
 class TaskAPI:
@@ -73,56 +72,48 @@ class TaskAPI:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error retrieving task status: {str(e)}") from e
 
-    async def stream_task_status(self, websocket: WebSocket, client_token: str, task_id: Optional[str] = None):
+    async def stream_task_status(self, websocket: WebSocket, client_token: str, task_id: Optional[str] = None): 
         """WebSocket endpoint for streaming real-time task status updates."""
         await websocket.accept()
         
         try:
-            initial_state = await self.get_task_status(client_token, task_id)
-            await websocket.send_json({
-                "type": "initial_state",
-                **initial_state
-            })
-            
+            # Get initial state
+            initial_state = await self.get_task_status(client_token, task_id)       
             prev_state = initial_state
             
             while True:
                 await asyncio.sleep(0.5)
                 try:
-                    current_state = await self.get_task_status(client_token)
-                    
+                    # Get current state using same logic as get_task_status
+                    current_state = await self.get_task_status(client_token, task_id)
+                    # Only send update if state changed
                     if current_state != prev_state:
                         await websocket.send_json({
                             "type": "state_update",
-                            **current_state
+                            "data": current_state
                         })
                         prev_state = current_state
                         
-                except (KeyError, ValueError) as e:
+                except HTTPException as e:
+                    # Send error and close if task not found or invalid
                     await websocket.send_json({
-                        "type": "error", 
-                        "message": f"Error updating state: {str(e)}"})
-                    
+                        "type": "error",
+                        "status_code": e.status_code,
+                        "detail": e.detail
+                    })
+                    await websocket.close()
+                    break
+                        
         except WebSocketDisconnect:
             pass
         except asyncio.CancelledError:
-            # Handle task cancellation
             await websocket.close()
-        except (KeyError, ValueError, HTTPException) as e:
-            # Handle known error types
+        except Exception as e:
+            # Handle any other errors
             try:
                 await websocket.send_json({
-                    "type": "error", 
-                    "message": str(e)
-                })
-            finally:
-                await websocket.close()
-        except (RuntimeError, ConnectionError) as e:
-            # Handle connection/runtime errors
-            try:
-                await websocket.send_json({
-                    "type": "error", 
-                    "message": f"Connection error: {str(e)}"
+                    "type": "error",
+                    "detail": str(e)
                 })
             finally:
                 await websocket.close()
