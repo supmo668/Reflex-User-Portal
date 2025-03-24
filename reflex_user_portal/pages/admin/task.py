@@ -31,7 +31,7 @@ def task_status_display():
                     rx.select.trigger(),
                     rx.select.content(
                         rx.foreach(
-                            DisplayMonitorState.available_states,
+                            DisplayMonitorState.state_mappings,
                             lambda item: rx.select.item(item[0], value=item[0])
                         )
                     ),

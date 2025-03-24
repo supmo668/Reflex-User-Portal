@@ -6,7 +6,7 @@ from reflex_user_portal.backend.wrapper.models import TaskStatus
 
 class ExampleTaskState(MonitorState):
     """Example state for a long-running task."""
-    @monitored_background_task()
+    @monitored_background_task
     async def long_running_task(self, task: Any):
         """Background task that updates progress.
         Refer to the decorator for more details.
@@ -19,7 +19,7 @@ class ExampleTaskState(MonitorState):
             await asyncio.sleep(1)
         return "<My Task Result>"
     
-    @monitored_background_task()
+    @monitored_background_task
     async def long_running_task2(self, task: Any):
         """Background task that updates progress.
         Refer to the decorator for more details.

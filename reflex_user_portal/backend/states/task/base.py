@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 import inspect
 
 import reflex as rx
@@ -8,8 +8,7 @@ from reflex_user_portal.backend.wrapper.models import TaskStatus, TaskData
 class MonitorState(rx.State):
     """Base Monitor State for task tracking."""    
     tasks: Dict[str, TaskData] = {}    
-    current_state_type: str = "ExampleTaskState"
-    current_task_function: str = "long_running_task"
+    current_task_function: Optional[str] = None
     
     @rx.var
     def client_token(self) -> str:
@@ -80,10 +79,11 @@ class MonitorState(rx.State):
                 current_method = current_method.__wrapped__
         
         return task_functions
-
+    @rx.event
     def change_task_function(self, function_name: str):
         """Change the current task function."""
         if function_name in self.get_task_functions():
             self.current_task_function = function_name
         else:
             raise ValueError(f"Invalid task function. Available functions: {list(self.get_task_functions().keys())}")
+
