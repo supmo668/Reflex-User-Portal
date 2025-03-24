@@ -9,6 +9,5 @@ def setup_state_task_apis(app):
     """   
     for name, state_info in STATE_MAPPINGS.items():
         # Extract the state class and API prefix
-        prefix = state_info.get("api_prefix", "")
-        print(f"Setting up API for state: {name} at {prefix}")
-        setup_task_api(app, state_info["cls"], prefix)
+        print(f"Setting up API for state: {name} at {state_info['api_prefix']}")
+        setup_task_api(app, state_info)

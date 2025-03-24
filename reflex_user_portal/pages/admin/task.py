@@ -3,17 +3,17 @@ import os
 
 import reflex as rx
 from reflex_user_portal.templates import portal_template
-from reflex_user_portal.backend.states.task import DisplayMonitorState, ExampleTaskState
-
+from reflex_user_portal.backend.states.task import DisplayMonitorState
+from reflex_user_portal.backend.states.task.example_task import ExampleTaskState
 # Command templates - makes it easier to maintain and more efficient
 API_COMMANDS = {
     "base": "{api_url}{state_prefix}/tasks/{token}",
-    "status": "curl -X GET {base_path}",
-    "status_by_id": "curl -X GET {base_path}/{task_id}",
-    "start": "curl -X POST {base_path}/start/{task_function} -H 'Content-Type: application/json' {{<data_param>}}",
-    "result": "curl -X GET {base_path}/{task_id}/result",
-    "ws_all": "wscat -c {ws_url}{state_prefix}/tasks/{token}",
-    "ws_task": "wscat -c {ws_url}{state_prefix}/tasks/{token}/{task_id}"
+    "status": "curl -X GET {api_url}{state_prefix}/tasks/{token}",
+    "status_by_id": "curl -X GET {api_url}{state_prefix}/tasks/{token}/{task_id}",
+    "start": "curl -X POST {api_url}{state_prefix}/tasks/{token}/start/{task_function} -H 'Content-Type: application/json' {data_param}",
+    "result": "curl -X GET {api_url}{state_prefix}/tasks/{token}/{task_id}/result",
+    "ws_all": "wscat -c {ws_url}{state_prefix}/tasks/ws/{token}",
+    "ws_task": "wscat -c {ws_url}{state_prefix}/tasks/ws/{token}/{task_id}"
 }
 
 @portal_template(route="/admin/tasks", title="Task Dashboard")
@@ -51,6 +51,7 @@ def task_status_display():
                 ),
             ),
             rx.text("Client Token: ", DisplayMonitorState.client_token),
+            rx.text("Session ID: ", DisplayMonitorState.session_id),
             rx.text("Base API Path:"),
             rx.code_block(
                 API_COMMANDS["base"].format(
@@ -67,7 +68,9 @@ def task_status_display():
                     rx.text("Get All Tasks Status:"),
                     rx.code_block(
                         API_COMMANDS["status"].format(
-                            base_path=f"{API_URL}{DisplayMonitorState.current_state_prefix}/tasks/{DisplayMonitorState.client_token}"
+                            api_url=API_URL,
+                            state_prefix=DisplayMonitorState.current_state_prefix,
+                            token=DisplayMonitorState.client_token
                         ),
                         language="bash",
                         can_copy=True
@@ -75,7 +78,9 @@ def task_status_display():
                     rx.text("Get Single Task Status:"),
                     rx.code_block(
                         API_COMMANDS["status_by_id"].format(
-                            base_path=f"{API_URL}{DisplayMonitorState.current_state_prefix}/tasks/{DisplayMonitorState.client_token}",
+                            api_url=API_URL,
+                            state_prefix=DisplayMonitorState.current_state_prefix,
+                            token=DisplayMonitorState.client_token,
                             task_id="{task_id}"
                         ),
                         language="bash",
@@ -84,8 +89,11 @@ def task_status_display():
                     rx.text("Start Selected Task:"),
                     rx.code_block(
                         API_COMMANDS["start"].format(
-                            base_path=f"{API_URL}{DisplayMonitorState.current_state_prefix}/tasks/{DisplayMonitorState.client_token}",
+                            api_url=API_URL,
+                            state_prefix=DisplayMonitorState.current_state_prefix,
+                            token=DisplayMonitorState.client_token,
                             task_function=DisplayMonitorState.current_task_function,
+                            data_param="-d '{}'"  # Empty data by default
                         ),
                         language="bash",
                         can_copy=True
@@ -94,7 +102,9 @@ def task_status_display():
                     rx.text("Get Task Result:"),
                     rx.code_block(
                         API_COMMANDS["result"].format(
-                            base_path=f"{API_URL}{DisplayMonitorState.current_state_prefix}/tasks/{DisplayMonitorState.client_token}",
+                            api_url=API_URL,
+                            state_prefix=DisplayMonitorState.current_state_prefix,
+                            token=DisplayMonitorState.client_token,
                             task_id="{task_id}"
                         ),
                         language="bash",
@@ -170,7 +180,9 @@ def task_status_display():
                     rx.text("Get task result:"),
                     rx.code_block(
                         API_COMMANDS["result"].format(
-                            base_path=f"{API_URL}{DisplayMonitorState.current_state_prefix}/tasks/{DisplayMonitorState.client_token}",
+                            api_url=API_URL,
+                            state_prefix=DisplayMonitorState.current_state_prefix,
+                            token=DisplayMonitorState.client_token,
                             task_id=task.id
                         ),
                         language="bash", can_copy=True,

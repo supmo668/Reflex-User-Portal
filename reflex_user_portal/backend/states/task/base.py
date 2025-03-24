@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 import inspect
 
 import reflex as rx
@@ -8,11 +8,15 @@ from reflex_user_portal.backend.wrapper.models import TaskStatus, TaskData
 class MonitorState(rx.State):
     """Base Monitor State for task tracking."""    
     tasks: Dict[str, TaskData] = {}    
-    
+    most_recent_task: Optional[str] = None
     @rx.var
     def client_token(self) -> str:
         """Token for client identification."""
         return self.router.session.client_token
+    @rx.var
+    def session_id(self) -> str:
+        """Session ID for client identification."""
+        return self.router.session.session_id
     
     @rx.var
     def active_tasks(self) -> List[TaskData]:

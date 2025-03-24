@@ -4,52 +4,41 @@ from typing import Optional, Type, Any, Dict
 import asyncio
 
 import reflex as rx
-from ..states.task import MonitorState
+
+from ..states.task.example_task import ExampleTaskState
 from ..wrapper.task import TaskStatus
 
 class TaskAPI:
-    def __init__(self, app, state_cls: Type[MonitorState], prefix: str = ""):
+    def __init__(self, app, state_info: Dict[str, Any]):
         self.app = app
-        self.state_cls = state_cls
-        self.prefix = prefix.rstrip('/')
+        self.state_cls = state_info["cls"]
+        self.api_base_path = state_info.get("api_prefix", "/api")
+        self.ws_base_path = state_info.get("ws_prefix", "/ws")
 
-    async def start_task(self, client_token: str, task_name: str, parameters: Dict[str, Any] = Body(default=None)):
+    async def start_task(self, client_token: str, session_id: str, task_name: str, parameters: Dict[str, Any] = Body(default=None)):
         """Start a task with optional parameters passed in request body."""
         try:
-            async with self.app.state_manager.modify_state(client_token) as state_manager:
-                monitor_state = await state_manager.get_state(self.state_cls)
+            # Get state through Reflex's state manager
+            monitor_state = await self.app.state_manager.get_state(client_token)
+            # monitor_state = await state_manager.get_state(self.state_cls)
+            print("Got state:", monitor_state)
+            # monitor_state.task_arguments = parameters or {}
+            # Get the task method
+            task_method = getattr(monitor_state, task_name, None)
+            print(f"Running task: {task_name} with parameters: {parameters}")
+            if not task_method:
+                raise HTTPException(
+                    status_code=404, 
+                    detail=f"Task {task_name} not found in {self.state_cls.__name__}"
+                )
                 
-                task_method = getattr(monitor_state, task_name, None)
-                if not task_method:
-                    raise HTTPException(
-                        status_code=404, 
-                        detail=f"Task {task_name} not found in {self.state_cls.__name__}"
-                    )
-                
-                # Check if method has additional parameters
-                if hasattr(task_method, 'additional_params'):
-                    required_params = task_method.additional_params
-                    type_hints = task_method.type_hints
-                    
-                    # Validate required parameters are provided
-                    if required_params and not parameters:
-                        raise HTTPException(
-                            status_code=400,
-                            detail={
-                                "message": "Missing required parameters",
-                                "required_params": {
-                                    name: str(param_type.__name__) 
-                                    for name, param_type in type_hints.items() 
-                                    if name in required_params
-                                }
-                            }
-                        )
-                    
-                    # Pass parameters to the task method
-                    return await task_method(**parameters if parameters else {})
-                else:
-                    # No additional parameters needed
-                    return await task_method()
+            return await self.app.event_namespace.emit_update(
+                update=rx.state.StateUpdate(
+                    events=rx.event.fix_events([
+                        monitor_state.long_running_task], token=client_token),
+                ),
+                sid=session_id,
+            )
 
         except AttributeError as e:
             raise HTTPException(
@@ -61,10 +50,10 @@ class TaskAPI:
                 status_code=400, 
                 detail=f"Invalid parameters for task: {str(e)}"
             ) from e
-        except Exception as e:
+        except (TypeError, RuntimeError) as e:
             raise HTTPException(
-                status_code=500, 
-                detail=f"Error starting task: {str(e)}"
+                status_code=500,
+                detail=f"Error executing task: {str(e)}"
             ) from e
 
     async def get_task_status(self, client_token: str, task_id: Optional[str] = None):
@@ -121,11 +110,25 @@ class TaskAPI:
                     
         except WebSocketDisconnect:
             pass
-        except Exception as e:
+        except asyncio.CancelledError:
+            # Handle task cancellation
+            await websocket.close()
+        except (KeyError, ValueError, HTTPException) as e:
+            # Handle known error types
             try:
                 await websocket.send_json({
                     "type": "error", 
-                    "message": f"Fatal error: {str(e)}"})
+                    "message": str(e)
+                })
+            finally:
+                await websocket.close()
+        except (RuntimeError, ConnectionError) as e:
+            # Handle connection/runtime errors
+            try:
+                await websocket.send_json({
+                    "type": "error", 
+                    "message": f"Connection error: {str(e)}"
+                })
             finally:
                 await websocket.close()
 
@@ -156,26 +159,30 @@ class TaskAPI:
 
     def setup_routes(self, app_instance):
         """Set up API endpoints with optional prefix."""
-        base_path = f"{self.prefix}/tasks"
-        
-        # Task management endpoints - now accepts POST body
-        app_instance.api.post(f"{base_path}/{{client_token}}/start/{{task_name}}")(self.start_task)
+        api_base_path = f"{self.api_base_path}/tasks"
+        ws_base_path = f"{self.ws_base_path}/tasks"
+        # Task management endpoints
+        app_instance.api.post(f"{api_base_path}/{{client_token}}/{{session_id}}/start/{{task_name}}")(self.start_task)
         
         # Status endpoints
-        app_instance.api.get(f"{base_path}/{{client_token}}")(self.get_task_status)
-        app_instance.api.get(f"{base_path}/{{client_token}}/{{task_id}}")(self.get_task_status)
-        
-        # WebSocket endpoint
-        app_instance.api.websocket(f"{base_path}/ws/{{client_token}}/{{task_id}}")(self.stream_task_status)
+        app_instance.api.get(f"{api_base_path}/{{client_token}}")(self.get_task_status)
+        app_instance.api.get(f"{api_base_path}/{{client_token}}/{{task_id}}")(self.get_task_status)
         
         # Result endpoint
-        app_instance.api.get(f"{base_path}/{{client_token}}/{{task_id}}/result")(self.get_task_result)
+        app_instance.api.get(f"{api_base_path}/{{client_token}}/{{task_id}}/result")(self.get_task_result)
+
+        # WebSocket endpoints - now under /ws/ path
+        app_instance.api.websocket(f"{ws_base_path}/{{client_token}}")(self.stream_task_status)
+        app_instance.api.websocket(f"{ws_base_path}/{{client_token}}/{{task_id}}")(self.stream_task_status)
+        
+        
 
 
-def setup_api(app, state_cls: Type[MonitorState], prefix: str = ""):
+def setup_api(app, state_info: Dict[str, Any]):
     """
     Set up multiple API endpoints for state tasks.
+    state_info must contain keys: "cls", "api_prefix", "ws_prefix"
     """
-    task_api = TaskAPI(app, state_cls, prefix)
+    task_api = TaskAPI(app, state_info)
     task_api.setup_routes(app)
 

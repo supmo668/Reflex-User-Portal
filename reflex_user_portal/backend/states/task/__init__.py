@@ -40,9 +40,9 @@ def discover_task_states() ->Dict[str, dict]:
                     obj != MonitorState):
                     # Generate API prefix from module and class name
                     # Optionally: api_prefix = f"/api/{module_name}/{name.lower()}"  for multiple state class in a module 
-                    api_prefix = f"/api/{module_name}"  
                     state_mappings[obj.__name__] = {
-                        "api_prefix": api_prefix,
+                        "api_prefix": f"/api/{module_name}",
+                        "ws_prefix": f"/ws/{module_name}",
                         "cls": obj
                     }
 
@@ -113,17 +113,18 @@ class DisplayMonitorState(MonitorState):
         """Change the current state type being monitored."""
         self.current_state_type = state_type
 
-    @monitored_background_task()
-    async def execute_current_task(self, task: TaskContext):
+    @rx.event
+    def execute_current_task(self):
         """Execute the currently selected task function."""
         if self.current_state_class and self.current_task_function:
-            # Get the task method from the class
-            handler = getattr(self.current_state_class, self.current_task_function, None)
-            if handler:
-                # Execute the decorated task handler directly
-                return handler.fn
+            # Get the launcher method from the class
+            launcher_name = f"launch_{self.current_task_function}"
+            launcher = getattr(self.current_state_class, launcher_name, None)
+            if launcher:
+                # Return the launcher event which will properly handle the background task
+                return launcher(self)
             else:
-                raise ValueError(f"Task function {self.current_task_function} not found or not a monitored task in {self.current_state_type}")
+                raise ValueError(f"Launch handler {launcher_name} not found in {self.current_state_type}")
         else:
             raise ValueError("No valid state type or task function selected")
 
