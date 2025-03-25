@@ -54,11 +54,11 @@ def task_status_display():
                     on_change=DisplayMonitorState.change_task_function,
                 ),
             ),
-            rx.text("Client Token: (Example Task)", ExampleTaskState.client_token),
-            rx.text("Session ID: (Example Task)", ExampleTaskState.session_id),
+            rx.text("Client Token (Example Task): ", ExampleTaskState.client_token),
+            rx.text("Session ID (Example Task): ", ExampleTaskState.session_id),
             rx.text("Base API Path:"),
             rx.code_block(
-                get_command("base", DisplayMonitorState.current_state_type),
+                DisplayMonitorState.base_api_path,
                 language="bash",
                 can_copy=True
             ),

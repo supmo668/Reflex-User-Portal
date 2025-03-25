@@ -8,8 +8,9 @@ from reflex_user_portal.backend.wrapper.models import TaskStatus, TaskData
 class MonitorState(rx.State):
     """Base Monitor State for task tracking."""    
     tasks: Dict[str, TaskData] = {}    
-    current_task_function: Optional[str] = "long_running_task"
-    
+    current_task_function: Optional[str] = "{task_name}"
+    # this is for API access (task ID + task arguments)
+    enqueued_tasks: Dict[str, TaskData] = {}
     @rx.var
     def client_token(self) -> str:
         """Token for client identification."""

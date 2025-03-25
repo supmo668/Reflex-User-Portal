@@ -15,7 +15,7 @@ class TaskAPI:
         self.api_base_path = state_info.get("api_prefix", "/api")
         self.ws_base_path = state_info.get("ws_prefix", "/ws")
 
-    async def start_task(self, client_token: str, session_id: str, task_name: str, parameters: Dict[str, Any] = Body(default=None)):
+    async def start_task(self, client_token: str, task_name: str, parameters: Dict[str, Any] = Body(default=None)):
         """Start a task with optional parameters passed in request body."""
         try:
             task_method = getattr(self.state_cls, task_name, None)
@@ -25,14 +25,15 @@ class TaskAPI:
                     status_code=404, 
                     detail=f"Task {task_name} not found in {self.state_cls.__name__}"
                 )
-                
-            return await self.app.event_namespace.emit_update(
-                update=rx.state.StateUpdate(
-                    events=rx.event.fix_events([
-                        task_method], token=client_token),
-                ),
-                sid=session_id,
-            )
+            async with self.app.state_manager.modify_state(client_token) as state_manager:
+                monitor_state = await state_manager.get_state(self.state_cls)
+                return await self.app.event_namespace.emit_update(
+                    update=rx.state.StateUpdate(
+                        events=rx.event.fix_events([
+                            task_method], token=client_token),
+                    ),
+                    sid=monitor_state.session_id,
+                )
 
         except AttributeError as e:
             raise HTTPException(
@@ -147,8 +148,9 @@ class TaskAPI:
         """Set up API endpoints with optional prefix."""
         # Task management endpoints
         app_instance.api.post(
-            get_route("start", self.api_base_path, token="{client_token}", 
-                     session_id="{session_id}", task_name="{task_name}")
+            get_route("start", self.api_base_path, 
+                     token="{client_token}", 
+                     task_name="{task_name}")
         )(self.start_task)
         
         # Status endpoints
@@ -156,13 +158,12 @@ class TaskAPI:
             get_route("status", self.api_base_path, token="{client_token}")
         )(self.get_task_status)
         app_instance.api.get(
-            get_route("status_by_id", self.api_base_path, token="{client_token}", 
-                     task_id="{task_id}")
+            get_route("status_by_id", self.api_base_path, token="{client_token}", task_id="{task_id}")
         )(self.get_task_status)
         
         # Result endpoint
         app_instance.api.get(
-            get_route("result", self.api_base_path, token="{client_token}", 
+            get_route("result", self.api_base_path, token="{client_token}",
                      task_id="{task_id}")
         )(self.get_task_result)
 
@@ -171,7 +172,7 @@ class TaskAPI:
             get_route("ws_monitor", self.ws_base_path, token="{client_token}")
         )(self.stream_task_status)
         app_instance.api.websocket(
-            get_route("ws_task", self.ws_base_path, token="{client_token}", 
+            get_route("ws_task", self.ws_base_path, token="{client_token}",
                      task_id="{task_id}")
         )(self.stream_task_status)
         

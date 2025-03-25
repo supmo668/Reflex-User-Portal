@@ -1,23 +1,31 @@
+import os
 # Route templates for consistent path definitions
 API_ROUTES = {
     "base": "{prefix}/tasks/{token}",
     "status": "{prefix}/tasks/{token}",
     "status_by_id": "{prefix}/tasks/{token}/{task_id}",
-    "start": "{prefix}/tasks/{token}/{session_id}/start/{task_name}",
+    "start": "{prefix}/tasks/{token}/start/{task_name}",
     "result": "{prefix}/tasks/{token}/{task_id}/result",
     "ws_monitor": "{prefix}/tasks/{token}",
     "ws_task": "{prefix}/tasks/{token}/{task_id}"
 }
 
-# Command templates using route templates
+# Base command patterns
+HTTP_CMD_PATTERN = {
+    "GET": "curl -X GET {base_url}{route}",
+    "POST": "curl -X POST {base_url}{route}",
+    "WS": "wscat -c {ws_url}{route}"
+}
+
+# Command templates using route patterns
 API_COMMANDS = {
-    "base": "{base_url}{api_prefix}/tasks/{token}",
-    "status": "curl -X GET {base_url}{api_prefix}/tasks/{token}",
-    "status_by_id": "curl -X GET {base_url}{api_prefix}/tasks/{token}/{task_id}",
-    "start": "curl -X POST {base_url}{api_prefix}/tasks/{token}/{session_id}/start/{task_name}",
-    "result": "curl -X GET {base_url}{api_prefix}/tasks/{token}/{task_id}/result",
-    "ws_all": "wscat -c {ws_url}{ws_prefix}/tasks/{token}",
-    "ws_task": "wscat -c {ws_url}{ws_prefix}/tasks/{token}/{task_id}"
+    "base": "{base_url}" + API_ROUTES["base"],
+    "status": ("GET", API_ROUTES["status"]),
+    "status_by_id": ("GET", API_ROUTES["status_by_id"]),
+    "start": ("POST", API_ROUTES["start"]),
+    "result": ("GET", API_ROUTES["result"]),
+    "ws_all": ("WS", API_ROUTES["ws_monitor"]),
+    "ws_task": ("WS", API_ROUTES["ws_task"])
 }
 
 def get_route(route_type: str, prefix: str, **kwargs) -> str:
@@ -32,26 +40,32 @@ def format_command(command_type: str, state_info: dict, **kwargs) -> str:
     Format API commands using state mappings.
     Args:
         command_type: Type of command to format
-        state_name: Name of the state class from STATE_MAPPINGS
+        state_info: Dictionary containing api_prefix and ws_prefix
         **kwargs: Additional parameters for command formatting
     """
-    base_url = kwargs.pop("api_url", "http://localhost:8000")
-    ws_url = kwargs.pop("ws_url", "ws://localhost:8000")
-    
+    API_URL = os.getenv("API_URL", "http://localhost:8000")
+    WS_URL = os.getenv("WS_URL", "ws://localhost:8000")
     command_template = API_COMMANDS.get(command_type)
     if not command_template:
         raise ValueError(f"Unknown command type: {command_type}")
 
-    # Format with state-specific routing
+    # Format with prefix-specific routing
+    prefix = state_info.get("api_prefix", "/api")
+    if command_type.startswith("ws_"):
+        prefix = state_info.get("ws_prefix", "/ws")
+
+    # Special handling for base command
+    if command_type == "base":
+        return command_template.format(base_url=API_URL, prefix=prefix, **kwargs)
+
+    # For other commands, format the route first, then the command pattern
+    method, route_template = command_template
+    route = route_template.format(prefix=prefix, **kwargs)
+    
     format_params = {
-        "base_url": base_url,
-        "ws_url": ws_url,
-        "api_prefix": state_info["api_prefix"],
-        "ws_prefix": state_info["ws_prefix"],
-        **kwargs
+        "base_url": API_URL,
+        "ws_url": WS_URL,
+        "route": route
     }
 
-    try:
-        return command_template.format(**format_params)
-    except KeyError as e:
-        raise KeyError(f"Missing required parameter: {e} for command type: {command_type}")
+    return HTTP_CMD_PATTERN[method].format(**format_params)

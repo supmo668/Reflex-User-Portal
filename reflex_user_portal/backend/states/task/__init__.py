@@ -117,19 +117,19 @@ class DisplayMonitorState(MonitorState):
         """Change the current state type being monitored."""
         self.current_state_type = state_type
 
-    @rx.event
-    def execute_current_task(self):
-        """Execute the currently selected task function."""
-        if self.current_state_class and self.current_task_function:
-            # Get the launcher method from the class
-            launcher = getattr(self.current_state_class, self.current_task_function, None)
-            if launcher:
-                # Return the launcher event which will properly handle the background task
-                yield launcher
-            else:
-                raise ValueError(f"Launch handler {self.current_task_function} not found in {self.current_state_type}")
-        else:
-            raise ValueError("No valid state type or task function selected")
+    # @rx.event
+    # def execute_current_task(self):
+    #     """Execute the currently selected task function."""
+    #     if self.current_state_class and self.current_task_function:
+    #         # Get the launcher method from the class
+    #         launcher = getattr(self.current_state_class, self.current_task_function, None)
+    #         if launcher:
+    #             # Return the launcher event which will properly handle the background task
+    #             yield launcher
+    #         else:
+    #             raise ValueError(f"Launch handler {self.current_task_function} not found in {self.current_state_type}")
+    #     else:
+    #         raise ValueError("No valid state type or task function selected")
 
     @rx.event
     def change_task_function(self, function_name: str):
@@ -147,11 +147,12 @@ class DisplayMonitorState(MonitorState):
         return format_command(
             cmd_type,
             state_info,
-            api_url=API_URL,
-            ws_url=WS_URL,
             token=self.client_token,
             **kwargs
         )
+    @rx.var
+    def base_api_path(self) -> str:
+        return self.get_command("base", self.current_state_type)
     @rx.var
     def status_command(self) -> str:
         return self.get_command("status", self.current_state_type)
