@@ -68,43 +68,38 @@ def task_status_display():
                     rx.heading("API Commands", size="4"),
                     rx.text("Get All Tasks Status:"),
                     rx.code_block(
-                        get_command("status", DisplayMonitorState.current_state_type),
+                        DisplayMonitorState.status_command,
                         language="bash",
                         can_copy=True
                     ),
                     rx.text("Get Single Task Status:"),
                     rx.code_block(
-                        get_command("status_by_id", DisplayMonitorState.current_state_type, task_id="{task_id}"),
+                        DisplayMonitorState.task_status_command,
                         language="bash",
                         can_copy=True
                     ),
                     rx.text("Start Selected Task:"),
                     rx.code_block(
-                        get_command(
-                            "start",
-                            DisplayMonitorState.current_state_type,
-                            session_id=DisplayMonitorState.session_id,
-                            task_name=DisplayMonitorState.current_task_function
-                        ),
+                        DisplayMonitorState.start_command,
                         language="bash",
                         can_copy=True
                     ),
                     rx.text("Get Task Result:"),
                     rx.code_block(
-                        get_command("result", DisplayMonitorState.current_state_type, task_id="{task_id}"),
+                        DisplayMonitorState.result_command,
                         language="bash",
                         can_copy=True
                     ),
                     rx.heading("WebSocket Commands", size="4"),
                     rx.text("Monitor All Tasks:"),
                     rx.code_block(
-                        get_command("ws_all", DisplayMonitorState.current_state_type),
+                        DisplayMonitorState.ws_status_command,
                         language="bash",
                         can_copy=True
                     ),
                     rx.text("Monitor Specific Task:"),
                     rx.code_block(
-                        get_command("ws_task", DisplayMonitorState.current_state_type, task_id="{task_id}"),
+                        DisplayMonitorState.ws_task_command,
                         language="bash",
                         can_copy=True
                     ),

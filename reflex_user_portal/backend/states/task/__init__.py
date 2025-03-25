@@ -79,6 +79,8 @@ def _process_module(module_name: str, state_mappings: Dict[str, dict]):
 STATE_MAPPINGS: Dict[str, dict] = discover_task_states()
 print(f"Discovered task states: {list(STATE_MAPPINGS.keys())}")
 
+from reflex_user_portal.backend.api.commands import format_command
+
 class DisplayMonitorState(MonitorState):
     """Advanced Monitor State with built-in state type management."""
     current_state_type: str = "ExampleTaskState"
@@ -136,6 +138,38 @@ class DisplayMonitorState(MonitorState):
             self.current_task_function = function_name
         else:
             raise ValueError(f"Invalid task function. Available functions in {self.current_state_type}: {list(self.current_state_class.get_task_functions().keys())}")
+        
+    def get_command(self, cmd_type: str, state_name: str, **kwargs) -> str:
+        """Helper to format commands with current state info"""
+        state_info = STATE_MAPPINGS[state_name]
+        API_URL = os.getenv("API_URL", "http://localhost:8000")
+        WS_URL = os.getenv("WS_URL", "ws://localhost:8000")
+        return format_command(
+            cmd_type,
+            state_info,
+            api_url=API_URL,
+            ws_url=WS_URL,
+            token=self.client_token,
+            **kwargs
+        )
+    @rx.var
+    def status_command(self) -> str:
+        return self.get_command("status", self.current_state_type)
+    @rx.var
+    def task_status_command(self) -> str:
+        return self.get_command("status_by_id", self.current_state_type, task_id="{task_id}")
+    @rx.var
+    def start_command(self) -> str:
+        return self.get_command("start", self.current_state_type, session_id="{session_id}", task_name=self.current_task_function)
+    @rx.var
+    def result_command(self) -> str:
+        return self.get_command("result", self.current_state_type, task_id="{task_id}")
+    @rx.var
+    def ws_status_command(self) -> str:
+        return self.get_command("ws_all", self.current_state_type)
+    @rx.var
+    def ws_task_command(self) -> str:
+        return self.get_command("ws_task", self.current_state_type, task_id="{task_id}")
         
 # Export discovered classes
 __all__ = ["MonitorState", "DisplayMonitorState", "STATE_MAPPINGS"] + list(STATE_MAPPINGS.keys())
