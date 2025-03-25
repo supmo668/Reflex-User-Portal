@@ -5,8 +5,11 @@ import asyncio
 
 import reflex as rx
 from reflex_user_portal.backend.api.commands import get_route
+from reflex_user_portal.utils.logger import get_logger
 
 from ..wrapper.task import TaskStatus
+
+logger = get_logger("api.task")
 
 class TaskAPI:
     def __init__(self, app, state_info: Dict[str, Any]):
@@ -19,8 +22,9 @@ class TaskAPI:
         """Start a task with optional parameters passed in request body."""
         try:
             task_method = getattr(self.state_cls, task_name, None)
-            print(f"Running task: {task_name} with parameters: {parameters}")
+            logger.info(f"Running task: {task_name} with parameters: {parameters}")
             if not task_method:
+                logger.error(f"Task {task_name} not found in {self.state_cls.__name__}")
                 raise HTTPException(
                     status_code=404, 
                     detail=f"Task {task_name} not found in {self.state_cls.__name__}"
@@ -75,6 +79,7 @@ class TaskAPI:
 
     async def stream_task_status(self, websocket: WebSocket, client_token: str, task_id: Optional[str] = None): 
         """WebSocket endpoint for streaming real-time task status updates."""
+        logger.info(f"New websocket connection for client {client_token}, task {task_id}")
         await websocket.accept()
         
         try:
@@ -89,6 +94,7 @@ class TaskAPI:
                     current_state = await self.get_task_status(client_token, task_id)
                     # Only send update if state changed
                     if current_state != prev_state:
+                        logger.debug(f"State changed for task {task_id}")
                         await websocket.send_json({
                             "type": "state_update",
                             "data": current_state
@@ -96,6 +102,7 @@ class TaskAPI:
                         prev_state = current_state
                         
                 except HTTPException as e:
+                    logger.error(f"HTTP error in websocket: {e.detail}")
                     # Send error and close if task not found or invalid
                     await websocket.send_json({
                         "type": "error",
@@ -106,10 +113,12 @@ class TaskAPI:
                     break
                         
         except WebSocketDisconnect:
-            pass
+            logger.info(f"Websocket disconnected for client {client_token}")
         except asyncio.CancelledError:
+            logger.info(f"Websocket cancelled for client {client_token}")
             await websocket.close()
         except Exception as e:
+            logger.exception(f"Error in websocket connection: {str(e)}")
             # Handle any other errors
             try:
                 await websocket.send_json({
