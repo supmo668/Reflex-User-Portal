@@ -4,6 +4,7 @@ import inspect
 from typing import Dict, Type, ClassVar, Optional
 
 import reflex as rx
+
 from .base import MonitorState
 
 def discover_task_states() -> Dict[str, dict]:
@@ -11,35 +12,71 @@ def discover_task_states() -> Dict[str, dict]:
     states_dir = os.path.dirname(__file__)
     state_mappings: Dict[str, dict] = {}
     
-    # First, collect all the mappings
+    # Process all items in the directory
     for item in os.listdir(states_dir):
-        if item in {'__init__.py', '__pycache__', 'base.py'} or not item.endswith('.py'):
+        # Skip special files and directories
+        if item in {'__init__.py', '__pycache__', 'base.py'}:
             continue
             
-        module_name = item[:-3]
-        try:
-            # Import using absolute path
-            module = importlib.import_module(f".{module_name}", package=__package__)
+        item_path = os.path.join(states_dir, item)
+        
+        if os.path.isfile(item_path) and item.endswith('.py'):
+            # Handle direct Python files
+            module_name = item[:-3]
+            _process_module(module_name, state_mappings)
             
-            # Find MonitorState subclasses
-            for name, obj in inspect.getmembers(module):
-                if (inspect.isclass(obj) and 
-                    issubclass(obj, MonitorState) and 
-                    obj != MonitorState):
-                    state_mappings[name] = {
-                        "api_prefix": f"/api/{module_name}",
-                        "ws_prefix": f"/ws/{module_name}",
-                        "cls": obj,
-                    }
-                    # Make the class available at package level
-                    globals()[name] = obj
-        except ImportError as e:
-            print(f"Warning: Could not import {module_name}: {e}")
-            
+        elif os.path.isdir(item_path):
+            # Handle package directories with __init__.py
+            init_path = os.path.join(item_path, '__init__.py')
+            if os.path.exists(init_path):
+                try:
+                    # Import the package
+                    package = importlib.import_module(f".{item}", package=__package__)
+                    
+                    # First try processing exposed modules in __all__
+                    if hasattr(package, '__all__'):
+                        for exposed_name in package.__all__:
+                            # Get the actual object that was exposed
+                            exposed_obj = getattr(package, exposed_name)
+                            if (inspect.isclass(exposed_obj) and 
+                                issubclass(exposed_obj, MonitorState) and 
+                                exposed_obj != MonitorState):
+                                state_mappings[exposed_name] = {
+                                    "api_prefix": f"/api/{item}",
+                                    "ws_prefix": f"/ws/{item}",
+                                    "cls": exposed_obj,
+                                }
+                                # Make the class available at package level
+                                globals()[exposed_name] = exposed_obj
+                                
+                except ImportError as e:
+                    print(f"Warning: Could not import package {item}: {e}")
+                    
     return state_mappings
 
+def _process_module(module_name: str, state_mappings: Dict[str, dict]):
+    """Process a module and add any found state classes to the mappings."""
+    try:
+        # Import using absolute path
+        module = importlib.import_module(f".{module_name}", package=__package__)
+        
+        # Find MonitorState subclasses
+        for name, obj in inspect.getmembers(module):
+            if (inspect.isclass(obj) and 
+                issubclass(obj, MonitorState) and 
+                obj != MonitorState):
+                state_mappings[name] = {
+                    "api_prefix": f"/api/{module_name.split('.')[-1]}",
+                    "ws_prefix": f"/ws/{module_name.split('.')[-1]}",
+                    "cls": obj,
+                }
+                # Make the class available at package level
+                globals()[name] = obj
+    except ImportError as e:
+        print(f"Warning: Could not import {module_name}: {e}")
+
 # Discover states once at module load
-STATE_MAPPINGS: ClassVar[Dict[str, dict]] = discover_task_states()
+STATE_MAPPINGS: Dict[str, dict] = discover_task_states()
 print(f"Discovered task states: {list(STATE_MAPPINGS.keys())}")
 
 class DisplayMonitorState(MonitorState):
@@ -51,25 +88,11 @@ class DisplayMonitorState(MonitorState):
     @rx.var
     def current_state_info(self) -> dict:
         """Get the current state information."""
-        return self.state_mappings.get(self.current_state_type, {})
+        return STATE_MAPPINGS.get(self.current_state_type, {})
     @rx.var
     def current_state_class(self) -> Optional[Type[MonitorState]]:
         """Get the current state class based on the current state type."""
         return self.current_state_info.get("cls")
-    
-    # @rx.var
-    # async def active_tasks(self) -> List[TaskData]:
-    #     """Get active tasks from the current state."""
-    #     # Get an instance of the current state class
-    #     task_state = await self.get_state(self.current_state_class)
-    #     return task_state.active_tasks
-    
-    # @rx.var
-    # async def completed_tasks(self) -> List[TaskData]:
-    #     """Get active tasks from the current state."""
-    #     # Get an instance of the current state class
-    #     task_state = await self.get_state(self.current_state_class)
-    #     return task_state.completed_tasks
     
     @rx.var
     def task_functions(self) -> Dict[str, str]:
@@ -106,5 +129,13 @@ class DisplayMonitorState(MonitorState):
         else:
             raise ValueError("No valid state type or task function selected")
 
+    @rx.event
+    def change_task_function(self, function_name: str):
+        """Change the current task function."""
+        if function_name in self.current_state_class.get_task_functions():
+            self.current_task_function = function_name
+        else:
+            raise ValueError(f"Invalid task function. Available functions in {self.current_state_type}: {list(self.current_state_class.get_task_functions().keys())}")
+        
 # Export discovered classes
 __all__ = ["MonitorState", "DisplayMonitorState", "STATE_MAPPINGS"] + list(STATE_MAPPINGS.keys())

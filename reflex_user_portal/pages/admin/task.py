@@ -1,8 +1,9 @@
 import os
+from typing import Type
 
 import reflex as rx
 from reflex_user_portal.templates import portal_template
-from reflex_user_portal.backend.states.task import DisplayMonitorState, STATE_MAPPINGS
+from reflex_user_portal.backend.states.task import DisplayMonitorState, STATE_MAPPINGS, MonitorState
 from reflex_user_portal.backend.api.commands import format_command
 
 @portal_template(route="/admin/tasks", title="Task Dashboard")
@@ -10,10 +11,9 @@ def task_status_display():
     """Display the status of tasks."""
     API_URL = os.getenv("API_URL", "http://localhost:8000")
     WS_URL = os.getenv("WS_URL", "ws://localhost:8000")
-    
-    def get_command(cmd_type: str, **kwargs) -> str:
+    ExampleTaskState: Type[MonitorState] = STATE_MAPPINGS["ExampleTaskState"].get("cls")
+    def get_command(cmd_type: str, state_name: str, **kwargs) -> str:
         """Helper to format commands with current state info"""
-        # state_info = STATE_MAPPINGS[DisplayMonitorState.current_state_type]
         state_info = STATE_MAPPINGS["ExampleTaskState"]
         return format_command(
             cmd_type,
@@ -23,7 +23,7 @@ def task_status_display():
             token=ExampleTaskState.client_token,
             **kwargs
         )
-    ExampleTaskState = STATE_MAPPINGS["ExampleTaskState"].get("cls")
+    
     return rx.center(
         rx.vstack(
             rx.heading("Task Monitor"),
@@ -54,11 +54,11 @@ def task_status_display():
                     on_change=DisplayMonitorState.change_task_function,
                 ),
             ),
-            rx.text("Client Token: ", ExampleTaskState.client_token),
-            rx.text("Session ID: ", ExampleTaskState.session_id),
+            rx.text("Client Token: (Example Task)", ExampleTaskState.client_token),
+            rx.text("Session ID: (Example Task)", ExampleTaskState.session_id),
             rx.text("Base API Path:"),
             rx.code_block(
-                get_command("base"),
+                get_command("base", DisplayMonitorState.current_state_type),
                 language="bash",
                 can_copy=True
             ),
@@ -68,13 +68,13 @@ def task_status_display():
                     rx.heading("API Commands", size="4"),
                     rx.text("Get All Tasks Status:"),
                     rx.code_block(
-                        get_command("status"),
+                        get_command("status", DisplayMonitorState.current_state_type),
                         language="bash",
                         can_copy=True
                     ),
                     rx.text("Get Single Task Status:"),
                     rx.code_block(
-                        get_command("status_by_id", task_id="{task_id}"),
+                        get_command("status_by_id", DisplayMonitorState.current_state_type, task_id="{task_id}"),
                         language="bash",
                         can_copy=True
                     ),
@@ -82,28 +82,29 @@ def task_status_display():
                     rx.code_block(
                         get_command(
                             "start",
-                            session_id=ExampleTaskState.session_id,
-                            task_name=DisplayMonitorState.current_task_function  # Changed from task_function to task_name
+                            DisplayMonitorState.current_state_type,
+                            session_id=DisplayMonitorState.session_id,
+                            task_name=DisplayMonitorState.current_task_function
                         ),
                         language="bash",
                         can_copy=True
                     ),
                     rx.text("Get Task Result:"),
                     rx.code_block(
-                        get_command("result", task_id="{task_id}"),
+                        get_command("result", DisplayMonitorState.current_state_type, task_id="{task_id}"),
                         language="bash",
                         can_copy=True
                     ),
                     rx.heading("WebSocket Commands", size="4"),
                     rx.text("Monitor All Tasks:"),
                     rx.code_block(
-                        get_command("ws_all"),  # Changed from ws_all to ws_monitor
+                        get_command("ws_all", DisplayMonitorState.current_state_type),
                         language="bash",
                         can_copy=True
                     ),
                     rx.text("Monitor Specific Task:"),
                     rx.code_block(
-                        get_command("ws_task", task_id="{task_id}"),
+                        get_command("ws_task", DisplayMonitorState.current_state_type, task_id="{task_id}"),
                         language="bash",
                         can_copy=True
                     ),
@@ -111,16 +112,17 @@ def task_status_display():
                     border="1px solid",
                     border_radius="md",
                 ),
+                padding="4",
+                border="1px solid",
             ),
             rx.button(
-                "Start Selected Task (Simulated)",
+                "Start Selected Task",
                 on_click=ExampleTaskState.long_running_task,
-                color_scheme="green",
             ),
             rx.divider(),
             
             # Active Tasks Section
-            rx.heading("Active Tasks"),
+            rx.heading("Active Tasks (Simulated Example)"),
             rx.foreach(
                 ExampleTaskState.active_tasks,
                 lambda task: rx.vstack(
@@ -130,16 +132,15 @@ def task_status_display():
                     rx.progress(value=task.progress, max=100),
                     rx.text("Monitor this task:"),
                     rx.code_block(
-                        get_command("ws_task", task_id=task.id),
-                        language="bash",
-                        can_copy=True,
+                        get_command("ws_task", "ExampleTaskState", task_id=task.id),
+                        language="bash", can_copy=True,
                     ),
                     padding="2",
                 )
             ),
             
             # Completed Tasks Section
-            rx.heading("Completed Tasks"),
+            rx.heading("Completed Tasks (Simulated Example)"),
             rx.foreach(
                 ExampleTaskState.completed_tasks,
                 lambda task: rx.vstack(
@@ -148,9 +149,8 @@ def task_status_display():
                     rx.text(f"Task ID: {task.id}"),
                     rx.text("Get task result:"),
                     rx.code_block(
-                        get_command("result", task_id=task.id),
-                        language="bash",
-                        can_copy=True,
+                        get_command("result", "ExampleTaskState", task_id=task.id),
+                        language="bash", can_copy=True,
                     ),
                     padding="2",
                 ),
