@@ -1,11 +1,14 @@
 import os
 import importlib
 import inspect
-from typing import Dict, Type, ClassVar, Optional
+from typing import Dict, Type, Optional
 
 import reflex as rx
 
 from .base import MonitorState
+from reflex_user_portal.utils.logger import get_logger
+logger = get_logger(__name__)
+
 
 def discover_task_states() -> Dict[str, dict]:
     """Dynamically discover all task state classes."""
@@ -50,7 +53,7 @@ def discover_task_states() -> Dict[str, dict]:
                                 globals()[exposed_name] = exposed_obj
                                 
                 except ImportError as e:
-                    print(f"Warning: Could not import package {item}: {e}")
+                    logger.info(f"Warning: Could not import package {item}: {e}")
                     
     return state_mappings
 
@@ -73,11 +76,11 @@ def _process_module(module_name: str, state_mappings: Dict[str, dict]):
                 # Make the class available at package level
                 globals()[name] = obj
     except ImportError as e:
-        print(f"Warning: Could not import {module_name}: {e}")
+        logger.info(f"Warning: Could not import {module_name}: {e}")
 
 # Discover states once at module load
 STATE_MAPPINGS: Dict[str, dict] = discover_task_states()
-print(f"Discovered task states: {list(STATE_MAPPINGS.keys())}")
+logger.info(f"Discovered task states: {list(STATE_MAPPINGS.keys())}")
 
 from reflex_user_portal.backend.api.commands import format_command
 
@@ -101,7 +104,9 @@ class DisplayMonitorState(MonitorState):
         """Get available task functions for current state type."""
         if self.current_state_class and hasattr(self.current_state_class, "get_task_functions"):
             task_functions = self.current_state_class.get_task_functions()
-            print(f"Found {len(task_functions)} task functions named {list(task_functions.keys())}")
+            logger.info(f"Found {len(task_functions)} task functions named {list(task_functions.keys())}")
+            if task_functions:
+                self.current_task_function = list(task_functions.keys())[0]
             return task_functions
         return {}
     
@@ -134,42 +139,47 @@ class DisplayMonitorState(MonitorState):
     @rx.event
     def change_task_function(self, function_name: str):
         """Change the current task function."""
-        if function_name in self.current_state_class.get_task_functions():
+        if function_name in self.task_functions:
             self.current_task_function = function_name
         else:
-            raise ValueError(f"Invalid task function. Available functions in {self.current_state_type}: {list(self.current_state_class.get_task_functions().keys())}")
+            raise ValueError(f"Invalid task function. Available functions in {self.current_state_type}: {list(self.task_functions.keys())}")
         
     def get_command(self, cmd_type: str, state_name: str, **kwargs) -> str:
         """Helper to format commands with current state info"""
         state_info = STATE_MAPPINGS[state_name]
-        API_URL = os.getenv("API_URL", "http://localhost:8000")
-        WS_URL = os.getenv("WS_URL", "ws://localhost:8000")
         return format_command(
             cmd_type,
             state_info,
-            token=self.client_token,
+            client_token=self.client_token,
             **kwargs
         )
     @rx.var
     def base_api_path(self) -> str:
+        """Get the base API path for the current state type."""
         return self.get_command("base", self.current_state_type)
     @rx.var
     def status_command(self) -> str:
+        """Get the command to check the status of all tasks."""
         return self.get_command("status", self.current_state_type)
     @rx.var
     def task_status_command(self) -> str:
+        """Get the command to check the status of a specific task."""
         return self.get_command("status_by_id", self.current_state_type, task_id="{task_id}")
     @rx.var
     def start_command(self) -> str:
+        """Get the command to start a task."""
         return self.get_command("start", self.current_state_type, session_id="{session_id}", task_name=self.current_task_function)
     @rx.var
     def result_command(self) -> str:
+        """Get the command to check the result of a task."""
         return self.get_command("result", self.current_state_type, task_id="{task_id}")
     @rx.var
     def ws_status_command(self) -> str:
+        """Get the command to check the status of all tasks via WebSocket."""
         return self.get_command("ws_all", self.current_state_type)
     @rx.var
     def ws_task_command(self) -> str:
+        """Get the command to check the status of a specific task via WebSocket."""
         return self.get_command("ws_task", self.current_state_type, task_id="{task_id}")
         
 # Export discovered classes

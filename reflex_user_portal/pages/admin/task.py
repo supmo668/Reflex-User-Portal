@@ -2,6 +2,8 @@ import os
 from typing import Type
 
 import reflex as rx
+
+
 from reflex_user_portal.templates import portal_template
 from reflex_user_portal.backend.states.task import DisplayMonitorState, STATE_MAPPINGS, MonitorState
 from reflex_user_portal.backend.api.commands import format_command
@@ -9,18 +11,14 @@ from reflex_user_portal.backend.api.commands import format_command
 @portal_template(route="/admin/tasks", title="Task Dashboard")
 def task_status_display():
     """Display the status of tasks."""
-    API_URL = os.getenv("API_URL", "http://localhost:8000")
-    WS_URL = os.getenv("WS_URL", "ws://localhost:8000")
     ExampleTaskState: Type[MonitorState] = STATE_MAPPINGS["ExampleTaskState"].get("cls")
-    def get_command(cmd_type: str, state_name: str, **kwargs) -> str:
+    def get_command(cmd_type: str, state_name: str="ExampleTaskState", **kwargs) -> str:
         """Helper to format commands with current state info"""
-        state_info = STATE_MAPPINGS["ExampleTaskState"]
+        state_info = STATE_MAPPINGS[state_name]
         return format_command(
             cmd_type,
             state_info,
-            api_url=API_URL,
-            ws_url=WS_URL,
-            token=ExampleTaskState.client_token,
+            client_token=ExampleTaskState.client_token,
             **kwargs
         )
     
@@ -54,8 +52,9 @@ def task_status_display():
                     on_change=DisplayMonitorState.change_task_function,
                 ),
             ),
-            rx.text("Client Token (Example Task): ", ExampleTaskState.client_token),
-            rx.text("Session ID (Example Task): ", ExampleTaskState.session_id),
+            rx.text("Client Token (Example Task): "),
+            rx.code_block(ExampleTaskState.client_token, can_copy=True),
+            rx.text("Session ID (Example Task): "), rx.code_block(ExampleTaskState.session_id, can_copy=True),
             rx.text("Base API Path:"),
             rx.code_block(
                 DisplayMonitorState.base_api_path,

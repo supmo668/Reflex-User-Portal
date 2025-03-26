@@ -182,6 +182,122 @@ The template system provides:
    - Create state handlers in `backend/custom_api_state.py`
    - Link configurations from DB to workload
 
+## Backend API Documentation
+
+### Background Tasks API
+
+The backend provides REST APIs and WebSocket endpoints for managing long-running background tasks.
+
+#### 1. Starting a Task
+
+Tasks can be started via POST request. Tasks requiring parameters must provide them in the request body according to their Pydantic model definition.
+
+**Endpoint Structure:**
+```
+POST /api/{state_name}/tasks/{client_token}/start/{task_name}
+```
+
+**Example - Starting a task with parameters:**
+```bash
+# Task with InputArgs model parameters
+curl -X POST \
+  -H "Content-Type: application/json" \
+  http://localhost:8000/api/example_task2/tasks/{client_token}/start/loaded_task \
+  -d '{"name": "bob", "age": 6}'
+```
+
+The parameter structure is defined by Pydantic models:
+```python
+# model.py
+class InputArgs(BaseModel):
+    name: str
+    age: int
+```
+
+#### 2. Monitoring Tasks
+
+##### REST Endpoints
+
+Get task status:
+```bash
+# Get specific task
+GET /api/{state_name}/tasks/{client_token}/status/{task_id}
+
+# Get all tasks
+GET /api/{state_name}/tasks/{client_token}/status
+```
+
+Get task result:
+```bash
+GET /api/{state_name}/tasks/{client_token}/result/{task_id}
+```
+
+##### WebSocket Monitoring
+
+Connect to WebSocket for real-time updates:
+```bash
+# Monitor specific task
+ws://localhost:8000/api/tasks/{client_token}/{task_id}/monitor
+
+# Monitor all tasks
+ws://localhost:8000/api/tasks/{client_token}/monitor
+```
+
+WebSocket messages follow this structure:
+```json
+{
+    "type": "state_update",
+    "data": {
+        "task_id": "xxx",
+        "status": "PROCESSING|COMPLETED|ERROR",
+        "progress": 0-100,
+        "result": "task result when completed",
+        "error": "error message if failed"
+    }
+}
+```
+
+Example WebSocket client:
+```python
+import websockets
+import asyncio
+import json
+
+async def monitor_task(client_token, task_id=None):
+    url = f"ws://localhost:8000/ws/example_task2/tasks/{client_token}"
+    if task_id:
+        url = f"{url}/{task_id}"
+        
+    async with websockets.connect(url) as ws:
+        while True:
+            msg = await ws.recv()
+            state = json.loads(msg)
+            print(f"Task update: {state}")
+            
+            if state["data"]["status"] in ["COMPLETED", "ERROR"]:
+                break
+
+# Usage
+asyncio.run(monitor_task("your-client-token", "task-id"))
+```
+
+### Development Guidelines
+
+1. **Adding New Task Types**
+   - Define task logic in state classes using `@monitored_background_task` decorator
+   - For tasks with parameters, create Pydantic models in `model.py`
+   - Task methods should use `TaskContext` for progress updates
+
+2. **Task Status Updates**
+   - Use `task.update()` for progress and status changes
+   - Status values: PROCESSING, COMPLETED, ERROR
+   - Include progress (0-100) for long-running tasks
+
+3. **Error Handling**
+   - Tasks should handle exceptions and update status accordingly
+   - Use `TaskError` for specific task failures
+   - WebSocket connections handle disconnects gracefully
+
 ## Contributing
 
 Contributions welcome! Please submit Pull Requests.

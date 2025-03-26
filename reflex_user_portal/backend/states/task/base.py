@@ -1,16 +1,18 @@
 from typing import Dict, List, Optional
 import inspect
+from pydantic import BaseModel
 
 import reflex as rx
 from reflex_user_portal.backend.wrapper.models import TaskStatus, TaskData
-
 
 class MonitorState(rx.State):
     """Base Monitor State for task tracking."""    
     tasks: Dict[str, TaskData] = {}    
     current_task_function: Optional[str] = "{task_name}"
+    tasks_argument: Dict[str, BaseModel] = {}
+    
     # this is for API access (task ID + task arguments)
-    enqueued_tasks: Dict[str, TaskData] = {}
+    enqueued_tasks: Dict[str, dict] = {}
     @rx.var
     def client_token(self) -> str:
         """Token for client identification."""
@@ -78,7 +80,9 @@ class MonitorState(rx.State):
                     task_functions[name] = display_name
                     break
                 current_method = current_method.__wrapped__
-        
+        if task_functions:
+            # Sort task functions by their display names
+            task_functions = dict(sorted(task_functions.items(), key=lambda item: item[0]))
         return task_functions
     @rx.event
     def change_task_function(self, function_name: str):

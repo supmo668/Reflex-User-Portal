@@ -1,5 +1,6 @@
 """Configuration settings for the application."""
 import os, warnings
+import logging
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -10,7 +11,9 @@ if not load_envar:
 # App configuration
 APP_DISPLAY_NAME = os.getenv("APP_DISPLAY_NAME", "App Portal")
 APP_ENV = os.getenv("APP_ENV", "DEV").upper()
+LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG" if APP_ENV in ["DEV", "TEST"] else "INFO").upper()
 print(f"App environment: {APP_ENV}")
+
 # Admin configuration
 ADMIN_USER_EMAILS = os.getenv("ADMIN_USER_EMAILS", "").split(",")
 

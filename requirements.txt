@@ -1,2 +1,2 @@
-reflex>=0.5.5
+reflex==0.7.0
 reflex-clerk==1.0.3

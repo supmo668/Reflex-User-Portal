@@ -2,22 +2,11 @@ import reflex as rx
 import functools
 import uuid
 from typing import Any
-from .models import TaskData, TaskStatus
+from .models import TaskData, TaskStatus, TaskContext
 
-class TaskContext:
-    """Context manager for updating task status."""
-    def __init__(self, state, task_id):
-        self.state = state
-        self.task_id = task_id
-    
-    async def update(self, progress: int, status: str, result: Any = None):
-        """Update task progress, status and result"""
-        async with self.state:
-            self.state.tasks[self.task_id].progress = progress
-            self.state.tasks[self.task_id].status = status
-            self.state.tasks[self.task_id].active = True
-            if result is not None:
-                self.state.tasks[self.task_id].result = result
+from reflex_user_portal.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 def monitored_background_task(func=None):
     """
@@ -36,12 +25,13 @@ def monitored_background_task(func=None):
     async def wrapper(state: rx.State, **kwargs) -> Any:
         # Pass through the marker
         wrapper.is_monitored_background_task = True
-        
-        # Generate task ID
-        task_id = str(uuid.uuid4())[:8]
-        
         # Initialize task
         async with state:
+            if getattr(state, "tasks_argument", {}):
+                task_id, task_args = state.tasks_argument.popitem()
+                kwargs.update({"task_args": task_args} if task_args else task_args)
+            else:
+                task_id = str(uuid.uuid4())[:8]
             state.tasks[task_id] = TaskData(
                 id=task_id,
                 name=func.__name__.replace('_', ' ').title(),
@@ -55,7 +45,6 @@ def monitored_background_task(func=None):
             # Create task context
             task_ctx = TaskContext(state, task_id)
             result = await func(state, task_ctx, **kwargs)
-            
             # Mark task as complete with final result
             async with state:
                 state.tasks[task_id].status = TaskStatus.COMPLETED

@@ -1,13 +1,13 @@
 import os
 # Route templates for consistent path definitions
 API_ROUTES = {
-    "base": "{prefix}/tasks/{token}",
-    "status": "{prefix}/tasks/{token}",
-    "status_by_id": "{prefix}/tasks/{token}/{task_id}",
-    "start": "{prefix}/tasks/{token}/start/{task_name}",
-    "result": "{prefix}/tasks/{token}/{task_id}/result",
-    "ws_monitor": "{prefix}/tasks/{token}",
-    "ws_task": "{prefix}/tasks/{token}/{task_id}"
+    "base": "{prefix}/tasks/{client_token}",
+    "status": "{prefix}/tasks/{client_token}",
+    "status_by_id": "{prefix}/tasks/{client_token}/{task_id}",
+    "start": "{prefix}/tasks/{client_token}/start/{task_name}",
+    "result": "{prefix}/tasks/{client_token}/{task_id}/result",
+    "ws_monitor": "{prefix}/tasks/{client_token}",
+    "ws_task": "{prefix}/tasks/{client_token}/{task_id}"
 }
 
 # Base command patterns

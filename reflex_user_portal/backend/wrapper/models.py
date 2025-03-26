@@ -1,5 +1,24 @@
+import uuid
+from typing import Any
 from dataclasses import dataclass, field
 import asyncio
+
+class TaskContext:
+    """Context manager for updating task status."""
+    def __init__(self, state, task_id=None):
+        self.state = state
+        if task_id is None:
+            task_id = str(uuid.uuid4()[:8])
+        self.task_id = task_id
+    
+    async def update(self, progress: int, status: str, result: Any = None):
+        """Update task progress, status and result"""
+        async with self.state:
+            self.state.tasks[self.task_id].progress = progress
+            self.state.tasks[self.task_id].status = status
+            self.state.tasks[self.task_id].active = True
+            if result is not None:
+                self.state.tasks[self.task_id].result = result
 
 class TaskStatus:
     PENDING = "PENDING"

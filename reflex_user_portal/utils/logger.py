@@ -1,15 +1,32 @@
 """Logger configuration for the application."""
+import os
 import logging
 import sys
 from typing import Optional
 
+from reflex_user_portal.config import LOG_LEVEL, APP_ENV
+
 # Create logger
+def get_log_level(level_str: str=None) -> int:
+    if not level_str:
+        return logging.INFO
+    levels = {
+        'DEBUG': logging.DEBUG,
+        'INFO': logging.INFO,
+        'WARNING': logging.WARNING,
+        'ERROR': logging.ERROR,
+        'CRITICAL': logging.CRITICAL
+    }
+    return levels.get(level_str.upper(), logging.INFO)
+
+LOG_LEVEL = get_log_level(LOG_LEVEL)
+
 logger = logging.getLogger("reflex_user_portal")
-logger.setLevel(logging.INFO)
+logger.setLevel(LOG_LEVEL)
 
 # Create console handler with formatting
 console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.INFO)
+console_handler.setLevel(LOG_LEVEL)
 
 # Create formatter
 formatter = logging.Formatter(

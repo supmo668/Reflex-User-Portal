@@ -7,14 +7,15 @@ from reflex_user_portal.pages.portal import setup_pages as setup_portal_pages
 from reflex_user_portal.pages.admin import setup_pages as setup_admin_pages
 
 import reflex_user_portal.styles as styles
-
+from reflex_user_portal.utils.error_handler import custom_backend_handler, custom_frontend_handler
 
 # Create app instance
 app = rx.App(
     style=styles.base_style,
     stylesheets=[
-        "https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap",
-    ]
+        "https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
+    ],
+    backend_exception_handler=custom_backend_handler,
 )
 
 # Add pages
