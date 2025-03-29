@@ -41,9 +41,7 @@ def _show_user(user: User, index: int) -> rx.Component:
     Returns:
         Table row component
     """
-    try:
-        logger.debug(f"Rendering user row for index {index}")
-        
+    try:        
         bg_color = rx.cond(
             index % 2 == 0,
             rx.color("gray", 1),
