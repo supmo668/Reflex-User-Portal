@@ -17,7 +17,7 @@ class UserBaseState(rx.State):
     """User state for the application."""
     
     # User state
-    user: Optional[User] = User(user_type=UserType.GUEST)
+    user: Optional[User] = None
     redirect_after_login: Optional[str] = None
     
     @rx.var
@@ -26,6 +26,26 @@ class UserBaseState(rx.State):
         if self.user:
             return self.user.user_type == UserType.ADMIN.value
         return False
+    
+    async def get_or_create_guest(self) -> User:
+        """Get or create guest user."""
+        with rx.session() as session:
+            # Find existing guest user
+            user = session.exec(
+                select(User).where(User.user_type == UserType.GUEST.value)
+            ).first()
+            if user is None:
+                # Create new guest user with a generated email
+                timestamp = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')
+                user = User(
+                    email=f"guest_{timestamp}@temp.com",  # Generate unique email
+                    user_type=UserType.GUEST.value,
+                    created_at=datetime.now(timezone.utc)
+                )
+                session.add(user)
+                session.commit()
+                session.refresh(user)
+        return user
     
     async def get_or_create_user(self, clerk_state: dict = None) -> User:
         """Get or create user based on Clerk info."""
@@ -87,12 +107,12 @@ class UserAuthState(UserBaseState):
                         return rx.redirect(redirect_url)
             else:
                 # Not signed in
-                self.user.user_type = UserType.GUEST.value
+                self.user = await self.get_or_create_guest()
                 self.redirect_after_login = self.router.page.raw_path
 
         except Exception as e:
             logger.error("Error handling auth state change: %s", e, exc_info=True)
-            self.user.user_type = UserType.GUEST.value
+            self.user = await self.get_or_create_guest()
             self.redirect_after_login = None
 
 class UserAttributeState(UserBaseState):

@@ -1,43 +1,35 @@
 """User API endpoints and authentication."""
 from typing import Dict, Any, Optional
-import os
+from sqlmodel import select
 from datetime import datetime, timezone
 from fastapi import Request, HTTPException, status, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
-from clerk_backend_api import Clerk, User as ClerkUser
-from clerk_backend_api.jwks_helpers import AuthenticateRequestOptions
-import reflex as rx
 
-from reflex_user_portal.models.user import User, UserType, UserAPI
+import reflex as rx
+from clerk_backend_api import Clerk
+from clerk_backend_api.models import User as ClerkUser
+from clerk_backend_api.jwks_helpers import AuthenticateRequestOptions
+
+from reflex_user_portal.models.user import User, UserType, UserModel
 from reflex_user_portal.utils.logger import get_logger
-from reflex_user_portal.config import CLERK_AUTHORIZED_DOMAINS
+from reflex_user_portal.config import CLERK_AUTHORIZED_DOMAINS, CLERK_SECRET_KEY
 
 # Initialize components
 logger = get_logger(__name__)
-auth_scheme = HTTPBearer()
 
 # Initialize Clerk SDK
-clerk_secret_key = os.getenv('CLERK_SECRET_KEY')
-if not clerk_secret_key:
+if not CLERK_SECRET_KEY:
     raise ValueError("CLERK_SECRET_KEY environment variable is not set")
 
-clerk_sdk = Clerk(bearer_auth=clerk_secret_key)
+clerk_sdk = Clerk(bearer_auth=CLERK_SECRET_KEY)
 
-# Response models
-class AuthStatus(BaseModel):
-    """Authentication status model."""
-    authenticated: bool
-    message: str
-    user_id: Optional[int] = None
-    clerk_id: Optional[str] = None
 
 def get_or_create_user(session: rx.session, clerk_user: ClerkUser) -> User:
     """Get or create a user from Clerk data.
     
     Args:
         session: The database session
-        clerk_user: The Clerk user data
+        clerk_user: The Clerk user object
         
     Returns:
         User: The internal user model
@@ -46,12 +38,14 @@ def get_or_create_user(session: rx.session, clerk_user: ClerkUser) -> User:
         HTTPException: If there's an error creating/getting the user
     """
     try:
+        logger.debug("Getting or creating user against Clerk: %s", clerk_user.id)
         # Find existing user
         user = session.exec(
-            rx.select(User).where(User.clerk_id == clerk_user.user_id)
+            select(User).where(User.clerk_id == clerk_user.id)
         ).first()
         
         if user:
+            logger.debug("Found existing user: %s", user)
             return user
         
         # Get primary email
@@ -69,11 +63,10 @@ def get_or_create_user(session: rx.session, clerk_user: ClerkUser) -> User:
         session.add(user)
         session.commit()
         session.refresh(user)
-        
         return user
         
     except Exception as e:
-        logger.error(f"Error in get_or_create_user: {str(e)}")
+        logger.error("Error in get_or_create_user: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error creating/getting user: {str(e)}"
@@ -106,20 +99,15 @@ async def authenticate_clerk_request(request: Request) -> ClerkUser:
             )
         )
         if auth_state.is_signed_in:
-            user = clerk_sdk.users.get_user(auth_state.session.user_id)
+            user = clerk_sdk.users.get(user_id=auth_state.payload.get('sub'))
             if not user:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="User not found in Clerk"
                 )
             return user
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Not signed in"
-            )
     except Exception as e:
-        logger.error(f"Clerk authentication failed: {str(e)}")
+        logger.error("Clerk authentication failed: %s", e)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e)
@@ -128,7 +116,7 @@ async def authenticate_clerk_request(request: Request) -> ClerkUser:
 
 async def get_local_user(
     clerk_user: ClerkUser = Depends(authenticate_clerk_request),
-) -> User:
+) -> UserModel:
     """FastAPI dependency for user authentication.
     
     Args:
@@ -144,7 +132,7 @@ async def get_local_user(
     try:        
         # Get or create internal user
         with rx.session() as session:
-            user = get_or_create_user(session, clerk_user)
+            user = get_or_create_user(session, clerk_user.id)
             return update_user_login(session, user)
             
     except Exception as e:
@@ -153,23 +141,6 @@ async def get_local_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e)
         )
-    
-async def verify_token_api(
-    user: User = Depends(get_local_user)
-) -> AuthStatus:
-    """Verify the authentication token and return the authentication status."""
-    return AuthStatus(
-        authenticated=True,
-        message="Authentication successful",
-        user_id=user.id,
-        clerk_id=user.clerk_id
-    )
-
-async def get_current_user_api(
-    user: User = Depends(get_local_user)
-) -> UserAPI:
-    """Get current authenticated user."""
-    return UserAPI.from_user(user)
 
 async def get_user_queries_api(
     user_id: int,
@@ -218,4 +189,5 @@ def setup_api(app: rx.App) -> None:
     app.api.add_api_route("/api/users/{user_id}/queries", get_user_queries_api, methods=["GET"])
     
     # Authentication route
-    app.api.add_api_route("/api/auth/me", get_current_user_api, methods=["GET"])
+    app.api.add_api_route("/api/auth/me", get_local_user, methods=["GET"])
+    app.api.add_api_route("/api/auth/clerk/me", authenticate_clerk_request, methods=["GET"])

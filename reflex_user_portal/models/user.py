@@ -1,13 +1,11 @@
 """User model for the application."""
-from typing import List, Optional, Dict, Any
+from typing import Optional, Dict, Any
 from enum import Enum
-from sqlmodel import Field, Column, JSON
-
-import sqlmodel
-import reflex as rx
-from pydantic import BaseModel
-
 from datetime import datetime, timezone
+
+import reflex as rx
+from sqlmodel import Field, Column, JSON, Relationship
+from pydantic import BaseModel, SkipValidation
 
 class UserType(str, Enum):
     """User type enumeration."""
@@ -17,45 +15,21 @@ class UserType(str, Enum):
 
 class UserAttribute(rx.Model, table=True):
     """
-    [Optional] User attribute model for storing user-specific data.
+    User attribute model for storing user-specific data including collections.
+    Collections are stored as a dictionary where:
+    - key: collection name
+    - value: dictionary containing collection data including entries
     """
-    user_id: int = sqlmodel.Field(foreign_key="user.id")
-    user: Optional["User"] = sqlmodel.Relationship(
-        back_populates="user_attribute"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id")
+    user: Optional["User"] = Relationship(
+        back_populates="user_attribute",
     )
-    user_collections: Dict[str, Any] = Field(
+    collections: Dict[str, Any] = Field(
         default={},
         sa_column=Column(JSON)
     )
 
-class UserAPI(BaseModel):
-    """API-compatible user model."""
-    id: Optional[int] = None
-    email: str
-    clerk_id: str
-    user_type: UserType
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    avatar_url: Optional[str] = None
-    is_active: bool
-    created_at: Optional[datetime] = None
-    last_login: Optional[datetime] = None
-
-    @classmethod
-    def from_user(cls, user: "User") -> "UserAPI":
-        """Convert User model to UserAPI model."""
-        return cls(
-            id=user.id,
-            email=user.email,
-            clerk_id=user.clerk_id,
-            user_type=user.user_type,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            avatar_url=user.avatar_url,
-            is_active=user.is_active,
-            created_at=user.created_at,
-            last_login=user.last_login
-        )
 
 class User(rx.Model, table=True):
     """Base user model."""
@@ -74,9 +48,10 @@ class User(rx.Model, table=True):
     created_at: Optional[datetime] = Field(default=datetime.now(timezone.utc))
     last_login: Optional[datetime] = None
 
-    # custom user attributes
-    user_attribute: UserAttribute = sqlmodel.Relationship(
-        back_populates="user"
+    # Relationship to user attributes (including collections)
+    user_attribute: Optional[UserAttribute] = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={"uselist": False}
     )
     
     @property
@@ -89,3 +64,30 @@ class User(rx.Model, table=True):
         elif self.last_name:
             return self.last_name
         return "Anonymous"
+
+
+class UserAttributeModel(BaseModel):
+    """Response model for UserAttribute data"""
+    id: Optional[int] = None
+    user_id: int
+    collections: Dict[str, Dict[str, Any]] = {}
+    user: Dict[str, Any]
+
+class CollectionResponse(BaseModel):
+    """Response model for collection data"""
+    collections: Dict[str, Dict[str, Any]]
+
+
+class UserModel(BaseModel):
+    """Response model for User data"""
+    id: Optional[int] = None
+    email: str
+    clerk_id: str = ""
+    user_type: UserType = UserType.GUEST
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    is_active: bool = True
+    created_at: Optional[datetime] = None
+    last_login: Optional[datetime] = None
+    user_attribute: Dict[str, Any] = None

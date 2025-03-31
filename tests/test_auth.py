@@ -13,9 +13,7 @@ def get_test_token_for_user() -> str:
             bearer_auth=os.getenv("CLERK_SECRET_KEY"),
         ) as clerk:
 
-            res = clerk.sign_in_tokens.create(request={
-                "user_id": os.getenv("CLERK_TEST_USER_ID"),
-            })
+            res = clerk.testing_tokens.create()
 
             assert res is not None
 
@@ -35,11 +33,14 @@ class TestAuth:
         # Get token for admin user
         token: str = get_test_token_for_user()
         assert token is not None, "Failed to obtain authentication token"
-        logger.info(f"Test token: {token}")
         # Test the /api/auth/me endpoint using API_URL from environment
         response = requests.get(
             f'{load_env["api_url"]}/api/auth/me',
-            headers={'Authorization': f'Bearer {token}'}
+            headers={
+                'Authorization': f'Bearer {token}',
+                'Host': "http://localhost:3000"
+            },
+            timeout=10
         )
         data = response.json()
         assert response.status_code == 200, f"Authentication request failed: {data}"
