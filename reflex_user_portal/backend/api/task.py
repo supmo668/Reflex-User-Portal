@@ -43,7 +43,9 @@ class TaskAPI:
                 logger.debug(f"Found matching parameter '{param.name}' with type: {model_type}")
                 
                 if not parameters:
-                    raise ValueError(f"Parameters are required for input model '{param.name}' but none were provided.")
+                    return create_error_response(
+                        InvalidParametersError(f"Parameters are required for input model '{param.name}' but none were provided.")
+                    )
                 
                 if model_type:
                     try:
@@ -51,19 +53,20 @@ class TaskAPI:
                         logger.debug(f"Successfully validated parameters: {validated}")
                         return validated
                     except ValidationError as e:
-                        raise ValueError(f"Invalid parameters for input model: {str(e)}")
+                        return create_error_response(
+                            InvalidParametersError(f"Invalid parameters for input model: {str(e)}")
+                        )
         return None
     
     async def start_task(self, client_token: str, task_name: str, parameters: Dict[str, Any] = Body(default=None)):        
         task_method = getattr(self.state_cls, task_name, None)
         if not task_method:
-            raise TaskNotFoundError(task_name)
+            return create_error_response(TaskNotFoundError(task_name))
 
         task_id = str(uuid.uuid4())[:8]
-        try:
-            validated_params = self._get_input_params(task_method, parameters)
-        except ValueError as e:
-            raise InvalidParametersError(str(e))
+        validated_params = self._get_input_params(task_method, parameters)
+        if isinstance(validated_params, dict) and validated_params.get('error'):
+            return validated_params
 
         async with self.app.state_manager.modify_state(client_token) as state_manager:
             monitor_state = await state_manager.get_state(self.state_cls)
@@ -82,7 +85,7 @@ class TaskAPI:
             
             if task_id:
                 if task_id not in monitor_state.tasks:
-                    raise TaskNotFoundError(task_id)
+                    return create_error_response(TaskNotFoundError(task_id))
                 return monitor_state.tasks[task_id].to_dict()
             
             return {
@@ -95,14 +98,14 @@ class TaskAPI:
             monitor_state = await state_manager.get_state(self.state_cls)
             
             if task_id not in monitor_state.tasks:
-                raise TaskNotFoundError(task_id)
+                return create_error_response(TaskNotFoundError(task_id))
                 
             task = monitor_state.tasks[task_id]
             if task.status != TaskStatus.COMPLETED:
-                raise TaskError(
+                return create_error_response(TaskError(
                     f"Task {task_id} not completed. Current status: {task.status}",
                     code=400
-                )
+                ))
             return task.result
 
     async def stream_task_status(self, websocket: WebSocket, client_token: str, task_id: Optional[str] = None): 

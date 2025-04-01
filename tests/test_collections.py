@@ -33,6 +33,7 @@ def test_user(test_session):
         # Create new test user if not found
         user = User(
             email="test@default.com",
+            clerk_id="test_clerk_id",
             user_type=UserType.USER.value,
             first_name="Test",
             last_name="User",
