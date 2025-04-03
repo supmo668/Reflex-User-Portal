@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 class ExampleTaskState(MonitorState):
     """Example state for a long-running task."""
     @monitored_background_task
-    async def long_running_task(self, task: TaskContext):
+    async def task1(self, task: TaskContext):
         """Background task that updates progress.
         Refer to the decorator for more details.
         """
@@ -27,7 +27,7 @@ class ExampleTaskState(MonitorState):
         return "<My Task Result>"
     
     @rx.event
-    async def long_running_task2(self, task: TaskContext):
+    async def task2(self, task: TaskContext):
         """Background task that updates progress.
         Refer to the decorator for more details.
         """

@@ -10,10 +10,12 @@ from .model import InputArgs
 
 logger = get_logger(__name__)
 
+DEFAULT_TASK_ARGS = InputArgs(name="MATT", age=25)
+
 class ExampleTaskState2(MonitorState):
     """Example state for a long-running task."""
     @monitored_background_task
-    async def longer_task(self, task: TaskContext, **kwargs):
+    async def task1(self, task: TaskContext, **kwargs):
         """Background task that updates progress.
         Refer to the decorator for more details.
         """
@@ -30,7 +32,7 @@ class ExampleTaskState2(MonitorState):
     # This is Key Example: a task with arguments defined by pydantic model. The input is handled by monitored_background_task and checked for consistency.
     # "task_args" should be fixed for signature to be able to identify the input type in the decorator.
     @monitored_background_task
-    async def loaded_task(self, task: TaskContext, task_args: InputArgs):
+    async def task2_with_args(self, task: TaskContext, task_args: InputArgs = DEFAULT_TASK_ARGS):
         """Background task that updates progress with input arguments."""
         logger.info(f"Starting loaded task {task.task_id}")
         

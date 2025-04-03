@@ -1,6 +1,8 @@
 import os
+import json
 import importlib
 import inspect
+from pydantic import BaseModel
 from typing import Dict, Type, Optional
 
 import reflex as rx
@@ -86,7 +88,7 @@ from reflex_user_portal.backend.api.commands import format_command
 
 class DisplayMonitorState(MonitorState):
     """Advanced Monitor State with built-in state type management."""
-    current_state_type: str = "ExampleTaskState"
+    current_state_type: str = list(STATE_MAPPINGS.keys())[0]
     # Class variables for state management
     state_mappings: Dict[str, dict] = STATE_MAPPINGS
 
@@ -121,20 +123,27 @@ class DisplayMonitorState(MonitorState):
     def change_state_type(self, state_type: str):
         """Change the current state type being monitored."""
         self.current_state_type = state_type
-
-    # @rx.event
-    # def execute_current_task(self):
-    #     """Execute the currently selected task function."""
-    #     if self.current_state_class and self.current_task_function:
-    #         # Get the launcher method from the class
-    #         launcher = getattr(self.current_state_class, self.current_task_function, None)
-    #         if launcher:
-    #             # Return the launcher event which will properly handle the background task
-    #             yield launcher
-    #         else:
-    #             raise ValueError(f"Launch handler {self.current_task_function} not found in {self.current_state_type}")
-    #     else:
-    #         raise ValueError("No valid state type or task function selected")
+    
+    # TODO: Untested function - require validation
+    @rx.event
+    async def execute_current_task(self):
+        """Execute the currently selected task function."""
+        if self.current_state_class and self.current_task_function:
+            # Get the launcher method from the class
+            launcher = getattr(self.current_state_class, self.current_task_function, None)
+            if launcher:
+                # Set the task arguments in the target state before launching
+                async with self.current_state_class as target_state:
+                    # Set any required input variables on target_state here
+                    if self.tasks_argument:
+                        target_state.tasks_argument = self.tasks_argument
+                
+                # Return the launcher event which will properly handle the background task
+                yield launcher
+            else:
+                raise ValueError(f"Launch handler {self.current_task_function} not found in {self.current_state_type}")
+        else:
+            raise ValueError("No valid state type or task function selected")
 
     @rx.event
     def change_task_function(self, function_name: str):
@@ -143,7 +152,43 @@ class DisplayMonitorState(MonitorState):
             self.current_task_function = function_name
         else:
             raise ValueError(f"Invalid task function. Available functions in {self.current_state_type}: {list(self.task_functions.keys())}")
-        
+    
+    @rx.var
+    def formatted_curl_body(self) -> str:
+        """Format task arguments into a curl -d string using default args."""
+        if not self.current_task_function:
+            return ""
+            
+        try:
+            # Get the task method
+            task_method = getattr(self.current_state_class, self.current_task_function, None)
+            if not task_method:
+                return ""
+                
+            # Get the actual function if it's an event handler
+            if hasattr(task_method, 'fn'):
+                task_method = task_method.fn
+                
+            # Inspect signature to find task_args parameter
+            sig = inspect.signature(task_method)
+            
+            # Look for task_args parameter and get its default value
+            for param_name, param in sig.parameters.items():
+                if param_name == "task_args":
+                    # Get the default value if it exists
+                    if param.default is not param.empty:
+                        default_value = param.default
+                        # Convert default value to dict if it's a pydantic model
+                        if isinstance(default_value, BaseModel):
+                            default_dict = default_value.model_dump()
+                            return f"-d '{json.dumps(default_dict, indent=2, sort_keys=True)}'"
+                    break
+            return ""
+            
+        except Exception as e:
+            logger.error(f"Error formatting curl body: {e}")
+            return ""
+           
     def get_command(self, cmd_type: str, state_name: str, **kwargs) -> str:
         """Helper to format commands with current state info"""
         state_info = STATE_MAPPINGS[state_name]

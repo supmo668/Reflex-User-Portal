@@ -55,35 +55,19 @@ class MonitorState(rx.State):
         
         for name, method in class_methods.items():
             # For Reflex EventHandler, we need to check the original function
-            if hasattr(method, 'fn'):
-                original_func = method.fn
-                if hasattr(original_func, 'is_monitored_background_task'):
-                    # Get the docstring's first line or use formatted name
-                    doc = inspect.getdoc(original_func)
-                    if doc:
-                        display_name = doc.split('\n')[0].strip()
-                    else:
-                        display_name = name.replace('_', ' ').title()
-                    task_functions[name] = display_name
-                    continue
-
-            # For other cases, check through wrapper chain
-            current_method = method
-            while hasattr(current_method, '__wrapped__'):
-                if hasattr(current_method, 'is_monitored_background_task'):
-                    # Get the docstring's first line or use formatted name
-                    doc = inspect.getdoc(method)
-                    if doc:
-                        display_name = doc.split('\n')[0].strip()
-                    else:
-                        display_name = name.replace('_', ' ').title()
-                    task_functions[name] = display_name
-                    break
-                current_method = current_method.__wrapped__
+            if hasattr(method, 'fn') and hasattr(method.fn, 'is_monitored_background_task'):
+                # Get the docstring's first line or use formatted name
+                doc = inspect.getdoc(method.fn)
+                if doc:
+                    display_name = doc.split('\n')[0].strip()
+                else:
+                    display_name = name.replace('_', ' ').title()
+                task_functions[name] = display_name
         if task_functions:
             # Sort task functions by their display names
             task_functions = dict(sorted(task_functions.items(), key=lambda item: item[0]))
         return task_functions
+    
     @rx.event
     def change_task_function(self, function_name: str):
         """Change the current task function."""

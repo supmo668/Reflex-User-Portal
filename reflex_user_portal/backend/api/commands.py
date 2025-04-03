@@ -44,7 +44,7 @@ def format_command(command_type: str, state_info: dict, **kwargs) -> str:
         **kwargs: Additional parameters for command formatting
     """
     API_URL = os.getenv("API_URL", "http://localhost:8000")
-    WS_URL = os.getenv("WS_URL", "ws://localhost:8000")
+    WS_URL = os.getenv("WS_URL", API_URL.replace("http://", "ws://"))
     command_template = API_COMMANDS.get(command_type)
     if not command_template:
         raise ValueError(f"Unknown command type: {command_type}")

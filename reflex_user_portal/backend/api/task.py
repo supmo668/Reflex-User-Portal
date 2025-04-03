@@ -1,6 +1,6 @@
 # Import necessary modules and classes
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException, Body
-from typing import Optional, Type, Any, Dict
+from typing import Optional, Type, Any, Dict, Callable
 import asyncio
 import uuid 
 from inspect import signature
@@ -25,7 +25,7 @@ class TaskAPI:
         self.api_base_path = state_info.get("api_prefix", "/api")
         self.ws_base_path = state_info.get("ws_prefix", "/ws")
 
-    def _get_input_params(self, task_method, parameters: Dict[str, Any], input_arg_name: str = "task_args") -> Optional[BaseModel]:
+    def _get_input_params(self, task_method: Callable, parameters: Dict[str, Any], input_arg_name: str = "task_args") -> Optional[BaseModel]:
         """Get and validate input parameters against the input model if it exists."""
         
         # Get the actual function from EventHandler
@@ -58,7 +58,8 @@ class TaskAPI:
                         )
         return None
     
-    async def start_task(self, client_token: str, task_name: str, parameters: Dict[str, Any] = Body(default=None)):        
+    async def start_task(self, client_token: str, task_name: str, parameters: Dict[str, Any] = Body(default=None)):
+        """Start a background task by invoking the task method through a client event."""
         task_method = getattr(self.state_cls, task_name, None)
         if not task_method:
             return create_error_response(TaskNotFoundError(task_name))

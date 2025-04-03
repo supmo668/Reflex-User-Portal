@@ -285,7 +285,18 @@ asyncio.run(monitor_task("your-client-token", "task-id"))
 
 1. **Adding New Task Types**
    - Define task logic in state classes using `@monitored_background_task` decorator
-   - For tasks with parameters, create Pydantic models in `model.py`
+   - For tasks with parameters:
+     - Create Pydantic models in `model.py`
+     - Use `task_args` as the parameter name in your function signature
+     - Example:
+       ```python
+       @monitored_background_task
+       async def my_task(self, task: TaskContext, task_args: MyInputModel):
+           """Task description here."""
+           # task_args will be automatically validated against MyInputModel
+           result = await process(task_args.field1, task_args.field2)
+           return result
+       ```
    - Task methods should use `TaskContext` for progress updates
 
 2. **Task Status Updates**
