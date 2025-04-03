@@ -13,7 +13,7 @@ API_ROUTES = {
 # Base command patterns
 HTTP_CMD_PATTERN = {
     "GET": "curl -X GET {base_url}{route}",
-    "POST": "curl -X POST {base_url}{route}",
+    "POST": "curl -X POST -H \"Content-Type: application/json\" {base_url}{route}",
     "WS": "wscat -c {ws_url}{route}"
 }
 

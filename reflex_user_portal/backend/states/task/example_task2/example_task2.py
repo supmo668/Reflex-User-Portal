@@ -19,14 +19,14 @@ class ExampleTaskState2(MonitorState):
         """Background task that updates progress.
         Refer to the decorator for more details.
         """
-        logger.info(f"Starting longer task {task.task_id}")
+        logger.info(f"Starting task1 {task.task_id}")
         for i in range(10):
             await task.update(
                 progress=(i + 1) * 10,
                 status=TaskStatus.PROCESSING,
             )
             await asyncio.sleep(1)
-        logger.info(f"Finished longer task {task.task_id}")
+        logger.info(f"Finished task1 {task.task_id}")
         return "<My Task Result>"
     
     # This is Key Example: a task with arguments defined by pydantic model. The input is handled by monitored_background_task and checked for consistency.
@@ -34,7 +34,7 @@ class ExampleTaskState2(MonitorState):
     @monitored_background_task
     async def task2_with_args(self, task: TaskContext, task_args: InputArgs = DEFAULT_TASK_ARGS):
         """Background task that updates progress with input arguments."""
-        logger.info(f"Starting loaded task {task.task_id}")
+        logger.info(f"Starting task2_with_args {task.task_id}")
         
         for i in range(10):
             await task.update(
@@ -42,7 +42,7 @@ class ExampleTaskState2(MonitorState):
                 status=TaskStatus.PROCESSING,
             )
             await asyncio.sleep(1)
-        logger.info(f"Finished longer task {task.task_id}")
+        logger.info(f"Finished task2_with_args {task.task_id}")
         return {**task_args.model_dump()}
     
     # Example: this task is not discovered because it's not @monitored_background_task    

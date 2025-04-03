@@ -181,8 +181,7 @@ class DisplayMonitorState(MonitorState):
                         # Convert default value to dict if it's a pydantic model
                         if isinstance(default_value, BaseModel):
                             default_dict = default_value.model_dump()
-                            # Format as single-line JSON for curl compatibility
-                            return f"-d '{json.dumps(default_dict, sort_keys=True)}'"
+                            return f"-d '{json.dumps(default_dict, indent=2, sort_keys=True)}'"
                     break
             return ""
             
