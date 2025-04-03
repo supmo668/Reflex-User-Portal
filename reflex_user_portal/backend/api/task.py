@@ -11,7 +11,7 @@ import reflex as rx
 from reflex_user_portal.backend.api.commands import get_route
 from reflex_user_portal.utils.logger import get_logger
 from reflex_user_portal.utils.error_handler import (
-    TaskError, TaskNotFoundError, InvalidParametersError
+    TaskError, TaskNotFoundError, InvalidParametersError, create_error_response
 )
 
 from ..wrapper.task import TaskStatus
@@ -25,7 +25,7 @@ class TaskAPI:
         self.api_base_path = state_info.get("api_prefix", "/api")
         self.ws_base_path = state_info.get("ws_prefix", "/ws")
 
-    def _get_input_params(self, task_method: Callable, parameters: Dict[str, Any], input_arg_name: str = "task_args") -> Optional[BaseModel]:
+    def _get_input_params(self, task_method, parameters: Dict[str, Any], input_arg_name: str = "task_args") -> Optional[BaseModel]:
         """Get and validate input parameters against the input model if it exists."""
         
         # Get the actual function from EventHandler
@@ -34,8 +34,9 @@ class TaskAPI:
             
         sig = signature(task_method)
         logger.debug(f"Method signature: {sig}")
-        
-        for param in sig.parameters.values():
+        # 'task' is essential for wrapper to pass 'TaskContext' and must be excluded here for non-detection
+        EXCLUDE_PARAM = ["self", "task", "kwargs"]  
+        for param in [p for p in sig.parameters.values() if p.name not in EXCLUDE_PARAM]:
             logger.debug(f"Checking parameter: {param.name}")
             # Check both task_args and args since Reflex may use either
             if param.name == input_arg_name:
@@ -43,9 +44,7 @@ class TaskAPI:
                 logger.debug(f"Found matching parameter '{param.name}' with type: {model_type}")
                 
                 if not parameters:
-                    return create_error_response(
-                        InvalidParametersError(f"Parameters are required for input model '{param.name}' but none were provided.")
-                    )
+                    raise ValueError(f"Parameters are required for input model '{param.name}' but none were provided.")
                 
                 if model_type:
                     try:
@@ -53,9 +52,7 @@ class TaskAPI:
                         logger.debug(f"Successfully validated parameters: {validated}")
                         return validated
                     except ValidationError as e:
-                        return create_error_response(
-                            InvalidParametersError(f"Invalid parameters for input model: {str(e)}")
-                        )
+                        raise ValueError(f"Invalid parameters for input model: {str(e)}")
         return None
     
     async def start_task(self, client_token: str, task_name: str, parameters: Dict[str, Any] = Body(default=None)):
@@ -63,9 +60,12 @@ class TaskAPI:
         task_method = getattr(self.state_cls, task_name, None)
         if not task_method:
             return create_error_response(TaskNotFoundError(task_name))
-
+        logger.debug(f"Starting task {task_name} with parameters: {parameters}")
         task_id = str(uuid.uuid4())[:8]
-        validated_params = self._get_input_params(task_method, parameters)
+        try:
+            validated_params = self._get_input_params(task_method, parameters)
+        except ValueError as e:
+            return create_error_response(InvalidParametersError(str(e)))
         if isinstance(validated_params, dict) and validated_params.get('error'):
             return validated_params
 

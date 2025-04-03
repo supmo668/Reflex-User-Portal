@@ -3,7 +3,7 @@ import reflex as rx
 
 
 from reflex_user_portal.templates import portal_template
-from reflex_user_portal.backend.states.task import DisplayMonitorState, STATE_MAPPINGS, MonitorState
+from reflex_user_portal.backend.states.task import DisplayMonitorState, STATE_MAPPINGS
 from reflex_user_portal.backend.api.commands import format_command
 
 def wrapped_code_block(text: str, language: str = None, can_copy: bool = True) -> rx.Component:
@@ -36,7 +36,7 @@ DEFAULT_STATE_NAME = "ExampleTaskState"
 @portal_template(route="/admin/tasks", title="Task Dashboard")
 def task_status_display():
     """Display the status of tasks."""
-    DefaultTaskState: Type[MonitorState] = STATE_MAPPINGS[DEFAULT_STATE_NAME].get("cls")
+    DefaultTaskState: Type[rx.State] = STATE_MAPPINGS[DEFAULT_STATE_NAME].get("cls")
     def get_command(cmd_type: str, state_name: str=DEFAULT_STATE_NAME, **kwargs) -> str:
         state_info = STATE_MAPPINGS[state_name]
         return format_command(
@@ -89,8 +89,8 @@ def task_status_display():
                     task_command_section("Get All Tasks Status:", DisplayMonitorState.status_command),
                     task_command_section("Get Single Task Status:", DisplayMonitorState.task_status_command),
                     task_command_section("Start Selected Task:", DisplayMonitorState.start_command),
+                    task_command_section("additional parameters:", DisplayMonitorState.formatted_curl_body),
                     task_command_section("Get Task Result:", DisplayMonitorState.result_command),
-                    task_command_section("Task Args Curl Body:", DisplayMonitorState.formatted_curl_body),
                     
                     rx.heading("WebSocket Commands", size="4"),
                     task_command_section("Monitor All Tasks:", DisplayMonitorState.ws_status_command),
