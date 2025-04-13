@@ -17,6 +17,7 @@ from reflex_user_portal.config import CLERK_AUTHORIZED_DOMAINS, CLERK_SECRET_KEY
 # Initialize components
 logger = get_logger(__name__)
 
+logger.info(f"Authorizing domains: {CLERK_AUTHORIZED_DOMAINS}")
 # Initialize Clerk SDK
 if not CLERK_SECRET_KEY:
     raise ValueError("CLERK_SECRET_KEY environment variable is not set")
@@ -90,7 +91,21 @@ def update_user_login(session: rx.session, user: User) -> User:
 
 
 async def authenticate_clerk_request(request: Request) -> ClerkUser:
-    """Authenticate a request with Clerk."""
+    """Authenticate a request with Clerk.
+    
+    Args:
+        request: The incoming FastAPI request
+        
+    Returns:
+        ClerkUser: The authenticated Clerk user
+        
+    Raises:
+        HTTPException: If authentication fails or user not found
+    """
+    # Get the Authorization header for debugging
+    auth_header = request.headers.get("Authorization")
+    logger.debug(f"Authorization header: {auth_header}")
+    
     try:
         auth_state = clerk_sdk.authenticate_request(
             request,
@@ -98,48 +113,76 @@ async def authenticate_clerk_request(request: Request) -> ClerkUser:
                 authorized_parties=CLERK_AUTHORIZED_DOMAINS,
             )
         )
-        if auth_state.is_signed_in:
-            user = clerk_sdk.users.get(user_id=auth_state.payload.get('sub'))
-            if not user:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="User not found in Clerk"
-                )
-            return user
+        if not auth_state or not auth_state.is_signed_in:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated"
+            )
+            
+        user_id = auth_state.payload.get('sub')
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User ID not found in token"
+            )
+            
+        user = clerk_sdk.users.get(user_id=user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found in Clerk"
+            )
+        return user
+            
+    except HTTPException as he:
+        # Re-raise HTTP exceptions as-is
+        raise he
     except Exception as e:
         logger.error("Clerk authentication failed: %s", e)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(e)
+            detail=f"Authentication failed: {str(e)}"
         )
 
 
-async def get_local_user(
-    clerk_user: ClerkUser = Depends(authenticate_clerk_request),
-) -> UserModel:
+async def get_local_user(request: Request) -> UserModel:
     """FastAPI dependency for user authentication.
     
     Args:
-        credentials: The HTTP bearer credentials
-        request: Optional FastAPI request
+        request: The FastAPI request object
         
     Returns:
-        User: The authenticated internal user
+        UserModel: The authenticated internal user
         
     Raises:
         HTTPException: If authentication fails
     """
-    try:        
+    try:
+        # First authenticate with Clerk
+        clerk_user = await authenticate_clerk_request(request)
+        if not clerk_user or not clerk_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid Clerk user"
+            )
+            
         # Get or create internal user
         with rx.session() as session:
             user = get_or_create_user(session, clerk_user.id)
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Failed to create or retrieve local user"
+                )
             return update_user_login(session, user)
             
+    except HTTPException as he:
+        raise he
     except Exception as e:
         logger.error(f"Authentication failed: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(e)
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error during authentication"
         )
 
 async def get_user_queries_api(
