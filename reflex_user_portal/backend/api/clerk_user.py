@@ -39,7 +39,10 @@ def get_or_create_user(session: rx.session, clerk_user: ClerkUser) -> User:
         HTTPException: If there's an error creating/getting the user
     """
     try:
+        # Log the clerk user object for debugging
+        logger.debug("Clerk user object: %s", vars(clerk_user))
         logger.debug("Getting or creating user against Clerk: %s", clerk_user.id)
+        
         # Find existing user
         user = session.exec(
             select(User).where(User.clerk_id == clerk_user.id)
@@ -49,8 +52,17 @@ def get_or_create_user(session: rx.session, clerk_user: ClerkUser) -> User:
             logger.debug("Found existing user: %s", user)
             return user
         
-        # Get primary email
-        email = clerk_user.email_addresses[0].email_address if clerk_user.email_addresses else None
+        # Get primary email safely
+        email = None
+        if hasattr(clerk_user, 'email_addresses') and clerk_user.email_addresses:
+            primary_id = getattr(clerk_user, 'primary_email_address_id', None)
+            for email_obj in clerk_user.email_addresses:
+                if primary_id and email_obj.id == primary_id:
+                    email = email_obj.email_address
+                    break
+                # If no primary email is set, use the first one
+                if not email:
+                    email = email_obj.email_address
         
         # Create new user
         user = User(
@@ -104,7 +116,7 @@ async def authenticate_clerk_request(request: Request) -> ClerkUser:
     """
     # Get the Authorization header for debugging
     auth_header = request.headers.get("Authorization")
-    logger.debug(f"Authorization header: {auth_header}")
+    logger.debug(f"Authorization header: {auth_header.split(':')}")
     
     try:
         auth_state = clerk_sdk.authenticate_request(
@@ -157,6 +169,7 @@ async def get_local_user(request: Request) -> UserModel:
     Raises:
         HTTPException: If authentication fails
     """
+    session = None
     try:
         # First authenticate with Clerk
         clerk_user = await authenticate_clerk_request(request)
@@ -167,14 +180,40 @@ async def get_local_user(request: Request) -> UserModel:
             )
             
         # Get or create internal user
-        with rx.session() as session:
-            user = get_or_create_user(session, clerk_user.id)
-            if not user:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Failed to create or retrieve local user"
-                )
-            return update_user_login(session, user)
+        session = rx.session()
+        user = get_or_create_user(session, clerk_user)  # Pass the entire clerk_user object
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Failed to create or retrieve local user"
+            )
+            
+        # Update login time
+        updated_user = update_user_login(session, user)
+        
+        # Eager load relationships
+        session.refresh(updated_user, ['user_attribute'])
+        
+        # Convert to dict to avoid detached instance issues
+        user_dict = {
+            'id': updated_user.id,
+            'clerk_id': updated_user.clerk_id,
+            'email': updated_user.email,
+            'first_name': updated_user.first_name,
+            'last_name': updated_user.last_name,
+            'user_type': updated_user.user_type,
+            'created_at': updated_user.created_at,
+            'last_login': updated_user.last_login,
+            'is_active': updated_user.is_active,
+            'avatar_url': updated_user.avatar_url,
+            'user_attribute': {} if updated_user.user_attribute is None else {
+                'id': updated_user.user_attribute.id,
+                'user_id': updated_user.user_attribute.user_id,
+                'collections': updated_user.user_attribute.collections
+            }
+        }
+        
+        return UserModel(**user_dict)
             
     except HTTPException as he:
         raise he
@@ -184,6 +223,9 @@ async def get_local_user(request: Request) -> UserModel:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error during authentication"
         )
+    finally:
+        if session:
+            session.close()
 
 async def get_user_queries_api(
     user_id: int,
@@ -196,7 +238,7 @@ async def get_user_queries_api(
         current_user: The authenticated user (injected)
         
     Returns:
-        Dict[str, Any]: The user's queries
+        Dict[str, Any]: The user's queries from user_attribute collections
         
     Raises:
         HTTPException: If user not found or unauthorized
@@ -208,6 +250,7 @@ async def get_user_queries_api(
         )
     
     with rx.session() as session:
+        # Eager load user with user_attribute
         user = session.exec(
             rx.select(User).where(User.id == user_id)
         ).first()
@@ -217,8 +260,13 @@ async def get_user_queries_api(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"User {user_id} not found"
             )
+            
+        session.refresh(user, ['user_attribute'])
         
-        return user.user_queries.queries if user.user_queries else {}
+        # Get queries from user_attribute collections
+        if user.user_attribute and 'queries' in user.user_attribute.collections:
+            return user.user_attribute.collections['queries']
+        return {}
 
 def setup_api(app: rx.App) -> None:
     """Initialize user-related API routes.
