@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Optional, Tuple
 import reflex as rx
 from supabase import create_client, Client
 
-from reflex_user_portal.models.admin_config import MODEL_FACTORY
+from reflex_user_portal.models.admin.admin_config import MODEL_FACTORY
 import reflex_user_portal.config as CONFIG
 
 class BaseState(rx.State):

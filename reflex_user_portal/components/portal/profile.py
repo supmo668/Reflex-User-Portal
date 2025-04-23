@@ -4,7 +4,7 @@ import reflex as rx
 import reflex_clerk as clerk
 from .sign_in import signin_page_content
 
-from reflex_user_portal.backend.states.user import UserAuthState
+from reflex_user_portal.backend.states.admin.user import UserAuthState
 
 def profile_card() -> rx.Component:
     return rx.vstack(

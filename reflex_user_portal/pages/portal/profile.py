@@ -3,7 +3,7 @@
 import reflex as rx
 
 from reflex_user_portal.templates import portal_template
-from reflex_user_portal.backend.states.user import UserAttributeState
+from reflex_user_portal.backend.states.admin.user import UserAttributeState
 from reflex_user_portal.components.portal.profile import profile_content
 
 @portal_template(route="/profile", title="Profile")

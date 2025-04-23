@@ -5,8 +5,8 @@ import reflex_clerk as clerk
 
 from reflex_user_portal.templates.portal import portal_template
 
-from reflex_user_portal.backend.states.user_table import TableState
-from reflex_user_portal.models.user import User
+from reflex_user_portal.backend.states.admin.user_table import TableState
+from reflex_user_portal.models.admin.user import User
 from reflex_user_portal.utils.logger import get_logger
 
 logger = get_logger(__name__)

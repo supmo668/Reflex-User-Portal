@@ -9,8 +9,8 @@ from reflex_user_portal import styles
 from reflex_user_portal.components.portal.card import card
 from reflex_user_portal.components.portal.notification import notification
 from reflex_user_portal.templates import portal_template
-from reflex_user_portal.views.acquisition_view import acquisition
-from reflex_user_portal.views.charts import (
+from reflex_user_portal.views.admin_portal.acquisition_view import acquisition
+from reflex_user_portal.views.admin_portal.charts import (
     StatsState,
     area_toggle,
     orders_chart,
@@ -19,7 +19,7 @@ from reflex_user_portal.views.charts import (
     timeframe_select,
     users_chart,
 )
-from reflex_user_portal.views.stats_cards import stats_cards
+from reflex_user_portal.views.admin_portal.stats_cards import stats_cards
 
 def _time_data() -> rx.Component:
     return rx.hstack(

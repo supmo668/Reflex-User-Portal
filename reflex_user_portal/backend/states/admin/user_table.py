@@ -5,7 +5,7 @@ import reflex as rx
 from sqlmodel import select, func, asc, desc, or_
 from datetime import datetime, timezone
 
-from reflex_user_portal.models.user import User
+from reflex_user_portal.models.admin.user import User
 from reflex_user_portal.utils.logger import get_logger
 
 logger = get_logger(__name__)

@@ -1,8 +1,8 @@
 """Table view component."""
 import reflex as rx
 
-from reflex_user_portal.models.user import User
-from reflex_user_portal.backend.states.table_state import TableState
+from reflex_user_portal.models.admin.user import User
+from reflex_user_portal.backend.states.admin.user_table import TableState
 
 
 def show_user(user: User) -> rx.Component:
@@ -33,12 +33,12 @@ def main_table() -> rx.Component:
             rx.select(
                 ["first_name", "last_name", "email", "user_type", "created_at"],
                 placeholder="Sort by...",
-                on_change=TableState.sort_values,
+                on_change=TableState.sort_value,
                 value=TableState.sort_value,
             ),
             rx.input(
                 placeholder="Search users...",
-                on_change=TableState.filter_values,
+                on_change=TableState.filtered_sorted_users,
                 value=TableState.search_value,
                 width="300px",
             ),

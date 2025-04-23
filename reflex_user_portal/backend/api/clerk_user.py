@@ -1,23 +1,23 @@
 """User API endpoints and authentication."""
-from typing import Dict, Any, Optional
-from sqlmodel import select
+from typing import Dict, Any
 from datetime import datetime, timezone
+
+from sqlmodel import select
 from fastapi import Request, HTTPException, status, Depends
-from pydantic import BaseModel
 
 import reflex as rx
 from clerk_backend_api import Clerk
 from clerk_backend_api.models import User as ClerkUser
 from clerk_backend_api.jwks_helpers import AuthenticateRequestOptions
 
-from reflex_user_portal.models.user import User, UserType, UserModel
+from reflex_user_portal.models.admin.user import User, UserType, UserModel
 from reflex_user_portal.utils.logger import get_logger
 from reflex_user_portal.config import CLERK_AUTHORIZED_DOMAINS, CLERK_SECRET_KEY
 
 # Initialize components
 logger = get_logger(__name__)
 
-logger.info(f"Authorizing domains: {CLERK_AUTHORIZED_DOMAINS}")
+logger.info("Authorizing domains: %s", CLERK_AUTHORIZED_DOMAINS)
 # Initialize Clerk SDK
 if not CLERK_SECRET_KEY:
     raise ValueError("CLERK_SECRET_KEY environment variable is not set")
@@ -83,7 +83,7 @@ def get_or_create_user(session: rx.session, clerk_user: ClerkUser) -> User:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error creating/getting user: {str(e)}"
-        )
+        ) from e
 
 
 def update_user_login(session: rx.session, user: User) -> User:
@@ -116,7 +116,7 @@ async def authenticate_clerk_request(request: Request) -> ClerkUser:
     """
     # Get the Authorization header for debugging
     auth_header = request.headers.get("Authorization")
-    logger.debug(f"Authorization header: {auth_header.split(':')}")
+    logger.debug("Authorization header: %s", auth_header)
     
     try:
         auth_state = clerk_sdk.authenticate_request(
@@ -154,7 +154,7 @@ async def authenticate_clerk_request(request: Request) -> ClerkUser:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Authentication failed: {str(e)}"
-        )
+        ) from e
 
 
 async def get_local_user(request: Request) -> UserModel:
@@ -218,11 +218,11 @@ async def get_local_user(request: Request) -> UserModel:
     except HTTPException as he:
         raise he
     except Exception as e:
-        logger.error(f"Authentication failed: {str(e)}")
+        logger.error("Authentication failed: %s", e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error during authentication"
-        )
+        ) from e
     finally:
         if session:
             session.close()

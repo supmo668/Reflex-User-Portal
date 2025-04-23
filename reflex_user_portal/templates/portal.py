@@ -8,7 +8,7 @@ import reflex_clerk as clerk
 from reflex_user_portal import styles
 from reflex_user_portal.components.portal.navbar import navbar
 from reflex_user_portal.components.portal.sidebar import sidebar
-from reflex_user_portal.backend.states.user import UserAuthState
+from reflex_user_portal.backend.states.admin.user import UserAuthState
 from reflex_user_portal.utils.logger import get_logger
 
 from .access_denied import access_denied_page

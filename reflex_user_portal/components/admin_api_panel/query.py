@@ -4,7 +4,7 @@ import os
 from typing import Any
 
 import reflex as rx
-from reflex_user_portal.backend.states.admin_api_panel_state import QueryAPI, QueryState
+from reflex_user_portal.backend.states.admin.admin_api_panel_state import QueryAPI, QueryState
 
 
 def get_database_url() -> str:

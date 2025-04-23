@@ -56,7 +56,10 @@ class TaskAPI:
         return None
     
     async def start_task(self, client_token: str, task_name: str, parameters: Dict[str, Any] = Body(default=None)):
-        """Start a background task by invoking the task method through a client event."""
+        """
+        Start a background task by invoking the task method through a client event.
+        Such tasks are not directly accessible from the client and are used for background processing. e.g. ExampleTask.task1
+        """
         task_method = getattr(self.state_cls, task_name, None)
         if not task_method:
             return create_error_response(TaskNotFoundError(task_name))

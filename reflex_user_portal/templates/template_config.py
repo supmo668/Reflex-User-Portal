@@ -5,7 +5,7 @@ from typing import List, Type
 
 import reflex as rx
 
-from reflex_user_portal.backend.states.user import UserAuthState
+from reflex_user_portal.backend.states.admin.user import UserAuthState
 
 
 @dataclass
