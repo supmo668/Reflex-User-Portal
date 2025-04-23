@@ -5,8 +5,8 @@ from datetime import datetime, timezone
 from sqlmodel import select
 from fastapi import HTTPException
 
-from reflex_user_portal.models import UserAttribute, User, UserType
-from reflex_user_portal.backend.api.user import (
+from reflex_user_portal.app.models import UserAttribute, User, UserType
+from reflex_user_portal.app.backend.api.user import (
     get_user_attribute,
     get_collection,
     get_user_collections_core,

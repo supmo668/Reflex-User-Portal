@@ -1,13 +1,14 @@
-import reflex_user_portal.config as CONFIG
 import reflex as rx
 import reflex_clerk as clerk
 
-from reflex_user_portal.pages.landing import setup_pages as setup_landing_pages
-from reflex_user_portal.pages.portal import setup_pages as setup_portal_pages
-from reflex_user_portal.pages.admin import setup_pages as setup_admin_pages
+from . import config as CONFIG
 
-import reflex_user_portal.styles as styles
-from reflex_user_portal.utils.error_handler import custom_backend_handler, custom_frontend_handler
+from .app.pages.landing import setup_pages as setup_landing_pages
+from .app.pages.portal import setup_pages as setup_portal_pages
+from .app.pages.admin import setup_pages as setup_admin_pages
+
+from .app import styles
+from .app.utils.error_handler import custom_backend_handler
 
 # Create app instance
 app = rx.App(
@@ -33,5 +34,5 @@ clerk.install_pages(
 )
 
 # External API
-from reflex_user_portal.backend.api import setup_api
+from .app.backend.api import setup_api
 setup_api(app)
