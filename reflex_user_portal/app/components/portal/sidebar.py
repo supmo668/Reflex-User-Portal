@@ -111,13 +111,8 @@ def sidebar_item(item: NavItem) -> rx.Component:
     )
 
 
-def sidebar() -> rx.Component:
-    """The sidebar.
-
-    Returns:
-        The sidebar component.
-    """
-    return rx.flex(
+def sidebar():
+    return rx.box(
         rx.vstack(
             sidebar_header(),
             rx.vstack(
@@ -130,21 +125,13 @@ def sidebar() -> rx.Component:
             ),
             rx.spacer(),
             sidebar_footer(),
-            justify="end",
-            align="end",
-            width=styles.sidebar_content_width,
-            height="100dvh",
-            padding="1em",
-            spacing="0",
         ),
-        display=["none", "flex"]+ ["flex"],
-        max_width=styles.sidebar_width,
-        width="auto",
-        height="100%",
+        width="250px",          # Fixed sidebar width
+        height="100vh",         # Full viewport height
+        bg=rx.color("gray", 2),
         position="sticky",
-        justify="end",
         top="0",
         left="0",
-        flex="1",
-        bg=rx.color("gray", 2),
+        min_width="0",
+        z_index="1",            # Ensure sidebar stays on top if needed
     )

@@ -112,34 +112,26 @@ def portal_template(
             content = page_content()
             
         def templated_page():
-            return (
-                rx.vstack(
-                    navbar(),  # Navbar at the top
-                    rx.flex(
-                        sidebar(),  # Sidebar on the left
-                        rx.flex(
-                            rx.vstack(
-                                # wrap content in templated page
-                                content,
-                                width="100%",
-                                **styles.template_content_style,
-                            ),
+            return rx.vstack(
+                navbar(),
+                rx.hstack(
+                    sidebar(),
+                    rx.box(
+                        rx.vstack(
+                            content,
                             width="100%",
-                            **styles.template_page_style,
-                            max_width=[
-                                "100%",
-                                "100%",
-                                "100%",
-                                "100%",
-                                styles.max_width,
-                            ],
+                            **styles.template_content_style,
                         ),
-                        width="100%",
+                        grow="1",              # Main content fills remaining space
+                        min_width="0",         # Prevent overflow
+                        **styles.template_page_style,
                     ),
                     width="100%",
-                    spacing="0",
-                    align_items="center",
-                )
+                    align_items="stretch",
+                ),
+                width="100%",
+                spacing="0",
+                align_items="center",
             )
 
         @rx.page(
