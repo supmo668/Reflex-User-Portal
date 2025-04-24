@@ -113,7 +113,9 @@ def portal_template(
             content = page_content()
         def templated_page():
             return rx.box(
+                # Navbar (fixed)
                 navbar(),
+                # Main area: sidebar (fixed) + content (scrollable)
                 rx.box(
                     desktop_sidebar(),
                     rx.box(
@@ -123,10 +125,18 @@ def portal_template(
                         ),
                         **styles.template_container_style,
                     ),
-                    **styles.main_area_style,
+                    width="100vw",
+                    display="flex",
+                    align_items="stretch",
+                    position="relative",
+                    height=f"calc(100vh - 56px)",
+                    margin_top="56px",
                 ),
+                # Mobile sidebar (drawer)
                 mobile_sidebar(),
-                **styles.root_box_style,
+                height="100vh",
+                width="100vw",
+                overflow="hidden",
             )
 
         @rx.page(
