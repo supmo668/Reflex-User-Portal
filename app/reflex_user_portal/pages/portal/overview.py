@@ -139,8 +139,8 @@ def overview() -> rx.Component:
                 "repeat(2, 1fr)",
                 "repeat(2, 1fr)",
             ],
-            width="100%",
+            width="100%",  # Ensure this is present!
         ),
         spacing="8",
-        width="100%",
+        width="100%",  # Ensure this is present!
     )

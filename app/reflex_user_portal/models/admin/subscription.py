@@ -8,11 +8,8 @@ import sqlmodel
 
 class SubscriptionFeature(rx.Model, table=True):
     name: str
-    max_hosts: int
-    max_guests: int
-    can_use_creative_tools: bool
-    can_use_premium_tools: bool
-    
+    # impose other subscription limits and constraints
+
 class Subscription(rx.Model, table=True):
     user_id: str
     feature_id: int = sqlmodel.Field(foreign_key="subscriptionfeature.id")

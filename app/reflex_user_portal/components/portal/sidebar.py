@@ -24,35 +24,33 @@ def sidebar_header() -> rx.Component:
 
 
 def sidebar_footer() -> rx.Component:
-    """Sidebar footer.
-
-    Returns:
-        The sidebar footer component.
-    """
-    return rx.vstack(
-        rx.divider(),
-        rx.hstack(
-            rx.link(
-                rx.text("Site", size="3"),
-                href=os.getenv("SITE_URL", "/"),
-                color=styles.text_color,
-                _hover={"color": styles.accent_text_color},
-            ),
-            rx.spacer(),
-            rx.color_mode.button(
-                style={
-                    "opacity": "0.8", 
-                    "scale": "0.95",
-                    "_hover": {"opacity": 1},
-                }
+    """Sidebar footer."""
+    return rx.box(
+        rx.vstack(
+            rx.divider(),
+            rx.hstack(
+                rx.link(
+                    rx.text("Site", size="3"),
+                    href=os.getenv("SITE_URL", "/"),
+                    color=styles.text_color,
+                    _hover={"color": styles.accent_text_color},
+                ),
+                rx.spacer(),
+                rx.color_mode.button(
+                    style={
+                        "opacity": "0.8", 
+                        "scale": "0.95",
+                        "_hover": {"opacity": 1},
+                    }
+                ),
+                width="100%",
+                padding="0",
             ),
             width="100%",
-            padding="4",
+            spacing="0",
         ),
-        width="100%",
-        spacing="0",
+        **styles.sidebar_footer_style,
     )
-
 
 def sidebar_item(item: NavItem) -> rx.Component:
     """Create a sidebar item.
@@ -109,40 +107,33 @@ def sidebar_item(item: NavItem) -> rx.Component:
         ),
     )
 
-
 def sidebar_content():
-    return rx.vstack(
-        sidebar_header(),
+    return rx.box(
         rx.vstack(
-            *[sidebar_item(item) for item in NAV_ITEMS],
-            spacing="1",
+            sidebar_header(),
+            rx.vstack(
+                *[sidebar_item(item) for item in NAV_ITEMS],
+                spacing="1",
+                width="100%",
+                align_items="flex-start",
+            ),
+            rx.spacer(),
             width="100%",
-            align_items="flex-start",
-            padding_x="6",  # More space left/right
-            padding_y="2",  # More space top/bottom
         ),
-        rx.spacer(),
-        sidebar_footer(),
-        height="100%",
-        justify_content="start",
-        width="100%",
-        padding_x="2",     # Outer padding for sidebar
-        padding_y="2",
+        **styles.sidebar_content_style,
     )
 
 def desktop_sidebar():
     return rx.tablet_and_desktop(
         rx.box(
-            sidebar_content(),
-            width="250px",
-            height="100vh",
-            bg=rx.color("gray", 2),
-            position="fixed",
-            top="64px",     # Offset by navbar height (e.g., 64px)
-            left="0",
-            min_width="0",
-            z_index="1",
-            padding_bottom="2",  # Bottom padding for comfort
+            rx.vstack(
+                sidebar_content(),
+                sidebar_footer(),
+                width="100%",
+                height="100%",
+                spacing="0",
+            ),
+            **styles.sidebar_style,
         )
     )
 
@@ -155,7 +146,13 @@ def mobile_sidebar():
             rx.drawer.overlay(z_index="5"),
             rx.drawer.portal(
                 rx.drawer.content(
-                    sidebar_content(),
+                    rx.vstack(
+                        sidebar_content(),
+                        sidebar_footer(),
+                        width="100%",
+                        height="100%",
+                        spacing="0",
+                    ),
                     width="70vw",
                     height="100vh",
                     bg=rx.color("gray", 2),

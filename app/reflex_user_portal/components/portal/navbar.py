@@ -59,6 +59,7 @@ def auth_components():
                         ),
                     ),
                 ),
+                padding="1"
             ),
             clerk.signed_out(
                 rx.button(
@@ -67,6 +68,7 @@ def auth_components():
                     color_scheme="gray",
                     background="black",
                     height="40px",  # Fixed height for sign in button
+                    padding="1",
                 ),
             ),
         )
@@ -100,14 +102,5 @@ def navbar(with_clerk_wrapper: bool = False) -> rx.Component:
             width="100%",
             align="center",
         ),
-        bg=styles.gray_bg_color,
-        border_bottom=f"1px solid {styles.border_color}",
-        position="sticky",
-        top="0",
-        z_index="100",
-        width="100%",
-        padding_x="8",   # More horizontal space
-        padding_y="4",   # More vertical space
-        margin_x="4",    # Margin from screen edges
-        margin_y="3",    # Margin from top and bottom
+        **styles.navbar_style,
     )

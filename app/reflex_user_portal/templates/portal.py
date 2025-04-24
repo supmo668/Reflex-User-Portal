@@ -112,28 +112,21 @@ def portal_template(
         else:
             content = page_content()
         def templated_page():
-            return rx.vstack(
+            return rx.box(
                 navbar(),
-                rx.hstack(
+                rx.box(
                     desktop_sidebar(),
                     rx.box(
                         rx.vstack(
                             content,
                             **styles.template_content_style,
                         ),
-                        **styles.template_page_style,
+                        **styles.template_container_style,
                     ),
-                    width="100vw",
-                    height="100vh",
-                    align_items="stretch",
+                    **styles.main_area_style,
                 ),
                 mobile_sidebar(),
-                width="100vw",
-                height="100vh",
-                spacing="0",
-                align_items="center",
-                overflow_x="hidden",
-                overflow_y="hidden",
+                **styles.root_box_style,
             )
 
         @rx.page(

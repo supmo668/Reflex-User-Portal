@@ -1,7 +1,7 @@
 import reflex as rx
-import sqlmodel
-from sqlmodel import select
+from sqlmodel import func, select
 from ....models.admin.subscription import Subscription, SubscriptionFeature
+from .DEFAULTS import DEFAULT_SUBSCRIPTION_FEATURES
 
 class SubscriptionFeatureState(rx.State):
     """State for managing subscription features."""
@@ -9,32 +9,11 @@ class SubscriptionFeatureState(rx.State):
     def initialize_default_features(self):
         """Initialize default subscription features if they do not exist."""
         with rx.session() as session:
-            count = session.exec(sqlmodel.select(sqlmodel.func.count(SubscriptionFeature.id))).one()
+            count = session.exec(
+                select(func.count(SubscriptionFeature.id))
+            ).one()
             if count == 0:
-                features = [
-                    SubscriptionFeature(
-                        name="Free",
-                        max_hosts=1,
-                        max_guests=1,
-                        can_use_creative_tools=False,
-                        can_use_premium_tools=False,
-                    ),
-                    SubscriptionFeature(
-                        name="Hobby",
-                        max_hosts=3,
-                        max_guests=3,
-                        can_use_creative_tools=True,
-                        can_use_premium_tools=False,
-                    ),
-                    SubscriptionFeature(
-                        name="Creative",
-                        max_hosts=10,
-                        max_guests=10,
-                        can_use_creative_tools=True,
-                        can_use_premium_tools=True,
-                    ),
-                ]
-                for feature in features:
+                for feature in DEFAULT_SUBSCRIPTION_FEATURES:
                     session.add(feature)
                 session.commit()
 

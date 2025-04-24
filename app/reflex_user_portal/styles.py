@@ -5,6 +5,7 @@ from reflex_clerk.lib.appearance import Appearance, AppearanceVariables
 
 # Colors
 border_radius = "var(--radius-2)"
+border_color = rx.color("gray", 4)  # <-- define before use
 border = f"1px solid {rx.color('gray', 5)}"
 text_color = rx.color("gray", 11)
 gray_color = rx.color("gray", 11)
@@ -15,16 +16,83 @@ accent_bg_color = rx.color("accent", 3)
 hover_accent_color = {"_hover": {"color": accent_text_color}}
 hover_accent_bg = {"_hover": {"background_color": accent_color}}
 
-# Layout
-content_width_vw = "90vw"
-sidebar_width = "20rem"
-sidebar_content_width = "16rem"
-max_width = "1480px"
+# --- Layout & Sidebar Styles ---
+
+SIDEBAR_WIDTH = "250px"
+NAVBAR_HEIGHT = "56px"
 color_box_size = ["2.25rem", "2.25rem", "2.5rem"]
+
+sidebar_style = {
+    "width": SIDEBAR_WIDTH,
+    "height": f"calc(100vh - {NAVBAR_HEIGHT})",
+    "position": "fixed",
+    "top": NAVBAR_HEIGHT,
+    "left": "0",
+    "bg": gray_bg_color,
+    "z_index": "1",
+    "display": "flex",
+    "flex_direction": "column",
+    "padding": "0",
+    "border_right": f"1px solid {border_color}",
+}
+
+sidebar_content_style = {
+    "flex": "1 1 auto",
+    "overflow_y": "auto",
+    "width": "100%",
+    "padding_x": "1.5em",
+    "padding_y": "1em",
+}
+
+sidebar_footer_style = {
+    "width": "100%",
+    "padding": "1em",
+    "border_top": f"1px solid {border_color}",
+    "bg": gray_bg_color,
+}
+
+template_container_style = {
+    "margin_left": [ "0", "0", SIDEBAR_WIDTH ],
+    "padding": "0",
+    "min_width": "0",
+    "height": f"calc(100vh - {NAVBAR_HEIGHT})",
+    "overflow": "auto",
+    "grow": "1",
+    "padding_top": "0",
+    "width": "100%",
+    "align_items": "center",            # Center children inside vstack
+    "justify_content": "center",
+    "display": "flex"
+}
+
+template_content_style = {
+    "padding": "2em 1.5em 2em 1.5em",
+    "margin": "0",
+    "min_height": "100%",
+    "width": "100%",
+    "align_items": "center",
+    "justify_content": "center",
+    "overflow_y": "auto",
+}
+
+navbar_style = {
+    "bg": gray_bg_color,
+    "border_bottom": f"1px solid {border_color}",
+    "position": "fixed",
+    "top": "0",
+    "left": "0",
+    "z_index": "100",
+    "width": "100vw",
+    "height": NAVBAR_HEIGHT,
+    "padding_x": "2",
+    "padding_y": "0",
+    "margin": "0",
+    "display": "flex",
+    "align_items": "center",
+}
 
 # Theme colors
 bg_color = gray_bg_color
-border_color = rx.color("gray", 4)
 danger_color = rx.color("red", 9)
 
 # Clerk sign-in appearance
@@ -74,26 +142,6 @@ base_style = {
         "text_decoration": "none",
         "_hover": {"text_decoration": "none"},
     },
-}
-
-# Template styles
-template_page_style = {
-    "padding_x": ["auto", "auto", "2em"],
-    "grow":"1",
-    "min_width": "0",
-    "height": "100vh",
-    "overflow_y": "auto",
-    "margin_left": ["0", "0", "250px"],
-    "padding_top": ["4em", "4em", "5em"],
-}
-
-template_content_style = {
-    "padding": "1em",
-    "margin_bottom": "2em",
-    "min_height": "90vh",
-    "width": "100%",
-    "align_items": "center",
-    "justify_content": "center",
 }
 
 link_style = {
@@ -155,7 +203,6 @@ color_picker_style = {
         "transform": "translateY(2px) scale(0.95)",
     },
 }
-
 
 base_stylesheets = [
     "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"

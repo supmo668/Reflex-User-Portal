@@ -91,5 +91,6 @@ def profile_content() -> rx.Component:
             ),
         ),
         spacing="8",
+        align_items= "center",
         width="100%",
     )

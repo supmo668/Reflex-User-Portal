@@ -33,4 +33,5 @@ def admin_settings() -> rx.Component:
             padding="2em 1em",
         ),
         spacing="4",
+        width="100%"
     )
