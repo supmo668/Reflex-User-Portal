@@ -51,20 +51,6 @@ sidebar_footer_style = {
     "bg": gray_bg_color,
 }
 
-template_container_style = {
-    "margin_left": [ "0", "0", SIDEBAR_WIDTH ],
-    "padding": "0",
-    "min_width": "0",
-    "height": f"calc(100vh - {NAVBAR_HEIGHT})",
-    "overflow": "auto",
-    "grow": "1",
-    "padding_top": "0",
-    "width": "100%",
-    "align_items": "center",            # Center children inside vstack
-    "justify_content": "center",
-    "display": "flex"
-}
-
 template_content_style = {
     "padding": "2em 1.5em 2em 1.5em",
     "margin": "0",
@@ -75,18 +61,56 @@ template_content_style = {
     "overflow_y": "auto",
 }
 
+template_container_style = {
+    "margin_left": [ "0", "0", SIDEBAR_WIDTH ],
+    "padding": "0",
+    "min_width": "0",
+    "height": "100%",        # REMOVE subtraction of NAVBAR_HEIGHT
+    "overflow": "auto",
+    "grow": "1",
+    "padding_top": "0",
+    "width": "100%",
+    "align_items": "center",            # Center children inside vstack
+    "justify_content": "center",
+    "display": "flex"
+}
+
+template_scroll_area = {
+    "height": f"calc(100vh - {NAVBAR_HEIGHT})",  # Leave space for navbar
+    "margin_top": NAVBAR_HEIGHT,            # Offset content below navbar
+    "overflow_y": "auto",
+}
+
+# Add the moved styles here
+template_main_area_style = {
+    "width": "100vw",
+    "display": "flex",
+    "align_items": "stretch",
+    "position": "relative",
+    "height": "100vh",        
+    # REMOVE margin_top and subtraction of NAVBAR_HEIGHT
+    "padding_top": NAVBAR_HEIGHT,
+}
+
+template_outer_box_style = {
+    "height": "100vh",
+    "width": "100vw",
+    "overflow": "auto",
+    # "padding_top": NAVBAR_HEIGHT,
+}
+
 navbar_style = {
     "bg": gray_bg_color,
     "border_bottom": f"1px solid {border_color}",
+    # REMOVE or COMMENT OUT the following line:
     "position": "fixed",
     "top": "0",
     "left": "0",
-    "z_index": "100",
     "width": "100vw",
     "height": NAVBAR_HEIGHT,
-    "padding_x": "2",
-    "padding_y": "0",
-    "margin": "0",
+    "padding_x": "1.5em",  # Increase horizontal padding
+    "padding_y": "0.75em", # Add some vertical padding
+    "margin": "1",
     "display": "flex",
     "align_items": "center",
 }

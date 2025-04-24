@@ -118,25 +118,18 @@ def portal_template(
                 # Main area: sidebar (fixed) + content (scrollable)
                 rx.box(
                     desktop_sidebar(),
-                    rx.box(
+                    rx.scroll_area(
                         rx.vstack(
                             content,
                             **styles.template_content_style,
                         ),
-                        **styles.template_container_style,
+                        **styles.template_scroll_area,
                     ),
-                    width="100vw",
-                    display="flex",
-                    align_items="stretch",
-                    position="relative",
-                    height=f"calc(100vh - 56px)",
-                    margin_top="56px",
+                    **styles.template_main_area_style,  # <-- moved style here
                 ),
                 # Mobile sidebar (drawer)
                 mobile_sidebar(),
-                height="100vh",
-                width="100vw",
-                overflow="hidden",
+                **styles.template_outer_box_style,  # <-- moved style here
             )
 
         @rx.page(
