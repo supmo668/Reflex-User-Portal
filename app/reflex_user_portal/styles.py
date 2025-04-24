@@ -78,14 +78,22 @@ base_style = {
 
 # Template styles
 template_page_style = {
-    "padding_top": ["1em", "1em", "2em"],
     "padding_x": ["auto", "auto", "2em"],
+    "grow":"1",
+    "min_width": "0",
+    "height": "100vh",
+    "overflow_y": "auto",
+    "margin_left": ["0", "0", "250px"],
+    "padding_top": ["4em", "4em", "5em"],
 }
 
 template_content_style = {
     "padding": "1em",
     "margin_bottom": "2em",
     "min_height": "90vh",
+    "width": "100%",
+    "align_items": "center",
+    "justify_content": "center",
 }
 
 link_style = {

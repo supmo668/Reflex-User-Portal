@@ -24,5 +24,6 @@ def logo():
                 color="purple",
             ),
             href="/",
-        )
+        ),
+        padding="2",
     )

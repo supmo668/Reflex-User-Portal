@@ -5,6 +5,7 @@ import reflex_clerk as clerk
 
 from ... import styles
 from .... import config
+from ...views.logo import logo
 
 
 def auth_components():
@@ -80,6 +81,8 @@ def navbar(with_clerk_wrapper: bool = False) -> rx.Component:
     return rx.box(
         rx.hstack(
             # Left side - Brand/Logo
+            logo(),
+            # Center - App name
             rx.hstack(
                 rx.link(
                     rx.heading(config.APP_DISPLAY_NAME, size="3", margin_y="1"),
@@ -95,10 +98,6 @@ def navbar(with_clerk_wrapper: bool = False) -> rx.Component:
             # Right side - Auth buttons
             auth_components(),
             width="100%",
-            padding_x="4",
-            height="100%",
-            max_width=styles.max_width,
-            margin="0 auto",
             align="center",
         ),
         bg=styles.gray_bg_color,
@@ -106,6 +105,9 @@ def navbar(with_clerk_wrapper: bool = False) -> rx.Component:
         position="sticky",
         top="0",
         z_index="100",
-        height="64px",
         width="100%",
+        padding_x="8",   # More horizontal space
+        padding_y="4",   # More vertical space
+        margin_x="4",    # Margin from screen edges
+        margin_y="3",    # Margin from top and bottom
     )

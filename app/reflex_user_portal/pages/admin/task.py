@@ -76,7 +76,7 @@ def task_status_display():
                     on_change=DisplayMonitorState.change_task_function,
                 ),
                 wrap="wrap",
-                spacing="2",
+                spacing_y="2",
             ),
             task_info_section("Client Token (All Tasks):", DefaultTaskState.client_token),
             task_info_section("Session ID (All Tasks):", DefaultTaskState.session_id),
@@ -100,8 +100,8 @@ def task_status_display():
                     border_radius="md",
                     width="100%",
                 ),
-                padding="4",
-                border="1px solid",
+                padding_y="2",
+                spacing="4",
                 width="100%",
             ),
             rx.button(
@@ -123,7 +123,7 @@ def task_status_display():
                         "Monitor this task:",
                         get_command("ws_task", DEFAULT_STATE_NAME, task_id=task.id)
                     ),
-                    padding="2",
+                    padding_y="1",
                     width="100%",
                 )
             ),
@@ -140,12 +140,14 @@ def task_status_display():
                         "Get task result:",
                         get_command("result", DEFAULT_STATE_NAME, task_id=task.id)
                     ),
-                    padding="2",
+                    padding_y="1",
                     width="100%",
                 ),
             ),
             spacing="4",
             width="100%",
         ),
-        size="3",
+        width="100%",
+        height="100%",
+        overflow_y="auto",
     )

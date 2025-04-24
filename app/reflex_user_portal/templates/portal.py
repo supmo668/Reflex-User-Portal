@@ -7,8 +7,9 @@ import reflex_clerk as clerk
 
 from .. import styles
 from ..components.portal.navbar import navbar
-from ..components.portal.sidebar import sidebar
+from ..components.portal.sidebar import desktop_sidebar, mobile_sidebar  # Only import these
 from ..components.portal.profile import profile_content
+
 from ..backend.states.admin.user import UserAuthState
 from ..utils.logger import get_logger
 
@@ -110,28 +111,29 @@ def portal_template(
                 )
         else:
             content = page_content()
-            
         def templated_page():
             return rx.vstack(
                 navbar(),
                 rx.hstack(
-                    sidebar(),
+                    desktop_sidebar(),
                     rx.box(
                         rx.vstack(
                             content,
-                            width="100%",
                             **styles.template_content_style,
                         ),
-                        grow="1",              # Main content fills remaining space
-                        min_width="0",         # Prevent overflow
                         **styles.template_page_style,
                     ),
-                    width="100%",
+                    width="100vw",
+                    height="100vh",
                     align_items="stretch",
                 ),
-                width="100%",
+                mobile_sidebar(),
+                width="100vw",
+                height="100vh",
                 spacing="0",
                 align_items="center",
+                overflow_x="hidden",
+                overflow_y="hidden",
             )
 
         @rx.page(

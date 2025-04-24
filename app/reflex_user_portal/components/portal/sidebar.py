@@ -19,8 +19,7 @@ def sidebar_header() -> rx.Component:
         rx.spacer(),
         align="center",
         width="100%",
-        padding="4",
-        height="64px",  # Match navbar height
+        padding="2",
     )
 
 
@@ -111,27 +110,57 @@ def sidebar_item(item: NavItem) -> rx.Component:
     )
 
 
-def sidebar():
-    return rx.box(
+def sidebar_content():
+    return rx.vstack(
+        sidebar_header(),
         rx.vstack(
-            sidebar_header(),
-            rx.vstack(
-                *[sidebar_item(item) for item in NAV_ITEMS],
-                spacing="1",
-                width="100%",
-                overflow_y="auto",
-                align_items="flex-start",
-                padding="4",
-            ),
-            rx.spacer(),
-            sidebar_footer(),
+            *[sidebar_item(item) for item in NAV_ITEMS],
+            spacing="1",
+            width="100%",
+            align_items="flex-start",
+            padding_x="6",  # More space left/right
+            padding_y="2",  # More space top/bottom
         ),
-        width="250px",          # Fixed sidebar width
-        height="100vh",         # Full viewport height
-        bg=rx.color("gray", 2),
-        position="sticky",
-        top="0",
-        left="0",
-        min_width="0",
-        z_index="1",            # Ensure sidebar stays on top if needed
+        rx.spacer(),
+        sidebar_footer(),
+        height="100%",
+        justify_content="start",
+        width="100%",
+        padding_x="2",     # Outer padding for sidebar
+        padding_y="2",
+    )
+
+def desktop_sidebar():
+    return rx.tablet_and_desktop(
+        rx.box(
+            sidebar_content(),
+            width="250px",
+            height="100vh",
+            bg=rx.color("gray", 2),
+            position="fixed",
+            top="64px",     # Offset by navbar height (e.g., 64px)
+            left="0",
+            min_width="0",
+            z_index="1",
+            padding_bottom="2",  # Bottom padding for comfort
+        )
+    )
+
+def mobile_sidebar():
+    return rx.mobile_only(
+        rx.drawer.root(
+            rx.drawer.trigger(
+                rx.button("Menu", variant="outline", margin="1em"),
+            ),
+            rx.drawer.overlay(z_index="5"),
+            rx.drawer.portal(
+                rx.drawer.content(
+                    sidebar_content(),
+                    width="70vw",
+                    height="100vh",
+                    bg=rx.color("gray", 2),
+                )
+            ),
+            direction="left",
+        )
     )
