@@ -89,7 +89,7 @@ template_main_area_style = {
     "position": "relative",
     "height": "100vh",        
     # REMOVE margin_top and subtraction of NAVBAR_HEIGHT
-    "padding_top": NAVBAR_HEIGHT,
+    # "padding_top": NAVBAR_HEIGHT,
 }
 
 template_outer_box_style = {
