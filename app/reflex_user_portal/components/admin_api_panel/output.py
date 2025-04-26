@@ -98,7 +98,8 @@ def create_pagination() -> rx.Component:
 
 
 def render_output() -> rx.Component:
-    """Render the main output component."""
+    """Render the Table with clickable row entry in a table
+    """
     return rx.center(
         rx.cond(
             QueryAPI.table_data,
@@ -124,7 +125,7 @@ def render_output() -> rx.Component:
                         open=QueryAPI.show_error,
                     ),
                 ),
-                # Drawer for editing
+                # Drawer for editing and commit changes to entry
                 render_drawer(),
                 # Pagination controls
                 create_pagination(),

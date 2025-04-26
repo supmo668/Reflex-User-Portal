@@ -7,6 +7,7 @@ from .base import MonitorState
 from ....backend.wrapper.task import monitored_background_task
 from ....backend.wrapper.models import TaskStatus, TaskContext
 
+from ....models.admin.admin_config import AdminConfig
 logger = get_logger(__name__)
 
 class ExampleTaskState(MonitorState):
@@ -25,6 +26,21 @@ class ExampleTaskState(MonitorState):
             await asyncio.sleep(1)
         logger.info(f"Finished long-running task {task.task_id}")
         return "<My Task Result>"
+    
+    @monitored_background_task
+    async def task2_show_db_config(
+        self, task: TaskContext, config_name: str="Default Admin Config"):
+        """Background task that fetch and shows a database configuration from AdminConfig.
+        """
+        logger.info(f"Using database configuration {config_name} for task {task.task_id}")
+        with rx.session() as session:
+            config = session.exec(
+                AdminConfig.select().where(AdminConfig.name == config_name)
+            ).first()
+            if config:
+                logger.info(f"Found AdminConfig: {config.name}")
+                return config.configuration  
+        return
     
     @rx.event
     async def task2(self, task: TaskContext):

@@ -15,7 +15,8 @@ def render_field(field_name: rx.Var, field_value: rx.Var) -> rx.Component:
     Returns:
         Input component
     """
-    readonly_fields = rx.Var.create(["id", "created_at", "last_updated"])
+    # fields to be read-only and not displayed in the drawer
+    readonly_fields = rx.Var.create(["id", "created_at", "updated_at"])
     
     return rx.vstack(
         rx.text(field_name, weight="bold"),

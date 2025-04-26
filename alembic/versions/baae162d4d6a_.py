@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: cdc32b3102e1
+Revision ID: baae162d4d6a
 Revises: 
-Create Date: 2025-03-29 23:54:53.106777
+Create Date: 2025-04-25 21:29:20.569719
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 import sqlmodel
 
 # revision identifiers, used by Alembic.
-revision: str = 'cdc32b3102e1'
+revision: str = 'baae162d4d6a'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,8 +25,8 @@ def upgrade() -> None:
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('version', sa.Float(), nullable=False),
     sa.Column('configuration', sa.JSON(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('last_updated', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('adminconfig', schema=None) as batch_op:

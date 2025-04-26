@@ -1,3 +1,9 @@
+"""
+Key module for dynamically discovering and manages task states for a monitoring system.
+It provides a base class for states and a display class that handles
+state management, task execution, and command formatting.
+task functions decorated with `@monitored_background_task` are automatically monitored.
+"""
 import os
 import json
 import importlib
@@ -13,7 +19,9 @@ logger = get_logger(__name__)
 
 
 def discover_task_states() -> Dict[str, dict]:
-    """Dynamically discover all task state classes."""
+    """
+    Dynamically discover all task state classe 
+    """
     states_dir = os.path.dirname(__file__)
     state_mappings: Dict[str, dict] = {}
     
@@ -103,7 +111,9 @@ class DisplayMonitorState(MonitorState):
     
     @rx.var
     def task_functions(self) -> Dict[str, str]:
-        """Get available task functions for current state type."""
+        """
+        Get available task functions for current state type.
+        """
         if self.current_state_class and hasattr(self.current_state_class, "get_task_functions"):
             task_functions = self.current_state_class.get_task_functions()
             logger.info(f"Found {len(task_functions)} task functions named {list(task_functions.keys())}")

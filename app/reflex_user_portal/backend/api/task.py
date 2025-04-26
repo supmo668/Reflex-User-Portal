@@ -19,6 +19,9 @@ from ..wrapper.task import TaskStatus
 logger = get_logger(__name__)
 
 class TaskAPI:
+    """
+    Class response for setting up API endpoints for task management.
+    """
     def __init__(self, app, state_info: Dict[str, Any]):
         self.app = app
         self.state_cls = state_info["cls"]
@@ -26,7 +29,11 @@ class TaskAPI:
         self.ws_base_path = state_info.get("ws_prefix", "/ws")
 
     def _get_input_params(self, task_method, parameters: Dict[str, Any], input_arg_name: str = "task_args") -> Optional[BaseModel]:
-        """Get and validate input parameters against the input model if it exists."""
+        """
+        Get and validate input parameters against the input model if it exists.
+        Find the argument name `input_arg_name` in the task method signature.
+        If the argument is found, validate the parameters against the model type.
+        """
         
         # Get the actual function from EventHandler
         if hasattr(task_method, 'fn'):
@@ -55,7 +62,9 @@ class TaskAPI:
                         raise ValueError(f"Invalid parameters for input model: {str(e)}")
         return None
     
-    async def start_task(self, client_token: str, task_name: str, parameters: Dict[str, Any] = Body(default=None)):
+    async def start_task(
+            self, client_token: str, task_name: str, parameters: Dict[str, Any] = Body(default=None)
+        ):
         """
         Start a background task by invoking the task method through a client event.
         Such tasks are not directly accessible from the client and are used for background processing. e.g. ExampleTask.task1

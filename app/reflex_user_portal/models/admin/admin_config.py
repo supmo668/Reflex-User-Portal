@@ -2,11 +2,12 @@
 from typing import Optional, Dict, Any
 import yaml
 import reflex as rx
-from sqlmodel import Field, Column, JSON
+import sqlalchemy
+from sqlalchemy import DateTime, JSON
+from sqlmodel import Field, Column
 from enum import Enum
 from datetime import datetime, timezone
 
-from .... import config as CONFIG
 
 
 class AdminConfig(rx.Model, table=True):
@@ -20,21 +21,20 @@ class AdminConfig(rx.Model, table=True):
         default={},
         sa_column=Column(JSON)
     )
-    
-    created_at: Optional[datetime] = Field(default=datetime.now(timezone.utc))
-    last_updated: Optional[datetime] = Field(default=datetime.now(timezone.utc))
-  
-    # Provide a method to get configuration as YAML
-    def get_yaml_config(self) -> str:
-        """Return the configuration as a YAML string."""
-        return yaml.dump(self.configuration, sort_keys=False)
-    
-    # Method to set configuration from YAML
-    def set_yaml_config(self, yaml_str: str) -> None:
-        """Set configuration from a YAML string."""
-        self.configuration = yaml.safe_load(yaml_str)
-
-# Factory mapping for models
-MODEL_FACTORY = {
-    CONFIG.ADMIN_CONFIG_TABLE_NAME: AdminConfig,
-}
+    created_at: datetime = Field(
+        default=None,
+        sa_column=Column(
+            "created_at",
+            DateTime(timezone=True),
+            server_default=sqlalchemy.func.now()
+        )
+    )
+    updated_at: datetime = Field(
+        default=None,
+        sa_column=Column(
+            "updated_at",
+            DateTime(timezone=True),
+            server_default=sqlalchemy.func.now(),
+            onupdate=sqlalchemy.func.now()
+        )
+    )

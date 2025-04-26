@@ -29,7 +29,8 @@ def render_navbar():
         ),
         rx.hstack(
             rx.button(
-                BaseState.is_request, on_click=BaseState.toggle_query, cursor="pointer"
+                BaseState.is_request, 
+                on_click=BaseState.toggle_query, cursor="pointer"
             ),
             rx.color_mode.button(),
             align_items="center",

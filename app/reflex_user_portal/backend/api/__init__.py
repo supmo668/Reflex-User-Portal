@@ -5,7 +5,7 @@ from ..states.task import STATE_MAPPINGS
 # setting up multiple task APIs with different states
 def setup_state_task_apis(app):
     """
-    Example of how to set up multiple task APIs for different states.
+    Set up multiple task APIs on all the discovered states.
     """   
     for name, state_info in STATE_MAPPINGS.items():
         # Extract the state class and API prefix

@@ -1,13 +1,17 @@
 import os
-import uuid, yaml, json
-from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
+import logging
+import yaml, json
+from datetime import datetime, timezone
 
+from sqlmodel import select, func
 import reflex as rx
 from supabase import create_client, Client
 
-from ....models.admin.admin_config import MODEL_FACTORY
+from ....models import MODEL_FACTORY
 from ..... import config as CONFIG
+
+logger = logging.getLogger(__name__)
 
 class BaseState(rx.State):
     query_component_toggle: str = "none"
@@ -30,8 +34,8 @@ class QueryState(BaseState):
     supabase_token: str = os.getenv("SUPABASE_DB_TOKEN", "")
     
     # Table selection
-    available_tables: list[str] = ["admin_config"]
-    current_table: str = "admin_config"
+    available_tables: list[str] = list(MODEL_FACTORY.keys())
+    current_table: str = available_tables[0] if available_tables else ""
     
     # Data storage
     table_data: list[dict[str, Any]] = []
@@ -85,9 +89,13 @@ class QueryState(BaseState):
         return []
 
 class QueryAPI(QueryState):
+    """State for the API query panel.
+    Including table selection, data fetching, editing and pagination.
+
+    """
     # Row editing state
     is_open: bool = False
-    readonly_fields: list[str] = ["id", "created_at", "last_updated"]
+    readonly_fields: list[str] = ["id", "created_at", "updated_at"]
     selected_entry: Dict[str, str] = {}
     original_entry: Dict[str, str] = {}
     error_message: str = ""
@@ -198,14 +206,19 @@ class QueryAPI(QueryState):
             await self.clear_error()
             self.is_open = True
 
-    async def display_selected_row(self, data: Dict[str, Any]) -> None:
+    async def display_selected_row(self, data: Dict[str, Any], display_read_only: bool=False) -> None:
         """Display selected row in drawer."""
         if not data:
             await self.show_error_message("No data to display")
             return
             
         await self.clear_error()
-        self.selected_entry = {k: v for k, v in data.copy().items() if k not in self.readonly_fields}
+        # selectively display fields that are not readonly
+        if display_read_only:
+            self.selected_entry = {
+                k: v for k, v in data.copy().items() if k not in self.readonly_fields}
+        else:
+            self.selected_entry = data.copy()
         self.original_entry = data.copy()
         await self.delta_drawer()
 
@@ -253,7 +266,6 @@ class QueryAPI(QueryState):
                             return
                 # Commit changes
                 try:
-                    item.last_updated = datetime.now().isoformat()
                     session.add(item)
                     session.commit()
                     session.refresh(item)
@@ -287,3 +299,32 @@ class QueryAPI(QueryState):
             await self.show_error_message(f"Error updating local data: {str(e)}")
             return
 
+    @rx.event
+    def ensure_defaults(self):
+        """
+        Ensure all tables in MODEL_FACTORY have at least one default record if available.
+        As according to AdminConfig schema
+        """
+        from ...configs.default_configurations import DEFAULT_CONFIGS
+        logger.info("Adding default records in database.")
+        try:
+            with rx.session() as session:
+                for model_key, model_cls in MODEL_FACTORY.items():
+                    logger.info(f"Adding default records for {model_key}")
+                    default_config = DEFAULT_CONFIGS.get(model_key)
+                    if not default_config:
+                        continue
+                    count = session.exec(
+                        select(func.count(model_cls.id))
+                    ).one()
+                    if count == 0:
+                        logger.info(f"Adding default record for {model_key}")
+                        session.add(
+                            model_cls(
+                                **{k: v for k, v in default_config.items()}
+                            )
+                        )
+                        session.commit()
+        except Exception as e:
+            logger.error(f"Error ensuring defaults: {str(e)}")
+            raise e

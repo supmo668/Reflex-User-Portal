@@ -1,13 +1,19 @@
 import reflex as rx
 from sqlmodel import func, select
 from ....models.admin.subscription import Subscription, SubscriptionFeature
-from .DEFAULTS import DEFAULT_SUBSCRIPTION_FEATURES
+from ...configs.default_configurations import DEFAULT_SUBSCRIPTION_FEATURES
 
-class SubscriptionFeatureState(rx.State):
-    """State for managing subscription features."""
+import logging
+logger = logging.getLogger(__name__)
+class SubscriptionState(rx.State):
+    selected_hosts: list[str] = []
+    selected_guests: list[str] = []
+    feature: SubscriptionFeature = None
+
     @rx.event
     def initialize_default_features(self):
         """Initialize default subscription features if they do not exist."""
+        logging.info("Initializing default subscription features.")
         with rx.session() as session:
             count = session.exec(
                 select(func.count(SubscriptionFeature.id))
@@ -16,11 +22,6 @@ class SubscriptionFeatureState(rx.State):
                 for feature in DEFAULT_SUBSCRIPTION_FEATURES:
                     session.add(feature)
                 session.commit()
-
-class SubscriptionState(rx.State):
-    selected_hosts: list[str] = []
-    selected_guests: list[str] = []
-    feature: SubscriptionFeature = None
 
     @rx.event
     def load_subscription(self, user_id: int):
