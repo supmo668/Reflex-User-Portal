@@ -5,6 +5,7 @@ from ...configs.default_configurations import DEFAULT_SUBSCRIPTION_FEATURES
 
 import logging
 logger = logging.getLogger(__name__)
+
 class SubscriptionState(rx.State):
     selected_hosts: list[str] = []
     selected_guests: list[str] = []

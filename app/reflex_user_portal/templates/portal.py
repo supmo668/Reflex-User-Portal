@@ -7,7 +7,7 @@ import reflex_clerk as clerk
 
 from .. import styles
 from ..components.portal.navbar import navbar
-from ..components.portal.sidebar import desktop_sidebar, mobile_sidebar  # Only import these
+from ..components.portal.sidebar import desktop_sidebar, mobile_sidebar  
 from ..components.portal.profile import profile_content
 
 from ..backend.states.admin.user import UserAuthState

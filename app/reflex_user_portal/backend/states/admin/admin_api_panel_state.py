@@ -10,6 +10,7 @@ from supabase import create_client, Client
 
 from ....models import MODEL_FACTORY
 from ..... import config as CONFIG
+from ...configs.default_configurations import DEFAULT_CONFIGS
 
 logger = logging.getLogger(__name__)
 
@@ -305,7 +306,6 @@ class QueryAPI(QueryState):
         Ensure all tables in MODEL_FACTORY have at least one default record if available.
         As according to AdminConfig schema
         """
-        from ...configs.default_configurations import DEFAULT_CONFIGS
         logger.info("Adding default records in database.")
         try:
             with rx.session() as session:
@@ -313,6 +313,7 @@ class QueryAPI(QueryState):
                     logger.info(f"Adding default records for {model_key}")
                     default_config = DEFAULT_CONFIGS.get(model_key)
                     if not default_config:
+                        logger.info(f"No default config found for {model_key} or is empty.")
                         continue
                     count = session.exec(
                         select(func.count(model_cls.id))

@@ -7,6 +7,10 @@ import reflex as rx
 from sqlmodel import Field, Column, JSON, Relationship
 from pydantic import BaseModel, SkipValidation
 
+# Add imports for Subscription and SubscriptionFeature
+from typing import List
+from ...models.admin.subscription import Subscription
+
 class UserType(str, Enum):
     """User type enumeration."""
     ADMIN = "admin"
@@ -53,6 +57,8 @@ class User(rx.Model, table=True):
         back_populates="user",
         sa_relationship_kwargs={"uselist": False}
     )
+    # Add subscriptions relationship
+    subscriptions: List[Subscription] = Relationship(back_populates="user")
     
     @property
     def full_name(self) -> str:
