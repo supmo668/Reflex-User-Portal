@@ -10,5 +10,5 @@ __all__ = ["User", "UserType", "UserAttribute", "CollectionResponse", "AdminConf
 # Factory mapping for models
 MODEL_FACTORY = {
     "AdminConfig": AdminConfig,
-    "SubscriptionFeature": SubscriptionFeature,
+    "SubscriptionFeature": SubscriptionFeature
 }

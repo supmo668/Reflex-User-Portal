@@ -66,7 +66,7 @@ class QueryState(BaseState):
             return "Connected to Supabase via API: {self.supabase_url} "
         except Exception:
             self.is_connected = False
-            return "Connecting..."
+            return "Connected"
     
     @rx.event
     async def update_db_url(self, value: str):
@@ -75,11 +75,6 @@ class QueryState(BaseState):
     @rx.event
     async def update_db_key(self, value: str):
         self.supabase_token = value
-        
-    @rx.event
-    async def select_table(self, table: str):
-        """Select a table to query."""
-        self.current_table = table
     
     @rx.var
     async def table_headers(self) -> List[str]:
@@ -133,6 +128,12 @@ class QueryAPI(QueryState):
         self.original_entry = {}
         await self.clear_error()
     
+    @rx.event
+    async def select_table(self, table: str):
+        """Select a table to query."""
+        self.current_table = table
+        self.refresh_table_data()
+
     @rx.event
     async def refresh_table_data(self):
         """Refresh table data from database."""
@@ -304,27 +305,23 @@ class QueryAPI(QueryState):
     def ensure_defaults(self):
         """
         Ensure all tables in MODEL_FACTORY have at least one default record if available.
-        As according to AdminConfig schema
         """
         logger.info("Adding default records in database.")
         try:
             with rx.session() as session:
                 for model_key, model_cls in MODEL_FACTORY.items():
-                    logger.info(f"Adding default records for {model_key}")
-                    default_config = DEFAULT_CONFIGS.get(model_key)
-                    if not default_config:
+                    logger.debug(f"Adding default records for {model_key}")
+                    default_config_list = DEFAULT_CONFIGS.get(model_key, [])
+                    if not default_config_list:
                         logger.info(f"No default config found for {model_key} or is empty.")
                         continue
                     count = session.exec(
                         select(func.count(model_cls.id))
                     ).one()
                     if count == 0:
-                        logger.info(f"Adding default record for {model_key}")
-                        session.add(
-                            model_cls(
-                                **{k: v for k, v in default_config.items()}
-                            )
-                        )
+                        logger.debug(f"Adding default records for {model_key}")
+                        for entry in default_config_list:
+                            session.add(model_cls(**entry))
                         session.commit()
         except Exception as e:
             logger.error(f"Error ensuring defaults: {str(e)}")

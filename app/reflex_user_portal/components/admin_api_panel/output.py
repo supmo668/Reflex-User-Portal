@@ -98,7 +98,9 @@ def create_pagination() -> rx.Component:
 
 
 def render_output() -> rx.Component:
-    """Render the Table with clickable row entry in a table
+    """
+    Main component to render the output of the admin API panel.
+    in a Table with clickable row entry in a table
     """
     return rx.center(
         rx.cond(
