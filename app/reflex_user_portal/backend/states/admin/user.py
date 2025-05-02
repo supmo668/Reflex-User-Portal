@@ -5,6 +5,7 @@ from typing import Optional, Dict, Any
 import reflex as rx
 from sqlmodel import select
 import reflex_clerk as clerk
+from clerk_backend_api.models import User as ClerkUser
 
 from .....config import ADMIN_USER_EMAILS
 from ....models.admin.user import User, UserType, UserAttribute
@@ -47,25 +48,27 @@ class UserBaseState(rx.State):
                 session.refresh(user)
         return user
     
-    async def get_or_create_user(self, clerk_state: dict = None) -> User:
+    async def get_or_create_user(self, clerk_user: ClerkUser = None) -> User:
         """Get or create user based on Clerk info."""
-        if not clerk_state:
+        if not clerk_user:
             clerk_state = await self.get_state(clerk.ClerkState)
+            clerk_user = clerk_state.user
         with rx.session() as session:
             # Find existing user
             user = session.exec(
-                select(User).where(User.clerk_id == clerk_state.user.id)
+                select(User).where(User.clerk_id == clerk_user.id)
             ).first()
             
             if user is None:
                 # Create new user
                 user = User(
-                    email=clerk_state.user.primary_email_address_id,
-                    clerk_id=clerk_state.user.id,
-                    first_name=clerk_state.user.first_name,
-                    last_name=clerk_state.user.last_name,
+                    email=clerk_user.primary_email_address_id,
+                    clerk_id=clerk_user.id,
+                    first_name=clerk_user.first_name,
+                    last_name=clerk_user.last_name,
                     created_at=datetime.now(timezone.utc)
                 )
+        # return local user 
         return user
                     
 
@@ -88,7 +91,7 @@ class UserAuthState(UserBaseState):
         logger.debug("Clerk state: %s", clerk_state.is_signed_in)
         try:
             if clerk_state.is_signed_in:
-                user = await self.get_or_create_user(clerk_state=clerk_state)
+                user = await self.get_or_create_user(clerk_user=clerk_state.user)
                 with rx.session() as session:
                     # Update user attributes
                     user.user_type = UserType.ADMIN if clerk_state.user.email_addresses[0].email_address in ADMIN_USER_EMAILS else UserType.USER
@@ -114,6 +117,7 @@ class UserAuthState(UserBaseState):
             logger.error("Error handling auth state change: %s", e, exc_info=True)
             self.user = await self.get_or_create_guest()
             self.redirect_after_login = None
+            raise Exception("Critical error occurred while handling authentication state.") from e
 
 class UserAttributeState(UserBaseState):
     """State for managing user attributes and collections."""

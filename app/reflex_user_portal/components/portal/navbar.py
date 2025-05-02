@@ -12,6 +12,7 @@ def auth_components():
     return (
         rx.cond(
             clerk.ClerkState.is_signed_in,
+            # Signed in
             rx.menu.root(
                 rx.menu.trigger(
                     rx.button(
@@ -61,6 +62,7 @@ def auth_components():
                 ),
                 padding="1"
             ),
+            # signed out
             clerk.signed_out(
                 rx.button(
                     clerk.sign_in_button(),

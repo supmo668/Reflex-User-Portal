@@ -21,7 +21,7 @@ class SubscriptionState(rx.State):
             ).one()
             if count == 0:
                 for feature in DEFAULT_SUBSCRIPTION_FEATURES:
-                    session.add(feature)
+                    session.add(SubscriptionFeature(**feature))
                 session.commit()
 
     @rx.event

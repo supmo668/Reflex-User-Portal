@@ -83,11 +83,12 @@ template_scroll_area = {
 
 # Add the moved styles here
 template_main_area_style = {
-    "width": "100vw",
+    "width": "100%",
+    "height": "100vh",
     "display": "flex",
     "align_items": "stretch",
     "position": "relative",
-    "height": "100vh",        
+
     # REMOVE margin_top and subtraction of NAVBAR_HEIGHT
     # "padding_top": NAVBAR_HEIGHT,
 }
@@ -95,24 +96,24 @@ template_main_area_style = {
 template_outer_box_style = {
     "height": "100vh",
     "width": "100vw",
-    "overflow": "auto",
+    "overflow_x": "hidden",  # Prevent horizontal scroll
     # "padding_top": NAVBAR_HEIGHT,
 }
 
 navbar_style = {
     "bg": gray_bg_color,
     "border_bottom": f"1px solid {border_color}",
-    # REMOVE or COMMENT OUT the following line:
     "position": "fixed",
     "top": "0",
     "left": "0",
-    "width": "100vw",
+    "width": "100%",
     "height": NAVBAR_HEIGHT,
-    "padding_x": "1.5em",  # Increase horizontal padding
-    "padding_y": "0.75em", # Add some vertical padding
+    "padding_x": "1.5em",
+    "padding_y": "0.75em",
     "margin": "1",
     "display": "flex",
     "align_items": "center",
+    "z_index": 1000,
 }
 
 # Theme colors
@@ -129,6 +130,8 @@ ORANGE = {
     "600": "#FF4500",
     "700": "#FF3300",
 }
+
+# Define the Clerk styles using the Appearance class
 CLERK_STYLES = Appearance(
     baseTheme="default",  # Can be "default", "dark", "shadesOfPurple", "neobrutalism"
     variables=AppearanceVariables(
@@ -227,6 +230,34 @@ color_picker_style = {
         "transform": "translateY(2px) scale(0.95)",
     },
 }
+
+professional_toast_style = {
+    "background_color": "#fff",
+    "color": "#222",
+    "border": "1px solid #E0E0E0",
+    "border_radius": "8px",
+    "box_shadow": "0 4px 24px 0 rgba(0,0,0,0.06)",
+    "padding": "1.25em 2em",
+    "font_size": "1.05em",
+    "font_weight": "500",
+    "min_width": "320px",
+    "max_width": "420px",
+}
+
+professional_toast_args = {
+    "duration": 5000,
+    "position": "top-right",
+    "close_button": True,
+    "invert": False,
+    "important": True,
+    "style": professional_toast_style,
+}
+
+# Example usage:
+# rx.button(
+#     "Show Toast",
+#     on_click=rx.toast(**professional_toast_args),
+# )
 
 base_stylesheets = [
     "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"

@@ -58,7 +58,9 @@ def render_entry_fields() -> rx.Component:
     )
 
 
-def render_drawer_buttons(name: str, color: str, function: Union[Callable, List[Callable]]) -> rx.Component:
+def render_drawer_buttons(
+        name: str, color: str, functions: Union[Callable, List[Callable]]
+        ) -> rx.Component:
     """Render a drawer action button.
     
     Args:
@@ -72,7 +74,7 @@ def render_drawer_buttons(name: str, color: str, function: Union[Callable, List[
     return rx.badge(
         rx.text(name, width="100%", text_align="center"),
         color_scheme=color,
-        on_click=function,
+        on_click=functions,
         variant="surface",
         padding="0.75em 1.25em",
         width="100%",

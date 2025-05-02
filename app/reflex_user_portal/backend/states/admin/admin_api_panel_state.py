@@ -11,6 +11,7 @@ from supabase import create_client, Client
 from ....models import MODEL_FACTORY
 from ..... import config as CONFIG
 from ...configs.default_configurations import DEFAULT_CONFIGS
+from .... import styles
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +133,18 @@ class QueryAPI(QueryState):
     async def select_table(self, table: str):
         """Select a table to query."""
         self.current_table = table
-        self.refresh_table_data()
+        yield self.refresh_table_data
+
+    @rx.event
+    async def init_defaults_and_refresh(self):
+        """Initialize default records and refresh table data, then show a toast."""
+        yield self.ensure_defaults
+        yield self.refresh_table_data
+        yield rx.toast(
+            **styles.professional_toast_args,
+            message="Initial table(s) have been initialized.",
+            description="Default records have been added and the table refreshed.",
+        )
 
     @rx.event
     async def refresh_table_data(self):
@@ -310,7 +322,6 @@ class QueryAPI(QueryState):
         try:
             with rx.session() as session:
                 for model_key, model_cls in MODEL_FACTORY.items():
-                    logger.debug(f"Adding default records for {model_key}")
                     default_config_list = DEFAULT_CONFIGS.get(model_key, [])
                     if not default_config_list:
                         logger.info(f"No default config found for {model_key} or is empty.")
@@ -319,7 +330,7 @@ class QueryAPI(QueryState):
                         select(func.count(model_cls.id))
                     ).one()
                     if count == 0:
-                        logger.debug(f"Adding default records for {model_key}")
+                        logger.debug(f"Adding default records for {model_key} since it is empty.")
                         for entry in default_config_list:
                             session.add(model_cls(**entry))
                         session.commit()
