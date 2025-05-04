@@ -133,13 +133,13 @@ class QueryAPI(QueryState):
     async def select_table(self, table: str):
         """Select a table to query."""
         self.current_table = table
-        yield self.refresh_table_data
+        yield QueryAPI.refresh_table_data
 
     @rx.event
     async def init_defaults_and_refresh(self):
         """Initialize default records and refresh table data, then show a toast."""
-        yield self.ensure_defaults
-        yield self.refresh_table_data
+        yield QueryAPI.ensure_defaults
+        yield QueryAPI.refresh_table_data
         yield rx.toast(
             **styles.professional_toast_args,
             message="Initial table(s) have been initialized.",
