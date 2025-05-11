@@ -106,7 +106,8 @@ def task_status_display():
             ),
             rx.button(
                 "Start Selected Task",
-                on_click=DisplayMonitorState.current_task_function,
+                # Not stable yet
+                on_click=DisplayMonitorState.execute_current_task,
             ),
             rx.divider(),
 

@@ -11,7 +11,7 @@ def setup_pages(app):
     """Setup portal pages."""
     # Register all portal pages
     app.add_page(overview)
-    app.add_page(profile)
-    app.add_page(about)
-    app.add_page(app_settings)
+    # app.add_page(profile)
+    # app.add_page(about)
+    # app.add_page(app_settings)
     

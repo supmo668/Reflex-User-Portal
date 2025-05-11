@@ -8,18 +8,16 @@ from ...utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-def monitored_background_task(func=None):
+def monitored_background_task(func):
     """
     Decorator that wraps rx.event(background=True) to add task monitoring.
-    Can be used with or without parentheses.
     Usage: 
         @monitored_background_task
-        or
-        @monitored_background_task()
+
+    The decorated function receives a TaskContext instance as its second argument (commonly named 'task').
+    You can call task.update(progress=..., status=...) inside your function to update the task's progress/status,
+    which will be reflected in the UI or any monitoring system.
     """
-    if func is None:
-        return monitored_background_task
-    
     @rx.event(background=True)
     @functools.wraps(func)
     async def wrapper(state: rx.State, **kwargs) -> Any:
@@ -40,7 +38,6 @@ def monitored_background_task(func=None):
                 progress=0,
                 result=None
             )
-        
         try:
             # Create task context
             task_ctx = TaskContext(state, task_id)
@@ -51,7 +48,6 @@ def monitored_background_task(func=None):
                 state.tasks[task_id].progress = 100
                 state.tasks[task_id].active = False
                 state.tasks[task_id].result = result
-            
         except Exception as e:
             # Handle errors
             async with state:
@@ -59,8 +55,7 @@ def monitored_background_task(func=None):
                 state.tasks[task_id].active = False
                 state.tasks[task_id].result = {"error": str(e)}
             raise
-    
-    # Mark both the original function and wrapper
+
     func.is_monitored_background_task = True
     wrapper.is_monitored_background_task = True
     return wrapper

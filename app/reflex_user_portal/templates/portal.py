@@ -79,7 +79,7 @@ def portal_template(
     if isinstance(on_load, list):
         on_load = [UserAuthState.sync_auth_state, *on_load]
     elif isinstance(on_load, [rx.EventHandler, Callable]):
-        on_load = [UserAuthState.sync_auth, *on_load]
+        on_load = [UserAuthState.sync_auth_state, *on_load]
     # Get the meta tags for the page.
     all_meta = [*default_meta, *(meta or [])]
     # Get auth requirements from route

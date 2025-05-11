@@ -12,13 +12,18 @@ logger = get_logger(__name__)
 
 class ExampleTaskState(MonitorState):
     """Example state for a long-running task."""
+
     @monitored_background_task
     async def task1(self, task: TaskContext):
         """Background task that updates progress.
         Refer to the decorator for more details.
+
+        The 'task' argument is a TaskContext injected by the monitored_background_task decorator.
+        Use task.update(...) to update progress/status for the UI.
         """
         logger.info(f"Starting long-running task {task.task_id}")
         for i in range(10):
+            # Update progress and status using TaskContext
             await task.update(
                 progress=(i + 1) * 10,
                 status=TaskStatus.PROCESSING,

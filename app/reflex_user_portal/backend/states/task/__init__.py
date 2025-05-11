@@ -110,16 +110,18 @@ class DisplayMonitorState(MonitorState):
         return self.current_state_info.get("cls")
     
     @rx.var
+    def avail_task_functions(self) -> Dict[str, str]:
+        return self.current_state_class.get_task_functions()
+    
+    @rx.var
     def task_functions(self) -> Dict[str, str]:
         """
         Get available task functions for current state type.
         """
         if self.current_state_class and hasattr(self.current_state_class, "get_task_functions"):
-            task_functions = self.current_state_class.get_task_functions()
-            logger.info(f"Found {len(task_functions)} task functions named {list(task_functions.keys())}")
-            if task_functions:
-                self.current_task_function = list(task_functions.keys())[0]
-            return task_functions
+            logger.info(f"Found {len(self.avail_task_functions)} task functions named {list(self.avail_task_functions.keys())}")
+            self.current_task_function = list(self.avail_task_functions.keys())[0]
+            return self.avail_task_functions
         return {}
     
     @rx.var
@@ -134,22 +136,27 @@ class DisplayMonitorState(MonitorState):
         """Change the current state type being monitored."""
         self.current_state_type = state_type
     
+    @rx.event
+    def current_task_method(self) -> Optional[callable]:
+        """Get the current task function name."""
+        return getattr(
+            self.current_state_class, self.current_task_function, None)
+    
     # TODO: Untested function - require validation
     @rx.event
     async def execute_current_task(self):
         """Execute the currently selected task function."""
         if self.current_state_class and self.current_task_function:
             # Get the launcher method from the class
-            launcher = getattr(self.current_state_class, self.current_task_function, None)
-            if launcher:
+            if self.current_task_method:
                 # Set the task arguments in the target state before launching
-                async with self.current_state_class as target_state:
-                    # Set any required input variables on target_state here
-                    if self.tasks_argument:
-                        target_state.tasks_argument = self.tasks_argument
+                # async with self.current_state_class as target_state:
+                #     # Set any required input variables on target_state here
+                #     if self.tasks_argument:
+                #         target_state.task_args = self.tasks_argument
                 
                 # Return the launcher event which will properly handle the background task
-                yield launcher
+                yield self.current_task_method
             else:
                 raise ValueError(f"Launch handler {self.current_task_function} not found in {self.current_state_type}")
         else:
@@ -162,6 +169,10 @@ class DisplayMonitorState(MonitorState):
             self.current_task_function = function_name
         else:
             raise ValueError(f"Invalid task function. Available functions in {self.current_state_type}: {list(self.task_functions.keys())}")
+
+    
+    ## The following functions are used to format the commands for the API
+    ## and WebSocket endpoints.
     
     @rx.var
     def formatted_curl_body(self) -> str:
@@ -170,18 +181,15 @@ class DisplayMonitorState(MonitorState):
             return ""
             
         try:
-            # Get the task method
-            task_method = getattr(self.current_state_class, self.current_task_function, None)
-            if not task_method:
+            if not self.current_task_method:
                 return ""
-                
             # Get the actual function if it's an event handler
-            if hasattr(task_method, 'fn'):
-                task_method = task_method.fn
-                
+            if hasattr(self.current_task_method, 'fn'):
+                self.current_task_method = self.current_task_method.fn
+
             # Inspect signature to find task_args parameter
-            sig = inspect.signature(task_method)
-            
+            sig = inspect.signature(self.current_task_method)
+
             # Look for task_args parameter and get its default value
             for param_name, param in sig.parameters.items():
                 if param_name == "task_args":

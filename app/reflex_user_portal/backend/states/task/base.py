@@ -6,9 +6,25 @@ import reflex as rx
 from ....backend.wrapper.models import TaskStatus, TaskData
 
 class MonitorState(rx.State):
-    """Base Monitor State for task tracking."""    
+    """
+    Base Monitor State for task tracking.
+
+    Child classes can define background tasks using the @monitored_background_task decorator.
+    The decorated task functions will receive a TaskContext instance (commonly named 'task') as their second argument.
+    You can call task.update(progress=..., status=...) inside your task function to update the progress and status,
+    which will be reflected in the UI and tracked in the MonitorState.tasks dictionary.
+
+    Example usage in a child class (see ExampleTaskState):
+
+        @monitored_background_task
+        async def my_task(self, task: TaskContext):
+            for i in range(10):
+                await task.update(progress=(i+1)*10, status=TaskStatus.PROCESSING)
+                await asyncio.sleep(1)
+    """
     tasks: Dict[str, TaskData] = {}    
-    current_task_function: Optional[str] = "{task_name}"
+    current_task_function: str = "{task_name}"
+    # Arguments for the current task. Mapping of task ID to its arguments.
     tasks_argument: Dict[str, BaseModel] = {}
     
     # this is for API access (task ID + task arguments)
@@ -41,9 +57,12 @@ class MonitorState(rx.State):
     
     @classmethod
     def get_task_functions(cls) -> Dict[str, str]:
-        """Get all available task functions with their display names.
+        """
+        Get all available task functions with their display names.
         Maps function names to their display names based on docstrings or formatted names.
         Only includes methods defined directly in the class (not from base classes).
+        Returns:
+            Dictionary mapping: function names -> display names.
         """
         task_functions = {}
         
