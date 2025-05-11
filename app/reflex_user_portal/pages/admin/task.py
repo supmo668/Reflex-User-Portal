@@ -106,10 +106,10 @@ def task_status_display():
             ),
             rx.button(
                 "Start Selected Task",
-                on_click=DefaultTaskState.task1,
+                on_click=DisplayMonitorState.current_task_function,
             ),
             rx.divider(),
-            
+
             # Active Tasks Section
             rx.heading("Active Tasks (Example Task Only)"),
             rx.foreach(
