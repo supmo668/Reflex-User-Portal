@@ -1,9 +1,15 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 import inspect
 from pydantic import BaseModel
+from sqlmodel import select, desc
 
 import reflex as rx
 from ....backend.wrapper.models import TaskStatus, TaskData
+
+from ....models.admin.admin_config import AdminConfig
+from ....utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 class MonitorState(rx.State):
     """
@@ -95,3 +101,60 @@ class MonitorState(rx.State):
         else:
             raise ValueError(f"Invalid task function. Available functions: {list(self.get_task_functions().keys())}")
 
+
+
+class ConfigurableMonitorState(MonitorState):  # Change inheritance to include MonitorState
+    """Base state class for task states that need configuration management."""
+    # Define "config_name" in subclass
+    config_name: str = ""
+    # Define "default_config" in subclass
+    # default_config: dict = {}  # Must be overridden by subclasses
+    
+    @rx.var
+    def default_config(self) -> Dict[str, Union[str, int, float, bool, None]]:
+        return {}
+        
+    @rx.var
+    def config(self) -> Dict[str, Union[str, int, float, bool, None]]:
+        """Get the latest configuration from database."""
+        if not self.config_name:
+            logger.warning("config_name not set in subclass")
+            return self.default_config
+
+        try:
+            with rx.session() as session:
+                # Query for latest version of named config
+                config = session.exec(
+                    select(AdminConfig)
+                    .where(AdminConfig.name == self.config_name)
+                    .order_by(desc(AdminConfig.version))
+                    .limit(1)
+                ).first()
+                
+                if config:
+                    return config.configuration
+                    
+        except Exception as e:
+            logger.error(f"Error fetching configuration: {str(e)}")
+            
+        return self.default_config
+
+    @classmethod
+    def get_config_from_db(cls, config_name: str, default_config: Optional[Dict[str, Union[str, int, float, bool, None]]] = None) -> Dict[str, Union[str, int, float, bool, None]]:
+        """Static method to get configuration - maintained for backwards compatibility."""
+        try:
+            with rx.session() as session:
+                config = session.exec(
+                    select(AdminConfig)
+                    .where(AdminConfig.name == config_name)
+                    .order_by(desc(AdminConfig.version))
+                    .limit(1)
+                ).first()
+                
+                if config:
+                    return config.configuration
+                    
+        except Exception as e:
+            logger.error(f"Error fetching configuration: {str(e)}")
+            
+        return default_config or {}
