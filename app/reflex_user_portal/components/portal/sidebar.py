@@ -62,49 +62,58 @@ def sidebar_item(item: NavItem) -> rx.Component:
         The sidebar item component.
     """
     # Whether the item is active: currently selected or default page
-    active = UserAuthState.is_hydrated & (
-        (rx.State.router.page.path == item.route.lower()) | (rx.State.router.page.path == "/overview") & (rx.State.router.page.path == "/")
+    current_tab = rx.cond(
+        # check whether the current tab is the item route or the default route
+        (rx.State.router.page.path == item.route.lower()) | (rx.State.router.page.path == "/overview") & (rx.State.router.page.path == "/"),
+        True, False
     )
 
     return rx.cond(
-        item.should_show(UserAuthState),
-        rx.link(
-            rx.hstack(
-                rx.icon(item.icon, size=18),
-                rx.text(item.title, size="3"),
+        UserAuthState.is_hydrated,
+        rx.cond(
+            item.should_show(UserAuthState),
+            # have access to this item
+            rx.link(
+                rx.hstack(
+                    rx.icon(item.icon, size=18),
+                    rx.text(item.title, size="3"),
+                    width="100%",
+                    color=rx.cond(
+                        current_tab,
+                        styles.accent_text_color,
+                        styles.text_color,
+                    ),
+                    bg=rx.cond(
+                        current_tab,
+                        styles.accent_bg_color,
+                        "transparent",
+                    ),
+                    border_radius="lg",
+                    padding_x="3",
+                    padding_y="2",
+                    spacing="3",
+                    style={
+                        "_hover": {
+                            "background_color": rx.cond(
+                                current_tab,
+                                styles.accent_bg_color,
+                                styles.gray_bg_color,
+                            ),
+                            "color": rx.cond(
+                                current_tab,
+                                styles.accent_text_color,
+                                styles.text_color,
+                            ),
+                        }
+                    },
+                ),
+                href=item.route,
                 width="100%",
-                color=rx.cond(
-                    active,
-                    styles.accent_text_color,
-                    styles.text_color,
-                ),
-                bg=rx.cond(
-                    active,
-                    styles.accent_bg_color,
-                    "transparent",
-                ),
-                border_radius="lg",
-                padding_x="3",
-                padding_y="2",
-                spacing="3",
-                style={
-                    "_hover": {
-                        "background_color": rx.cond(
-                            active,
-                            styles.accent_bg_color,
-                            styles.gray_bg_color,
-                        ),
-                        "color": rx.cond(
-                            active,
-                            styles.accent_text_color,
-                            styles.text_color,
-                        ),
-                    }
-                },
             ),
-            href=item.route,
-            width="100%",
+            # No access to this item
+            rx.box(),
         ),
+        rx.box(),
     )
 
 def sidebar_content():

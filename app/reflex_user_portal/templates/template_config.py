@@ -29,10 +29,14 @@ class NavItem:
         """
         # For admin-required items, check admin status
         return rx.cond(
-                UserAuth.is_hydrated & self.admin_only,
+            UserAuth.is_hydrated,
+            rx.cond(
+                self.admin_only,
                 UserAuth.is_admin,  # Admin check if needed
                 True,  # Regular auth is enough
-            )
+            ),
+            False,
+        )
 
 
 # Define all navigation items in specified order
