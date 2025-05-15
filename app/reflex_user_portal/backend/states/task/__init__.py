@@ -135,6 +135,7 @@ class DisplayMonitorState(MonitorState):
     def change_state_type(self, state_type: str):
         """Change the current state type being monitored."""
         self.current_state_type = state_type
+        yield self.preselect_task_function
     
     @rx.event
     def current_task_method(self) -> Optional[callable]:
@@ -142,6 +143,14 @@ class DisplayMonitorState(MonitorState):
         return getattr(
             self.current_state_class, self.current_task_function, None)
     
+    @rx.event
+    def preselect_task_function(self):
+        """Preselect the first task function. (for onload event)"""
+        if len(self.task_functions) == 0:
+            return
+        self.current_task_function = self.task_functions.keys()[0]
+        logger.debug(f"Preselected task function: {self.current_task_function}")
+        
     # TODO: Untested function - require validation
     @rx.event
     async def execute_current_task(self):

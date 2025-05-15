@@ -29,12 +29,13 @@ class MonitorState(rx.State):
                 await asyncio.sleep(1)
     """
     tasks: Dict[str, TaskData] = {}    
-    current_task_function: str = "{task_name}"
+    current_task_function: str = ""
     # Arguments for the current task. Mapping of task ID to its arguments.
     tasks_argument: Dict[str, BaseModel] = {}
     
     # this is for API access (task ID + task arguments)
     enqueued_tasks: Dict[str, dict] = {}
+    
     @rx.var
     def client_token(self) -> str:
         """Token for client identification."""
@@ -60,7 +61,6 @@ class MonitorState(rx.State):
         ]
         return sorted(completed_tasks, key=lambda x: x.created_at, reverse=True)
 
-    
     @classmethod
     def get_task_functions(cls) -> Dict[str, str]:
         """
@@ -92,7 +92,7 @@ class MonitorState(rx.State):
             # Sort task functions by their display names
             task_functions = dict(sorted(task_functions.items(), key=lambda item: item[0]))
         return task_functions
-    
+        
     @rx.event
     def change_task_function(self, function_name: str):
         """Change the current task function."""

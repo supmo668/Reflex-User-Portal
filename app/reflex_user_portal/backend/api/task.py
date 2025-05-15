@@ -1,6 +1,6 @@
 # Import necessary modules and classes
-from fastapi import WebSocket, WebSocketDisconnect, HTTPException, Body
-from typing import Optional, Type, Any, Dict, Callable
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Body
+from typing import Optional, Any, Dict
 import asyncio
 import uuid 
 from inspect import signature
@@ -22,11 +22,12 @@ class TaskAPI:
     """
     Class response for setting up API endpoints for task management.
     """
-    def __init__(self, app, state_info: Dict[str, Any]):
+    def __init__(self, app: rx.App, state_info: Dict[str, Any]):
         self.app = app
         self.state_cls = state_info["cls"]
         self.api_base_path = state_info.get("api_prefix", "/api")
         self.ws_base_path = state_info.get("ws_prefix", "/ws")
+        self.setup_routes(app.api_transformer)
 
     def _get_input_params(self, task_method, parameters: Dict[str, Any], input_arg_name: str = "task_args") -> Optional[BaseModel]:
         """
@@ -146,44 +147,34 @@ class TaskAPI:
         finally:
             await websocket.close()
 
-    def setup_routes(self, app_instance):
+    def setup_routes(self, app_instance: FastAPI):
         """Set up API endpoints with optional prefix."""
         # Task management endpoints
-        app_instance.api.post(
+        app_instance.post(
             get_route("start", self.api_base_path, 
                      client_token="{client_token}", 
                      task_name="{task_name}")
         )(self.start_task)
         
         # Status endpoints
-        app_instance.api.get(
+        app_instance.get(
             get_route("status", self.api_base_path, client_token="{client_token}")
         )(self.get_task_status)
-        app_instance.api.get(
+        app_instance.get(
             get_route("status_by_id", self.api_base_path, client_token="{client_token}", task_id="{task_id}")
         )(self.get_task_status)
         
         # Result endpoint
-        app_instance.api.get(
+        app_instance.get(
             get_route("result", self.api_base_path, client_token="{client_token}",
                      task_id="{task_id}")
         )(self.get_task_result)
 
         # WebSocket endpoints
-        app_instance.api.websocket(
+        app_instance.websocket(
             get_route("ws_monitor", self.ws_base_path, client_token="{client_token}")
         )(self.stream_task_status)
-        app_instance.api.websocket(
+        app_instance.websocket(
             get_route("ws_task", self.ws_base_path, client_token="{client_token}",
                      task_id="{task_id}")
         )(self.stream_task_status)
-        
-
-
-def setup_api(app, state_info: Dict[str, Any]):
-    """
-    Set up multiple API endpoints for state tasks.
-    state_info must contain keys: "cls", "api_prefix", "ws_prefix"
-    """
-    task_api = TaskAPI(app, state_info)
-    task_api.setup_routes(app)

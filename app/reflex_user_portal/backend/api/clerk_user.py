@@ -3,7 +3,7 @@ from typing import Dict, Any
 from datetime import datetime, timezone
 
 from sqlmodel import select
-from fastapi import Request, HTTPException, status, Depends
+from fastapi import FastAPI, Request, HTTPException, status, Depends
 
 import reflex as rx
 from clerk_backend_api import Clerk
@@ -268,17 +268,17 @@ async def get_user_queries_api(
             return user.user_attribute.collections['queries']
         return {}
 
-def setup_api(app: rx.App) -> None:
+def setup_api(app: FastAPI) -> None:
     """Initialize user-related API routes.
     
     Args:
-        app: The Reflex application
+        app: The FastAPI application
     """
     logger.info("Initializing user routes")
     
     # User data routes
-    app.api.add_api_route("/api/users/{user_id}/queries", get_user_queries_api, methods=["GET"])
+    app.add_api_route("/api/users/{user_id}/queries", get_user_queries_api, methods=["GET"])
     
     # Authentication route
-    app.api.add_api_route("/api/auth/me", get_local_user, methods=["GET"])
-    app.api.add_api_route("/api/auth/clerk/me", authenticate_clerk_request, methods=["GET"])
+    app.add_api_route("/api/auth/me", get_local_user, methods=["GET"])
+    app.add_api_route("/api/auth/clerk/me", authenticate_clerk_request, methods=["GET"])

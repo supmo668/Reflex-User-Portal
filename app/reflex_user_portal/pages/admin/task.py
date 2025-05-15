@@ -33,7 +33,7 @@ def task_command_section(label: str, command: str) -> rx.Component:
 
 DEFAULT_STATE_NAME = "ExampleTaskState"
 
-@portal_template(route="/admin/tasks", title="Task Dashboard")
+@portal_template(route="/admin/tasks", title="Task Dashboard", on_load=DisplayMonitorState.preselect_task_function)
 def task_status_display():
     """Display the status of tasks."""
     DefaultTaskState: Type[rx.State] = STATE_MAPPINGS[DEFAULT_STATE_NAME].get("cls")

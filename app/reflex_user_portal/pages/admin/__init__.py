@@ -9,7 +9,6 @@ __all__ = ["admin_settings", "users_table", "task_status_display"]
 def setup_pages(app):
     """Setup admin pages."""
     # Register all admin pages
-    # app.add_page(admin_settings)
-    # app.add_page(users_table)
-    # app.add_page(task_status_display)
-    pass
+    app.add_page(admin_settings)
+    app.add_page(users_table)
+    app.add_page(task_status_display)
