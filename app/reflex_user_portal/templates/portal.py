@@ -99,15 +99,23 @@ def portal_template(
             # since these routes are hidden based on template_config.py, it shows access denied if directly accessed
             if requires_admin:
                 content = rx.cond(
-                    UserAuthState.is_hydrated & UserAuthState.is_admin,
-                    page_content(),
-                    access_denied_page()
+                    UserAuthState.is_hydrated,  # Not hydrated yet
+                    rx.cond(
+                        UserAuthState.is_admin,
+                        page_content(),
+                        access_denied_page()
+                    ),
+                    rx.spinner(),                # Or any loading component
                 )
             else:
                 content = rx.cond(
-                    UserAuthState.is_hydrated & clerk.ClerkState.is_signed_in,
-                    page_content(),
-                    profile_content()
+                    UserAuthState.is_hydrated,  # Not hydrated yet
+                    rx.cond(
+                        clerk.ClerkState.is_signed_in,
+                        page_content(),
+                        profile_content()
+                    ),
+                    rx.spinner(),                # Or any loading component
                 )
         else:
             content = page_content()

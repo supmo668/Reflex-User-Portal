@@ -96,8 +96,8 @@ class UserAuthState(UserBaseState):
                     # Update user attributes
                     user.user_type = UserType.ADMIN if clerk_state.user.email_addresses[0].email_address in ADMIN_USER_EMAILS else UserType.USER
                     user.last_login = datetime.now(timezone.utc)
-                    session.add(user)
                     # commit changes
+                    session.add(user)
                     session.commit()
                     session.refresh(user)
                     
