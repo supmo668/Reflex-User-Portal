@@ -148,7 +148,7 @@ class DisplayMonitorState(MonitorState):
         """Preselect the first task function. (for onload event)"""
         if len(self.task_functions) == 0:
             return
-        self.current_task_function = self.task_functions.keys()[0]
+        self.current_task_function = list(self.task_functions.keys())[0]
         logger.debug(f"Preselected task function: {self.current_task_function}")
         
     # TODO: Untested function - require validation
@@ -165,7 +165,7 @@ class DisplayMonitorState(MonitorState):
                 #         target_state.task_args = self.tasks_argument
                 
                 # Return the launcher event which will properly handle the background task
-                yield self.current_task_method
+                return self.current_task_method
             else:
                 raise ValueError(f"Launch handler {self.current_task_function} not found in {self.current_state_type}")
         else:

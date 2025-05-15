@@ -16,6 +16,7 @@ def wrapped_code_block(text: str, language: str = None, can_copy: bool = True) -
             width="100%",
             overflow_x="auto",
         ),
+        padding_x="2",
         width="100%",
     )
 
@@ -26,10 +27,6 @@ def task_info_section(label: str, content: str, language: str = None) -> rx.Comp
         wrapped_code_block(content, language),
         width="100%",
     )
-
-def task_command_section(label: str, command: str) -> rx.Component:
-    """Helper function to create a command section."""
-    return task_info_section(label, command, language="bash")
 
 DEFAULT_STATE_NAME = "ExampleTaskState"
 
@@ -76,8 +73,10 @@ def task_status_display():
                     on_change=DisplayMonitorState.change_task_function,
                 ),
                 wrap="wrap",
-                spacing_y="2",
+                align="center",
+                padding="2",
             ),
+            # Task/State Info Section
             task_info_section("Client Token (All Tasks):", DefaultTaskState.client_token),
             task_info_section("Session ID (All Tasks):", DefaultTaskState.session_id),
             task_info_section("Base API Path:", DisplayMonitorState.base_api_path, "bash"),
@@ -86,22 +85,21 @@ def task_status_display():
             rx.box(
                 rx.vstack(
                     rx.heading("API Commands", size="4"),
-                    task_command_section("Get All Tasks Status:", DisplayMonitorState.status_command),
-                    task_command_section("Get Single Task Status:", DisplayMonitorState.task_status_command),
-                    task_command_section("Start Selected Task:", DisplayMonitorState.start_command),
-                    task_command_section("additional parameters:", DisplayMonitorState.formatted_curl_body),
-                    task_command_section("Get Task Result:", DisplayMonitorState.result_command),
-                    
+                    task_info_section("Get All Tasks Status:", DisplayMonitorState.status_command, 'bash'),
+                    task_info_section("Get Single Task Status:", DisplayMonitorState.task_status_command, 'bash'),
+                    task_info_section("Start Selected Task:", DisplayMonitorState.start_command, 'bash'),
+                    task_info_section("additional parameters:", DisplayMonitorState.formatted_curl_body, 'bash'),
+                    task_info_section("Get Task Result:", DisplayMonitorState.result_command, 'bash'),
                     rx.heading("WebSocket Commands", size="4"),
-                    task_command_section("Monitor All Tasks:", DisplayMonitorState.ws_status_command),
-                    task_command_section("Monitor Specific Task:", DisplayMonitorState.ws_task_command),
-                    padding="4",
-                    border="1px solid",
+                    task_info_section("Monitor All Tasks:", DisplayMonitorState.ws_status_command, 'bash'),
+                    task_info_section("Monitor Specific Task:", DisplayMonitorState.ws_task_command, 'bash'),
+                    padding="6",  # Increase this value for more space
+                    border="1px solid white",
                     border_radius="md",
                     width="100%",
                 ),
-                padding_y="2",
-                spacing="4",
+                spacing="2",
+                padding="2",
                 width="100%",
             ),
             rx.button(
@@ -120,7 +118,7 @@ def task_status_display():
                     rx.text(f"Task ID: {task.id}"),
                     rx.text(f"Status: {task.status}"),
                     rx.progress(value=task.progress, max=100),
-                    task_command_section(
+                    task_info_section(
                         "Monitor this task:",
                         get_command("ws_task", DEFAULT_STATE_NAME, task_id=task.id)
                     ),
@@ -137,7 +135,7 @@ def task_status_display():
                     rx.heading(task.name),
                     rx.text(f"Status: {task.status}"),
                     rx.text(f"Task ID: {task.id}"),
-                    task_command_section(
+                    task_info_section(
                         "Get task result:",
                         get_command("result", DEFAULT_STATE_NAME, task_id=task.id)
                     ),
@@ -145,10 +143,12 @@ def task_status_display():
                     width="100%",
                 ),
             ),
-            spacing="4",
+            spacing="2",
             width="100%",
         ),
         width="100%",
         height="100%",
         overflow_y="auto",
+        padding_x="2",
+        padding_y="1",
     )
