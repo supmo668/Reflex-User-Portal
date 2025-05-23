@@ -43,23 +43,23 @@ class NavItem:
 NAV_ITEMS = [
     NavItem(
         title="Overview",
-        route="/overview",
+        route="/admin/overview",
         icon="Home"
     ),
     NavItem(
         title="About",
-        route="/about",
+        route="/admin/about",
         icon="book-open",
     ),
     NavItem(
         title="Profile",
-        route="/profile",
+        route="/admin/profile",
         icon="user",
         requires_auth=True,
     ),
     NavItem(
         title="App Settings",
-        route="/app-settings",
+        route="/admin/app-settings",
         icon="settings",
     ),
     NavItem(

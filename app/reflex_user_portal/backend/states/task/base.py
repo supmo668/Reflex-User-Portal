@@ -1,12 +1,12 @@
-from typing import Dict, List, Optional, Union
 import inspect
-from pydantic import BaseModel
-from sqlmodel import select, desc
+import sys
+import importlib
+from types import ModuleType
+from typing import Dict, Type, Optional, List, Any, Callable, Set, Union
 
 import reflex as rx
-from ....backend.wrapper.models import TaskStatus, TaskData
 
-from ....models.admin.admin_config import AdminConfig
+from ...wrapper.task import TaskContext, TaskData, TaskStatus, monitored_background_task, reflex_task
 from ....utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -15,26 +15,98 @@ class MonitorState(rx.State):
     """
     Base Monitor State for task tracking.
 
-    Child classes can define background tasks using the @monitored_background_task decorator.
-    The decorated task functions will receive a TaskContext instance (commonly named 'task') as their second argument.
-    You can call task.update(progress=..., status=...) inside your task function to update the progress and status,
+    There are two ways to define tasks that will be automatically discovered:
+
+    1. Define methods directly in your state class using the @monitored_background_task decorator:
+       
+       class MyState(MonitorState):
+           @monitored_background_task
+           async def my_task(self, task: TaskContext):
+               # Task implementation
+               return result
+
+    2. Define standalone functions using the @reflex_task decorator in the same module:
+       
+       @reflex_task
+       async def my_standalone_task(task_ctx: TaskContext, task_args=None):
+           # Task implementation
+           return result
+       
+       class MyState(MonitorState):
+           # Tasks will be auto-discovered from the module
+           pass
+
+    In both cases, you can call task.update(progress=..., status=...) to update the progress and status,
     which will be reflected in the UI and tracked in the MonitorState.tasks dictionary.
-
-    Example usage in a child class (see ExampleTaskState):
-
-        @monitored_background_task
-        async def my_task(self, task: TaskContext):
-            for i in range(10):
-                await task.update(progress=(i+1)*10, status=TaskStatus.PROCESSING)
-                await asyncio.sleep(1)
     """
     tasks: Dict[str, TaskData] = {}    
     current_task_function: str = ""
     # Arguments for the current task. Mapping of task ID to its arguments.
-    tasks_argument: Dict[str, BaseModel] = {}
+    tasks_argument: Dict[str, Any] = {}
     
     # this is for API access (task ID + task arguments)
     enqueued_tasks: Dict[str, dict] = {}
+    
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        """Auto-discover tasks when a subclass is created."""
+        super().__init_subclass__(**kwargs)
+        cls._discover_tasks()
+    
+    @classmethod
+    def _discover_tasks(cls):
+        """Discover and register tasks from the current module at class level."""
+        module_name = cls.__module__
+        module = sys.modules.get(module_name)
+        
+        if not module:
+            logger.warning(f"Could not find module {module_name} for task discovery")
+            return
+            
+        logger.info(f"Discovering tasks in module {module_name} for {cls.__name__}")
+        
+        # Discover standalone functions with @reflex_task decorator
+        for name, func in inspect.getmembers(module, inspect.isfunction):
+            if hasattr(func, 'is_reflex_task'):
+                logger.info(f"Found standalone task: {name}")
+                cls._register_task_function(name, func)
+    
+    @classmethod
+    def _register_task_function(cls, name: str, func: Callable):
+        """Register a standalone task function as a method on this state class."""
+        # Skip if class already has a method with this name
+        if hasattr(cls, name):
+            logger.debug(f"Task {name} already exists on {cls.__name__}, skipping registration")
+            return
+            
+        # Inspect the original function to get its parameters
+        sig = inspect.signature(func)
+        logger.debug(f"Original function signature: {sig}")
+        
+        # Store the original function for reference
+        # This is important for parameter inspection later
+        
+        # Create a monitored background task wrapper that calls the standalone function
+        @monitored_background_task
+        async def task_wrapper(self, task: TaskContext, **kwargs):
+            # Forward the call to the standalone function
+            return await func(task, **kwargs)
+            
+        # Copy metadata and docstring
+        task_wrapper.__name__ = name
+        task_wrapper.__doc__ = func.__doc__
+        
+        # Store reference to original function for parameter inspection
+        task_wrapper.original_func = func
+        
+        # Log the wrapper's signature
+        wrapper_sig = inspect.signature(task_wrapper)
+        logger.debug(f"Wrapper function signature: {wrapper_sig}")
+        
+        # Add the wrapper method to the class
+        setattr(cls, name, task_wrapper)
+        
+        logger.info(f"Registered task '{name}' on {cls.__name__}")
     
     @rx.var
     def client_token(self) -> str:
@@ -66,18 +138,22 @@ class MonitorState(rx.State):
         """
         Get all available task functions with their display names.
         Maps function names to their display names based on docstrings or formatted names.
-        Only includes methods defined directly in the class (not from base classes).
+        Includes:
+        - Methods defined directly in the class with @monitored_background_task
+        - Standalone functions discovered from the module with @reflex_task
+        
         Returns:
             Dictionary mapping: function names -> display names.
         """
         task_functions = {}
         
-        # Get only methods defined in this specific class (not from base classes)
+        # Get methods defined in this specific class (not from base classes)
         class_methods = {
             name: method for name, method in cls.__dict__.items() 
             if callable(method) and not name.startswith('_')
         }
         
+        # Find all methods that are monitored background tasks
         for name, method in class_methods.items():
             # For Reflex EventHandler, we need to check the original function
             if hasattr(method, 'fn') and hasattr(method.fn, 'is_monitored_background_task'):
@@ -88,9 +164,21 @@ class MonitorState(rx.State):
                 else:
                     display_name = name.replace('_', ' ').title()
                 task_functions[name] = display_name
+            # For standalone functions wrapped with monitored_background_task
+            # (these won't have .fn attribute but will have is_monitored_background_task)
+            elif hasattr(method, 'is_monitored_background_task'):
+                # Get the docstring's first line or use formatted name
+                doc = inspect.getdoc(method)
+                if doc:
+                    display_name = doc.split('\n')[0].strip()
+                else:
+                    display_name = name.replace('_', ' ').title()
+                task_functions[name] = display_name
+                    
         if task_functions:
-            # Sort task functions by their display names
+            # Sort task functions by their names
             task_functions = dict(sorted(task_functions.items(), key=lambda item: item[0]))
+            
         return task_functions
         
     @rx.event

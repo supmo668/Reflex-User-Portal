@@ -1,6 +1,7 @@
 import reflex as rx
 
 from .task import TaskAPI
+from .client import ClientAPI
 from .clerk_user import setup_api as setup_clerk_user_api
 from ..states.task import STATE_MAPPINGS
 
@@ -13,7 +14,8 @@ def setup_state_task_apis(app):
         # Extract the state class and API prefix
         print(f"Setting up API for state: {name} at {state_info['api_prefix']}")
         TaskAPI(app, state_info)
-
+        # Client Module is not supported by Reflex
+        # ClientAPI(app, name, state_info)
 
 def setup_api(app: rx.App):
     setup_state_task_apis(app)

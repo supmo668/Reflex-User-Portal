@@ -34,6 +34,7 @@ sidebar_style = {
     "flex_direction": "column",
     "padding": "0",
     "border_right": f"1px solid {border_color}",
+    "flex_shrink": "0",
 }
 
 sidebar_content_style = {
@@ -79,6 +80,8 @@ template_scroll_area = {
     "height": f"calc(100vh - {NAVBAR_HEIGHT})",  # Leave space for navbar
     "margin_top": NAVBAR_HEIGHT,            # Offset content below navbar
     "overflow_y": "auto",
+    "flex_grow": "1",
+    "min_width": "0",
 }
 
 # Add the moved styles here
@@ -94,9 +97,9 @@ template_main_area_style = {
 }
 
 template_outer_box_style = {
-    "height": "100vh",
-    "width": "100vw",
-    "overflow_x": "hidden",  # Prevent horizontal scroll
+    "height": "100%",
+    "width": "100%",
+    # "overflow_x": "hidden",  # Prevent horizontal scroll
     # "padding_top": NAVBAR_HEIGHT,
 }
 

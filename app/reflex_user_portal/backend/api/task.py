@@ -158,23 +158,21 @@ class TaskAPI:
         
         # Status endpoints
         app_instance.get(
-            get_route("status", self.api_base_path, client_token="{client_token}")
+            get_route("status", self.api_base_path)
         )(self.get_task_status)
         app_instance.get(
-            get_route("status_by_id", self.api_base_path, client_token="{client_token}", task_id="{task_id}")
+            get_route("status_by_id", self.api_base_path)
         )(self.get_task_status)
         
         # Result endpoint
         app_instance.get(
-            get_route("result", self.api_base_path, client_token="{client_token}",
-                     task_id="{task_id}")
+            get_route("result", self.api_base_path)
         )(self.get_task_result)
 
         # WebSocket endpoints
         app_instance.websocket(
-            get_route("ws_monitor", self.ws_base_path, client_token="{client_token}")
+            get_route("ws_monitor", self.ws_base_path)
         )(self.stream_task_status)
         app_instance.websocket(
-            get_route("ws_task", self.ws_base_path, client_token="{client_token}",
-                     task_id="{task_id}")
+            get_route("ws_task", self.ws_base_path)
         )(self.stream_task_status)

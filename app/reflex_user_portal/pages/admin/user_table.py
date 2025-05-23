@@ -164,7 +164,7 @@ def users_table_content() -> rx.Component:
     Returns:
         The page component
     """
-    return rx.box(
+    return rx.container(
         rx.heading("User Management", size="3", margin_bottom="4"),
         rx.flex(
             rx.flex(
@@ -261,5 +261,5 @@ def users_table() -> rx.Component:
     Returns:
         The page component.
     """
-    page_content = clerk.protect(users_table_content())
+    page_content = users_table_content()
     return page_content

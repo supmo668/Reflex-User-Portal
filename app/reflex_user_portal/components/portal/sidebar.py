@@ -162,8 +162,6 @@ def mobile_sidebar():
                         height="100%",
                         spacing="0",
                     ),
-                    width="70vw",
-                    height="100vh",
                     bg=rx.color("gray", 2),
                 )
             ),

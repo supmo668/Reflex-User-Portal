@@ -1,12 +1,44 @@
 import reflex as rx
 import functools
 import uuid
-from typing import Any
+import inspect
+from typing import Any, Dict, Optional, Callable, Type
 from .models import TaskData, TaskStatus, TaskContext
 
 from ...utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+def reflex_task(func=None, *, name=None, description=None):
+    """
+    Decorator that marks a function as a task that can be discovered by MonitorState.
+    This allows defining task logic outside of state classes.
+    
+    Usage:
+        @reflex_task
+        async def my_task(task_ctx, task_args=None):
+            # Task implementation
+            return result
+    
+    Args:
+        func: The function to decorate
+        name: Optional display name for the task
+        description: Optional description for the task
+    
+    Returns:
+        The decorated function with metadata attached
+    """
+    def decorator(func):
+        # Add metadata to the function
+        func.is_reflex_task = True
+        func.task_name = name or func.__name__.replace('_', ' ').title()
+        func.task_description = description or (func.__doc__ or "").split('\n')[0].strip()
+        return func
+        
+    # Handle both @reflex_task and @reflex_task() syntax
+    if func is None:
+        return decorator
+    return decorator(func)
 
 def monitored_background_task(func):
     """

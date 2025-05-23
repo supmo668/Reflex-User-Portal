@@ -33,7 +33,7 @@ DEFAULT_STATE_NAME = "ExampleTaskState"
 @portal_template(route="/admin/tasks", title="Task Dashboard", on_load=DisplayMonitorState.preselect_task_function)
 def task_status_display():
     """Display the status of tasks."""
-    DefaultTaskState: Type[rx.State] = STATE_MAPPINGS[DEFAULT_STATE_NAME].get("cls")
+    DefaultTaskState: Type[DisplayMonitorState] = STATE_MAPPINGS[DEFAULT_STATE_NAME].get("cls")
     def get_command(cmd_type: str, state_name: str=DEFAULT_STATE_NAME, **kwargs) -> str:
         state_info = STATE_MAPPINGS[state_name]
         return format_command(
@@ -88,18 +88,21 @@ def task_status_display():
                     task_info_section("Get All Tasks Status:", DisplayMonitorState.status_command, 'bash'),
                     task_info_section("Get Single Task Status:", DisplayMonitorState.task_status_command, 'bash'),
                     task_info_section("Start Selected Task:", DisplayMonitorState.start_command, 'bash'),
-                    task_info_section("additional parameters:", DisplayMonitorState.formatted_curl_body, 'bash'),
+                    rx.cond(
+                        DisplayMonitorState.formatted_curl_body,
+                        task_info_section("Task Parameters:", DisplayMonitorState.formatted_curl_body, 'bash'),
+                        rx.text("No parameters required for this task"),
+                    ),
                     task_info_section("Get Task Result:", DisplayMonitorState.result_command, 'bash'),
                     rx.heading("WebSocket Commands", size="4"),
                     task_info_section("Monitor All Tasks:", DisplayMonitorState.ws_status_command, 'bash'),
                     task_info_section("Monitor Specific Task:", DisplayMonitorState.ws_task_command, 'bash'),
-                    padding="6",  # Increase this value for more space
-                    border="1px solid white",
+                    padding_x="20",  # Increase this value for more space
+                    padding_y="2",  # Increase this value for more space
+                    border="1px solid gray",
                     border_radius="md",
                     width="100%",
                 ),
-                spacing="2",
-                padding="2",
                 width="100%",
             ),
             rx.button(
@@ -143,12 +146,11 @@ def task_status_display():
                     width="100%",
                 ),
             ),
-            spacing="2",
             width="100%",
         ),
         width="100%",
         height="100%",
         overflow_y="auto",
-        padding_x="2",
+        padding_x="4",
         padding_y="1",
     )

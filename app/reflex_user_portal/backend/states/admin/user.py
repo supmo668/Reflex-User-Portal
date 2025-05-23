@@ -110,6 +110,7 @@ class UserAuthState(UserBaseState):
                         return rx.redirect(redirect_url)
             else:
                 # Not signed in
+                logger.debug("User is not signed in, setting guest user")
                 self.user = await self.get_or_create_guest()
                 self.redirect_after_login = self.router.page.raw_path
 

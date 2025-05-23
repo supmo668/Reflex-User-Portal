@@ -21,6 +21,15 @@ logger = get_logger(__name__)
 def discover_task_states() -> Dict[str, dict]:
     """
     Dynamically discover all task state classe 
+    Returns:
+        Dict[str, dict]: A dictionary of state mappings
+        Details:
+            Key: State name
+            Value: State info
+            State info:
+                api_prefix: API prefix for the state
+                ws_prefix: WebSocket prefix for the state
+                cls: State class
     """
     states_dir = os.path.dirname(__file__)
     state_mappings: Dict[str, dict] = {}
@@ -89,6 +98,14 @@ def _process_module(module_name: str, state_mappings: Dict[str, dict]):
         logger.info(f"Warning: Could not import {module_name}: {e}")
 
 # Discover states once at module load
+# STATE_MAPPINGS is a dictionary of mappings from state name to state info
+# Details:
+#     Key: State name
+#     Value: State info
+#     State info:
+#         api_prefix: API prefix for the state
+#         ws_prefix: WebSocket prefix for the state
+#         cls: State class
 STATE_MAPPINGS: Dict[str, dict] = discover_task_states()
 logger.info(f"Discovered task states: {list(STATE_MAPPINGS.keys())}")
 
@@ -135,9 +152,9 @@ class DisplayMonitorState(MonitorState):
     def change_state_type(self, state_type: str):
         """Change the current state type being monitored."""
         self.current_state_type = state_type
-        yield self.preselect_task_function
+        return DisplayMonitorState.preselect_task_function
     
-    @rx.event
+    # @rx.event
     def current_task_method(self) -> Optional[callable]:
         """Get the current task function name."""
         return getattr(
@@ -186,30 +203,72 @@ class DisplayMonitorState(MonitorState):
     @rx.var
     def formatted_curl_body(self) -> str:
         """Format task arguments into a curl -d string using default args."""
-        if not self.current_task_function:
+        if not self.current_task_function or not self.current_state_class:
             return ""
             
         try:
-            if not self.current_task_method:
+            # Get the method directly from the class
+            method_name = self.current_task_function
+            logger.debug(f"Looking for method: {method_name} in class {self.current_state_class.__name__}")
+            current_method = getattr(self.current_state_class, method_name, None)
+            
+            if not current_method:
+                logger.debug(f"Method {method_name} not found in {self.current_state_class.__name__}")
                 return ""
-            # Get the actual function if it's an event handler
-            if hasattr(self.current_task_method, 'fn'):
-                self.current_task_method = self.current_task_method.fn
-
+            
+            logger.debug(f"Found method: {current_method}")
+            
+            # Handle different types of methods
+            original_func = None
+            
+            # Case 1: Regular Reflex event handler with fn attribute
+            if hasattr(current_method, 'fn'):
+                logger.debug(f"Method has fn attribute: {current_method.fn}")
+                original_func = current_method.fn
+            # Case 2: Direct function with monitored_background_task decorator
+            elif hasattr(current_method, 'is_monitored_background_task'):
+                logger.debug(f"Method has is_monitored_background_task attribute")
+                # Check if this is a wrapper with original_func attribute
+                if hasattr(current_method, 'original_func'):
+                    logger.debug(f"Found original_func attribute: {current_method.original_func}")
+                    original_func = current_method.original_func
+                else:
+                    original_func = current_method
+            else:
+                logger.debug(f"Method is not a monitored background task")
+                return ""
+                
             # Inspect signature to find task_args parameter
-            sig = inspect.signature(self.current_task_method)
-
+            sig = inspect.signature(original_func)
+            logger.debug(f"Method signature: {sig}")
+            logger.debug(f"Parameter types: {[p for p in sig.parameters.values()]}")
+            
             # Look for task_args parameter and get its default value
             for param_name, param in sig.parameters.items():
+                logger.debug(f"Checking parameter: {param_name}, annotation: {param.annotation}, default: {'has default' if param.default is not param.empty else 'no default'}")
                 if param_name == "task_args":
+                    logger.debug(f"Found task_args parameter with annotation: {param.annotation}")
                     # Get the default value if it exists
                     if param.default is not param.empty:
                         default_value = param.default
                         # Convert default value to dict if it's a pydantic model
+                        logger.debug(f"Default value type: {type(default_value)}, dir: {dir(default_value)}")
                         if isinstance(default_value, BaseModel):
                             default_dict = default_value.model_dump()
+                            logger.debug(f"Converted to dict: {default_dict}")
                             return f"-d '{json.dumps(default_dict, indent=2, sort_keys=True)}'"
+                        elif hasattr(default_value, 'model_dump'):
+                            # Handle case where it's a Pydantic model but not recognized as BaseModel subclass
+                            logger.debug(f"Object has model_dump method but is not recognized as BaseModel")
+                            default_dict = default_value.model_dump()
+                            logger.debug(f"Converted to dict: {default_dict}")
+                            return f"-d '{json.dumps(default_dict, indent=2, sort_keys=True)}'"
+                        else:
+                            logger.debug(f"Default value is not a BaseModel: {type(default_value)}")
+                    else:
+                        logger.debug("task_args parameter has no default value")
                     break
+            logger.debug("No task_args parameter found or no valid default value")
             return ""
             
         except Exception as e:

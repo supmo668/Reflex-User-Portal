@@ -7,5 +7,6 @@ def home() -> rx.Component:
             rx.heading("Home Page", size="5", justify="center", align="center", width="100%"),
             font_family='system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
             min_height="100vh",
-        )
+        ),
+        rx.button("Admin Portal", on_click=lambda: rx.redirect("/admin/overview")),
     )

@@ -8,7 +8,7 @@ from ...views.admin_portal.color_picker import primary_color_picker, secondary_c
 from ...views.admin_portal.radius_picker import radius_picker
 from ...views.admin_portal.scaling_picker import scaling_picker
 
-@portal_template(route="/app-settings", title="App Settings")
+@portal_template(route="/admin/app-settings", title="App Settings")
 def app_settings() -> rx.Component:
     """The settings page content.
 

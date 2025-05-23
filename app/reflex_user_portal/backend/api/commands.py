@@ -1,14 +1,4 @@
 import os
-# Route templates for consistent path definitions
-API_ROUTES = {
-    "base": "{prefix}/tasks/{client_token}",
-    "status": "{prefix}/tasks/{client_token}",
-    "status_by_id": "{prefix}/tasks/{client_token}/{task_id}",
-    "start": "{prefix}/tasks/{client_token}/start/{task_name}",
-    "result": "{prefix}/tasks/{client_token}/{task_id}/result",
-    "ws_monitor": "{prefix}/tasks/{client_token}",
-    "ws_task": "{prefix}/tasks/{client_token}/{task_id}"
-}
 
 # Base command patterns
 HTTP_CMD_PATTERN = {
@@ -17,7 +7,19 @@ HTTP_CMD_PATTERN = {
     "WS": "wscat -c {ws_url}{route}"
 }
 
-# Command templates using route patterns
+# API Route templates for consistent path definitions that create routes
+API_ROUTES = {
+    "base": "{prefix}/tasks/{client_token}",
+    "token": "{prefix}/token",
+    "status": "{prefix}/tasks/{client_token}",
+    "status_by_id": "{prefix}/tasks/{client_token}/{task_id}",
+    "start": "{prefix}/tasks/{client_token}/start/{task_name}",
+    "result": "{prefix}/tasks/{client_token}/result/{task_id}",
+    "ws_monitor": "{prefix}/tasks/{client_token}",
+    "ws_task": "{prefix}/tasks/{client_token}/{task_id}"
+}
+
+# Command templates using route patterns for display in MonitorState
 API_COMMANDS = {
     "base": "{base_url}" + API_ROUTES["base"],
     "status": ("GET", API_ROUTES["status"]),
@@ -25,15 +27,18 @@ API_COMMANDS = {
     "start": ("POST", API_ROUTES["start"]),
     "result": ("GET", API_ROUTES["result"]),
     "ws_all": ("WS", API_ROUTES["ws_monitor"]),
-    "ws_task": ("WS", API_ROUTES["ws_task"])
+    "ws_task": ("WS", API_ROUTES["ws_task"]),
+    "create_token": ("GET", API_ROUTES["token"])
 }
 
-def get_route(route_type: str, prefix: str, **kwargs) -> str:
-    """Get API route with prefix."""
+def get_route(route_type: str, prefix: str, client_token: str="{client_token}", task_id: str="{task_id}", **kwargs) -> str:
+    """
+    Get API route with prefix. Format the route template with the prefix and kwargs.
+    """
     route_template = API_ROUTES.get(route_type)
     if not route_template:
         raise ValueError(f"Unknown route type: {route_type}")
-    return route_template.format(prefix=prefix, **kwargs)
+    return route_template.format(prefix=prefix, client_token=client_token, task_id=task_id, **kwargs)
 
 def format_command(command_type: str, state_info: dict, **kwargs) -> str:
     """

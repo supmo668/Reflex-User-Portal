@@ -1,3 +1,9 @@
+"""
+Example state for a long-running task.
+
+This state is used to demonstrate the task API.
+Takes no arguments.
+"""
 import asyncio
 
 import reflex as rx
