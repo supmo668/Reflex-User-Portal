@@ -3,6 +3,7 @@ import reflex as rx
 from .task import TaskAPI
 from .client import ClientAPI
 from .clerk_user import setup_api as setup_clerk_user_api
+from .user import setup_api as setup_user_api
 from ..states.task import STATE_MAPPINGS
 
 # setting up multiple task APIs with different states
@@ -22,5 +23,6 @@ def setup_state_task_apis(app):
 def setup_api(app: rx.App):
     setup_state_task_apis(app)
     setup_clerk_user_api(app.api_transformer)
+    setup_user_api(app.api_transformer)
     
 __all__ = ["setup_state_task_apis"]

@@ -1,6 +1,14 @@
 """User API endpoints and collection management functionality"""
 from typing import Dict, Optional, Tuple, Any
-from fastapi import HTTPException, status, Depends
+from fastapi import HTTPException, status, Depends, APIRouter
+from fastapi import FastAPI
+
+# Define the router for this module
+router = APIRouter(
+    prefix="/api/collections",
+    tags=["collections"]
+)
+
 
 import reflex as rx
 from sqlmodel import select, Session
@@ -63,6 +71,7 @@ def get_user_collections_core(session: Session, user_id: int) -> Dict:
     user_attr, _ = get_user_attribute(session, user_id)
     return user_attr.collections
 
+@router.get("", response_model=CollectionResponse)
 async def get_user_collections(
     current_user: User = Depends(get_local_user)
 ) -> CollectionResponse:
@@ -82,6 +91,7 @@ def add_user_collection_core(session: Session, user_id: int, collection_name: st
     session.refresh(user_attr)
     return user_attr.collections
 
+@router.post("", response_model=CollectionResponse)
 async def add_user_collection(
     collection_name: str,
     collection_data: Dict[str, Any],
@@ -118,6 +128,7 @@ def delete_user_collection_core(session: Session, user_id: int, collection_name:
     
     return user_attr.collections
 
+@router.delete("/{collection_name}", response_model=CollectionResponse)
 async def delete_user_collection(
     collection_name: str,
     current_user: User = Depends(get_local_user)
@@ -154,6 +165,7 @@ def add_collection_entry_core(session: Session, user_id: int, collection_name: s
     return user_attr.collections
 
 
+@router.post("/{collection_name}/entries", response_model=CollectionResponse)
 async def add_collection_entry(
     collection_name: str,
     entry: Dict[str, Any],
@@ -165,29 +177,6 @@ async def add_collection_entry(
         return CollectionResponse(collections=collections)
 
 
-def setup_api(app: rx.App) -> None:
-    """Initialize collection-related API routes"""
-    app.api.add_api_route(
-        "/api/collections",
-        get_user_collections,
-        methods=["GET"],
-        response_model=CollectionResponse
-    )
-    app.api.add_api_route(
-        "/api/collections",
-        add_user_collection,
-        methods=["POST"],
-        response_model=CollectionResponse
-    )
-    app.api.add_api_route(
-        "/api/collections/{collection_name}",
-        delete_user_collection,
-        methods=["DELETE"],
-        response_model=CollectionResponse
-    )
-    app.api.add_api_route(
-        "/api/collections/{collection_name}/entries",
-        add_collection_entry,
-        methods=["POST"],
-        response_model=CollectionResponse
-    )
+def setup_api(app: FastAPI) -> None:
+    """Initialize collection-related API routes using APIRouter."""
+    app.include_router(router)

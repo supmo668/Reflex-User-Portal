@@ -3,7 +3,14 @@ from typing import Dict, Any
 from datetime import datetime, timezone
 
 from sqlmodel import select
-from fastapi import FastAPI, Request, HTTPException, status, Depends
+from fastapi import FastAPI, Request, HTTPException, status, Depends, APIRouter
+
+# Define the router for this module
+router = APIRouter(
+    prefix="/api",
+    tags=["clerk_user"]
+)
+
 
 import reflex as rx
 from clerk_backend_api import Clerk
@@ -227,6 +234,7 @@ async def get_local_user(request: Request) -> UserModel:
         if session:
             session.close()
 
+@router.get("/users/{user_id}/queries", tags=["users"])
 async def get_user_queries_api(
     user_id: int,
     current_user: User = Depends(get_local_user)
@@ -268,17 +276,15 @@ async def get_user_queries_api(
             return user.user_attribute.collections['queries']
         return {}
 
+@router.get("/auth/me", tags=["auth"])
+async def get_me(request: Request):
+    return await get_local_user(request)
+
+@router.get("/auth/clerk/me", tags=["auth"])
+async def get_clerk_me(request: Request):
+    return await authenticate_clerk_request(request)
+
 def setup_api(app: FastAPI) -> None:
-    """Initialize user-related API routes.
-    
-    Args:
-        app: The FastAPI application
-    """
+    """Initialize user-related API routes using APIRouter."""
     logger.info("Initializing user routes")
-    
-    # User data routes
-    app.add_api_route("/api/users/{user_id}/queries", get_user_queries_api, methods=["GET"])
-    
-    # Authentication route
-    app.add_api_route("/api/auth/me", get_local_user, methods=["GET"])
-    app.add_api_route("/api/auth/clerk/me", authenticate_clerk_request, methods=["GET"])
+    app.include_router(router)

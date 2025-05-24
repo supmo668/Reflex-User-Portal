@@ -6,7 +6,7 @@ import sqlalchemy
 from sqlalchemy import DateTime, JSON
 from sqlmodel import Field, Column
 from enum import Enum
-from datetime import datetime, timezone
+from datetime import datetime
 
 
 
