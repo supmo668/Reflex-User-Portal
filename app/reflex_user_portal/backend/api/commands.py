@@ -22,7 +22,7 @@ API_ROUTES = {
     "direct_start": "/task/start/{task_name}",
     "direct_status": "/task/status/{task_id}",
     "direct_result": "/task/result/{task_id}",
-    "direct_ws": "/task/{task_id}",
+    "direct_ws": "/task/ws/{task_id}",
 }
 
 # Command templates using route patterns for display in MonitorState

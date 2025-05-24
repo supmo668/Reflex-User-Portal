@@ -1,5 +1,6 @@
 # Import necessary modules and classes
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Body, APIRouter, HTTPException
+from datetime import datetime
 from typing import Optional, Any, Dict
 import asyncio
 import inspect
@@ -45,7 +46,12 @@ class TaskAPI:
             prefix=f"{self.api_base_path}", 
             tags=[f"Direct Task API - {state_name}"]
         )
+        # Store active tasks with their status, progress, result, and error
         self.active_tasks = {}
+        
+        # Store task contexts for each task (includes history with timestamps)
+        self.task_contexts = {}
+        
         self.setup_routes()
         # Register routers with the app instance at init
         self.register_routers(app.api_transformer)
@@ -219,20 +225,8 @@ class TaskAPI:
             logger.error(f"Parameter validation error: {str(e)}")
             raise HTTPException(status_code=400, detail=str(e))
         
-        # Import the DirectTaskContext and GlobalTaskTracker from models.py
-        from ..wrapper.models import DirectTaskContext, GlobalTaskTracker
-        
-        # Create a global task tracker
-        global_tracker = GlobalTaskTracker()
-        global_tracker.tasks[task_id] = {
-            "progress": 0,
-            "status": TaskStatus.STARTING,
-            "active": True,
-            "result": None
-        }
-        
-        # Create the task context using our properly organized classes
-        task_context = DirectTaskContext(task_id, self, global_tracker)
+        # Import the DirectTaskContext from models.py
+        from ..wrapper.models import DirectTaskContext
         
         # Initialize our active_tasks structure for API endpoints
         self.active_tasks[task_id] = {
@@ -241,6 +235,13 @@ class TaskAPI:
             "result": None,
             "error": None
         }
+        
+        # Create the task context using DirectTaskContext
+        # The DirectTaskContext now maintains its own history
+        task_context = DirectTaskContext(task_id, self)
+        
+        # Store the task context for future reference
+        self.task_contexts[task_id] = task_context
         
         # Execute the task in the background
         asyncio.create_task(self._run_task(task_method, task_context, validated_params))
@@ -251,11 +252,14 @@ class TaskAPI:
         """Run a task in the background and update its status.
         
         This method executes the original (unwrapped) function directly, bypassing the monitored_background_task wrapper.
+        It uses the DirectTaskContext to update task progress and status, which mimics the behavior of TaskContext
+        used with monitored_background_task decorator.
         """
         task_id = task_context.task_id
         try:
-            # Update task status to processing
-            self.active_tasks[task_id]["status"] = TaskStatus.PROCESSING
+            # Update task status to processing using the context's update method
+            # This will also update the task history with a timestamp
+            await task_context.update(status=TaskStatus.PROCESSING)
             
             # Get the original function from the decorated method
             # The monitored_background_task decorator adds a __wrapped__ attribute to the function
@@ -269,15 +273,16 @@ class TaskAPI:
             else:
                 result = await original_func(task_context)
                 
-            # Update task status to completed
-            self.active_tasks[task_id]["status"] = TaskStatus.COMPLETED
-            self.active_tasks[task_id]["progress"] = 100
-            self.active_tasks[task_id]["result"] = result
+            # Update task status to completed using the context's update method
+            # This will also update the task history with a timestamp
+            await task_context.update(progress=100, status=TaskStatus.COMPLETED, result=result)
+            
             logger.info(f"Task {task_id} completed successfully with result: {result}")
             
         except Exception as e:
             logger.error(f"Error executing task {task_id}: {str(e)}")
-            self.active_tasks[task_id]["status"] = TaskStatus.ERROR
+            # Update task status to error using the context's update method
+            await task_context.update(status=TaskStatus.ERROR)
             self.active_tasks[task_id]["error"] = str(e)
     
     async def get_direct_task_result(self, task_id: str):
@@ -295,37 +300,130 @@ class TaskAPI:
         return {"result": self.active_tasks[task_id]["result"]}
     
     async def stream_direct_task_status(self, websocket: WebSocket, task_id: str):
-        """WebSocket endpoint for streaming real-time status updates for directly executed tasks."""
+        """WebSocket endpoint for streaming real-time status updates for directly executed tasks.
+        
+        This endpoint will first send the complete task history, then stream real-time updates
+        as they occur. Each update includes a timestamp for tracking when events occurred.
+        
+        If the task is not found in active_tasks, it will still stream the last update if available
+        in the task_contexts dictionary.
+        """
         logger.info(f"New direct task websocket connection for task {task_id}")
         await websocket.accept()
         
         try:
-            if task_id not in self.active_tasks:
+            # Check if we have a task context for this task_id
+            task_context = self.task_contexts.get(task_id)
+            
+            if not task_context:
+                # If no task context is found, check if we have any active tasks with this ID
+                if task_id not in self.active_tasks:
+                    # No task found - send a message but don't close the connection
+                    # This allows reconnecting to tasks that might have completed
+                    await websocket.send_json({
+                        "type": "status_update",
+                        "data": {
+                            "task_id": task_id,
+                            "status": "NOT_FOUND",
+                            "message": f"Task {task_id} not found",
+                            "timestamp": datetime.now().isoformat()
+                        }
+                    })
+                    # Keep the connection open but exit the function
+                    return
+            
+            # First, send the complete task history if we have a task context
+            if task_context:
                 await websocket.send_json({
-                    "type": "error",
-                    "message": f"Task {task_id} not found"
-                })
-                await websocket.close()
-                return
-                
-            while True:
-                task_info = self.active_tasks[task_id]
-                await websocket.send_json({
-                    "type": "status_update",
+                    "type": "history",
                     "data": {
                         "task_id": task_id,
-                        "status": task_info["status"],
-                        "progress": task_info["progress"],
-                        "result": task_info["result"],
-                        "error": task_info["error"]
+                        "history": task_context.history
                     }
                 })
                 
-                # Check if task is completed or errored
-                if task_info["status"] in [TaskStatus.COMPLETED, TaskStatus.ERROR]:
-                    break
+                # Keep track of the last history entry we've seen
+                last_history_index = len(task_context.history) - 1
+                
+                # Stream real-time updates
+                while True:
+                    # Check if we have new history entries
+                    current_history_index = len(task_context.history) - 1
                     
-                await asyncio.sleep(1)
+                    # If there are new entries, send them
+                    if current_history_index > last_history_index:
+                        new_entries = task_context.history[last_history_index+1:]
+                        await websocket.send_json({
+                            "type": "new_history",
+                            "data": {
+                                "task_id": task_id,
+                                "new_entries": new_entries
+                            }
+                        })
+                        last_history_index = current_history_index
+                    
+                    # Get current task status from active_tasks
+                    if task_id in self.active_tasks:
+                        task_info = self.active_tasks[task_id]
+                        
+                        # Send current status update
+                        await websocket.send_json({
+                            "type": "status_update",
+                            "data": {
+                                "task_id": task_id,
+                                "status": task_info["status"],
+                                "progress": task_info["progress"],
+                                "result": task_info["result"],
+                                "error": task_info["error"],
+                                "timestamp": datetime.now().isoformat()
+                            }
+                        })
+                        
+                        # Check if task is completed or errored
+                        if task_info["status"] in [TaskStatus.COMPLETED, TaskStatus.ERROR]:
+                            break
+                    else:
+                        # Task no longer in active_tasks, send the latest status from task_context
+                        await websocket.send_json({
+                            "type": "status_update",
+                            "data": {
+                                "task_id": task_id,
+                                "status": task_context.status,
+                                "progress": task_context.progress,
+                                "result": task_context.result,
+                                "timestamp": datetime.now().isoformat()
+                            }
+                        })
+                        
+                        # If task is completed or errored, break the loop
+                        if task_context.status in [TaskStatus.COMPLETED, TaskStatus.ERROR]:
+                            break
+                    
+                    # Wait before checking again
+                    await asyncio.sleep(1)
+            else:
+                # We have an active task but no task_context (shouldn't happen with current implementation)
+                # Just stream the active task info
+                while True:
+                    task_info = self.active_tasks[task_id]
+                    await websocket.send_json({
+                        "type": "status_update",
+                        "data": {
+                            "task_id": task_id,
+                            "status": task_info["status"],
+                            "progress": task_info["progress"],
+                            "result": task_info["result"],
+                            "error": task_info["error"],
+                            "timestamp": datetime.now().isoformat()
+                        }
+                    })
+                    
+                    # Check if task is completed or errored
+                    if task_info["status"] in [TaskStatus.COMPLETED, TaskStatus.ERROR]:
+                        break
+                        
+                    await asyncio.sleep(1)
+                    
         except WebSocketDisconnect:
             logger.info(f"WebSocket disconnected for task {task_id}")
         except Exception as e:

@@ -1,10 +1,29 @@
 import uuid
-from typing import Any
-from dataclasses import dataclass, field
-import asyncio
+import datetime
 import logging
+from typing import Any, Dict, List, Optional
+from dataclasses import dataclass, field
 
+# Configure logger
 logger = logging.getLogger(__name__)
+
+class TaskStatus:
+    """Task status constants."""
+    PENDING = "PENDING"
+    STARTING = "Starting"
+    PROCESSING = "Processing"
+    COMPLETED = "Completed"
+    ERROR = "Error"
+
+@dataclass
+class TaskData:
+    """Data model for tracking task status and results."""
+    id: str
+    name: str
+    status: str = TaskStatus.PENDING
+    active: bool = True
+    progress: int = 0
+    result: Any = None
 
 class TaskContext:
     """Context manager for updating task status in Reflex state."""
@@ -13,30 +32,8 @@ class TaskContext:
         if task_id is None:
             task_id = str(uuid.uuid4()[:8])
         self.task_id = task_id
+        self.progress = 0
         
-    async def update(self, progress: int, status: str, result: Any = None):
-        """Update task progress, status and result in Reflex state"""
-        async with self.state:
-            self.state.tasks[self.task_id].progress = progress
-            self.state.tasks[self.task_id].status = status
-            self.state.tasks[self.task_id].active = True
-            if result is not None:
-                self.state.tasks[self.task_id].result = result
-
-
-class DirectTaskContext:
-    """Task context for direct execution of tasks outside of Reflex state.
-    
-    This class provides the same interface as TaskContext but works with a global
-    task tracker instead of a Reflex state. It's used for executing static methods
-    directly through the API.
-    """
-    def __init__(self, task_id, task_api, global_tracker=None):
-        self.task_id = task_id
-        self.task_api = task_api
-        self.global_tracker = global_tracker
-    
-    # Implement async context manager protocol
     async def __aenter__(self):
         return self
         
@@ -44,71 +41,87 @@ class DirectTaskContext:
         pass
         
     async def update(self, progress=None, status=None, result=None):
-        """Update task progress, status and result in both global tracker and active_tasks."""
-        # Update the global tracker if provided
-        if self.global_tracker and hasattr(self.global_tracker, 'tasks'):
+        """Update task progress, status and result in Reflex state"""
+        async with self.state:
             if progress is not None:
-                self.global_tracker.tasks[self.task_id]["progress"] = progress
+                self.progress = progress
+                self.state.tasks[self.task_id].progress = progress
+                
             if status is not None:
-                self.global_tracker.tasks[self.task_id]["status"] = status
+                self.state.tasks[self.task_id].status = status
+                self.state.tasks[self.task_id].active = True
+                
             if result is not None:
-                self.global_tracker.tasks[self.task_id]["result"] = result
-        
-        # Update the task_api's active_tasks for API endpoints
-        if progress is not None:
-            self.task_api.active_tasks[self.task_id]["progress"] = progress
-        
-        if status is not None:
-            self.task_api.active_tasks[self.task_id]["status"] = status
-        
-        if result is not None:
-            self.task_api.active_tasks[self.task_id]["result"] = result
-        
-        logger.debug(f"Task {self.task_id} updated: progress={progress}, status={status}")
+                self.state.tasks[self.task_id].result = result
 
-
-class GlobalTaskTracker:
-    """A global task tracker that mimics a Reflex state for the TaskContext.
+class DirectTaskContext:
+    """Task context for direct execution of tasks outside of Reflex state.
     
-    This class provides a simple way to track task progress and status
-    without requiring a Reflex state instance.
+    This class provides the same interface as TaskContext but works directly with
+    the TaskAPI to track task status, progress, and results. It's used for executing
+    methods decorated with @monitored_background_task directly through the API.
+    
+    This class maintains its own task history with timestamps for each update,
+    making it easier to track task progress and status changes over time.
     """
-    def __init__(self):
-        self.tasks = {}
+    def __init__(self, task_id, task_api):
+        self.task_id = task_id
+        self.task_api = task_api
+        self.progress = 0
+        self.status = TaskStatus.PENDING
+        self.result = None
+        self.history = []
         
+        # Initialize with first history entry
+        self._add_history_entry(progress=0, status=TaskStatus.STARTING)
+    
+    # Implement async context manager protocol to be compatible with monitored_background_task
     async def __aenter__(self):
         return self
         
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         pass
-
-class TaskStatus:
-    PENDING = "PENDING"
-    STARTING = "Starting"
-    PROCESSING = "Processing"
-    COMPLETED = "Completed"
-    ERROR = "Error"
-
-# Define TaskData dataclass
-@dataclass
-class TaskData:
-    """Data structure for task information"""
-    id: str  # Primary identifier, matches dictionary key
-    name: str  # Task name
-    status: TaskStatus = TaskStatus.PENDING
-    active: bool = False
-    progress: int = 0
-    result: dict = field(default_factory=dict)
-    created_at: float = field(default_factory=lambda: asyncio.get_event_loop().time())
-    updated_at: float = field(default_factory=lambda: asyncio.get_event_loop().time())
     
-    def to_dict(self) -> dict:
-        """Convert task data to dictionary"""
-        return {
-            "id": self.id,
-            "name": self.name,
-            "status": self.status,
-            "progress": self.progress,
-            "result": self.result,
-            "created_at": self.created_at,
-        }
+    def _add_history_entry(self, progress=None, status=None, result=None):
+        """Add an entry to the task history with the current timestamp."""
+        timestamp = datetime.datetime.now().isoformat()
+        
+        # Only include non-None values in the history entry
+        entry = {"timestamp": timestamp}
+        if progress is not None:
+            entry["progress"] = progress
+        if status is not None:
+            entry["status"] = status
+        if result is not None:
+            entry["result"] = result
+            
+        self.history.append(entry)
+        return entry
+        
+    async def update(self, progress=None, status=None, result=None):
+        """Update task progress, status and result.
+        
+        Records the update in task history with a timestamp and updates the
+        task_api's active_tasks for API endpoints.
+        """
+        # Update local state
+        if progress is not None:
+            self.progress = progress
+        if status is not None:
+            self.status = status
+        if result is not None:
+            self.result = result
+            
+        # Add to history
+        history_entry = self._add_history_entry(progress, status, result)
+        
+        # Update the task_api's active_tasks for API endpoints
+        if self.task_id in self.task_api.active_tasks:
+            if progress is not None:
+                self.task_api.active_tasks[self.task_id]["progress"] = progress
+            if status is not None:
+                self.task_api.active_tasks[self.task_id]["status"] = status
+            if result is not None:
+                self.task_api.active_tasks[self.task_id]["result"] = result
+        
+        logger.debug(f"Task {self.task_id} updated: progress={progress}, status={status}, timestamp={history_entry['timestamp']}")
