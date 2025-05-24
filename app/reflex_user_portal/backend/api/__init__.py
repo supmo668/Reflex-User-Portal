@@ -9,13 +9,15 @@ from ..states.task import STATE_MAPPINGS
 def setup_state_task_apis(app):
     """
     Set up multiple task APIs on all the discovered states.
+    
+    This function creates TaskAPI instances for each state in STATE_MAPPINGS,
+    organizing them by state name for better API documentation.
     """   
-    for name, state_info in STATE_MAPPINGS.items():
+    for state_name, state_info in STATE_MAPPINGS.items():
         # Extract the state class and API prefix
-        print(f"Setting up API for state: {name} at {state_info['api_prefix']}")
-        TaskAPI(app, state_info)
-        # Client Module is not supported by Reflex
-        # ClientAPI(app, name, state_info)
+        print(f"Setting up API for state: {state_name} at {state_info['api_prefix']}")
+        # Pass state_name to TaskAPI constructor for better route organization
+        TaskAPI(app, state_name, state_info)
 
 def setup_api(app: rx.App):
     setup_state_task_apis(app)

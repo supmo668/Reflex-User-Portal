@@ -1,12 +1,12 @@
 import inspect
 import sys
-import importlib
-from types import ModuleType
 from typing import Dict, Type, Optional, List, Any, Callable, Set, Union
+from pydantic import BaseModel
+from sqlmodel import select, desc
 
 import reflex as rx
 
-from ...wrapper.task import TaskContext, TaskData, TaskStatus, monitored_background_task, reflex_task
+from ...wrapper.task import TaskContext, TaskData, TaskStatus, monitored_background_task
 from ....utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -42,72 +42,11 @@ class MonitorState(rx.State):
     tasks: Dict[str, TaskData] = {}    
     current_task_function: str = ""
     # Arguments for the current task. Mapping of task ID to its arguments.
-    tasks_argument: Dict[str, Any] = {}
+    tasks_argument: Dict[str, Union[Dict[str, Any], BaseModel]] = {}
     
     # this is for API access (task ID + task arguments)
     enqueued_tasks: Dict[str, dict] = {}
-    
-    @classmethod
-    def __init_subclass__(cls, **kwargs):
-        """Auto-discover tasks when a subclass is created."""
-        super().__init_subclass__(**kwargs)
-        cls._discover_tasks()
-    
-    @classmethod
-    def _discover_tasks(cls):
-        """Discover and register tasks from the current module at class level."""
-        module_name = cls.__module__
-        module = sys.modules.get(module_name)
-        
-        if not module:
-            logger.warning(f"Could not find module {module_name} for task discovery")
-            return
-            
-        logger.info(f"Discovering tasks in module {module_name} for {cls.__name__}")
-        
-        # Discover standalone functions with @reflex_task decorator
-        for name, func in inspect.getmembers(module, inspect.isfunction):
-            if hasattr(func, 'is_reflex_task'):
-                logger.info(f"Found standalone task: {name}")
-                cls._register_task_function(name, func)
-    
-    @classmethod
-    def _register_task_function(cls, name: str, func: Callable):
-        """Register a standalone task function as a method on this state class."""
-        # Skip if class already has a method with this name
-        if hasattr(cls, name):
-            logger.debug(f"Task {name} already exists on {cls.__name__}, skipping registration")
-            return
-            
-        # Inspect the original function to get its parameters
-        sig = inspect.signature(func)
-        logger.debug(f"Original function signature: {sig}")
-        
-        # Store the original function for reference
-        # This is important for parameter inspection later
-        
-        # Create a monitored background task wrapper that calls the standalone function
-        @monitored_background_task
-        async def task_wrapper(self, task: TaskContext, **kwargs):
-            # Forward the call to the standalone function
-            return await func(task, **kwargs)
-            
-        # Copy metadata and docstring
-        task_wrapper.__name__ = name
-        task_wrapper.__doc__ = func.__doc__
-        
-        # Store reference to original function for parameter inspection
-        task_wrapper.original_func = func
-        
-        # Log the wrapper's signature
-        wrapper_sig = inspect.signature(task_wrapper)
-        logger.debug(f"Wrapper function signature: {wrapper_sig}")
-        
-        # Add the wrapper method to the class
-        setattr(cls, name, task_wrapper)
-        
-        logger.info(f"Registered task '{name}' on {cls.__name__}")
-    
+
     @rx.var
     def client_token(self) -> str:
         """Token for client identification."""

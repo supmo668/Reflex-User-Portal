@@ -2,44 +2,13 @@ import reflex as rx
 import functools
 import uuid
 import inspect
-from typing import Any, Dict, Optional, Callable, Type
+from typing import Any, Dict, Type
+
 from .models import TaskData, TaskStatus, TaskContext
 
 from ...utils.logger import get_logger
 
 logger = get_logger(__name__)
-
-def reflex_task(func=None, *, name=None, description=None):
-    """
-    Decorator that marks a function as a task that can be discovered by MonitorState.
-    This allows defining task logic outside of state classes.
-    
-    Usage:
-        @reflex_task
-        async def my_task(task_ctx, task_args=None):
-            # Task implementation
-            return result
-    
-    Args:
-        func: The function to decorate
-        name: Optional display name for the task
-        description: Optional description for the task
-    
-    Returns:
-        The decorated function with metadata attached
-    """
-    def decorator(func):
-        # Add metadata to the function
-        func.is_reflex_task = True
-        func.task_name = name or func.__name__.replace('_', ' ').title()
-        func.task_description = description or (func.__doc__ or "").split('\n')[0].strip()
-        return func
-        
-    # Handle both @reflex_task and @reflex_task() syntax
-    if func is None:
-        return decorator
-    return decorator(func)
-
 def monitored_background_task(func):
     """
     Decorator that wraps rx.event(background=True) to add task monitoring.
@@ -55,6 +24,7 @@ def monitored_background_task(func):
     async def wrapper(state: rx.State, **kwargs) -> Any:
         # Pass through the marker
         wrapper.is_monitored_background_task = True
+        logger.info(f"Initializing monitored background task {func.__name__}")
         # Initialize task
         async with state:
             if getattr(state, "tasks_argument", {}):
@@ -71,6 +41,7 @@ def monitored_background_task(func):
                 result=None
             )
         try:
+            logger.info(f"Kick off task {func.__name__}")
             # Create task context
             task_ctx = TaskContext(state, task_id)
             result = await func(state, task_ctx, **kwargs)
@@ -82,6 +53,7 @@ def monitored_background_task(func):
                 state.tasks[task_id].result = result
         except Exception as e:
             # Handle errors
+            logger.error(f"Error in task {task_id}: {str(e)}")
             async with state:
                 state.tasks[task_id].status = f"{TaskStatus.ERROR}: {str(e)}"
                 state.tasks[task_id].active = False
@@ -90,4 +62,8 @@ def monitored_background_task(func):
 
     func.is_monitored_background_task = True
     wrapper.is_monitored_background_task = True
+    
+    # Copy the original function name and docstring
+    wrapper.__name__ = func.__name__
+    wrapper.__doc__ = func.__doc__
     return wrapper
