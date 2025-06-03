@@ -6,8 +6,9 @@ from sqlmodel import select, desc
 
 import reflex as rx
 
-from ...wrapper.task import TaskContext, TaskData, TaskStatus, monitored_background_task
+from ...wrapper.task import TaskContext, TaskData, TaskStatus
 from ....utils.logger import get_logger
+from ....models.admin.admin_config import AdminConfig
 
 logger = get_logger(__name__)
 

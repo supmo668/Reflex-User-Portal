@@ -82,7 +82,7 @@ class DirectTaskContext:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         pass
     
-    def _add_history_entry(self, progress=None, status=None, result=None):
+    def _add_history_entry(self, progress=None, status=None, message=None, result=None):
         """Add an entry to the task history with the current timestamp."""
         timestamp = datetime.datetime.now().isoformat()
         
@@ -92,17 +92,25 @@ class DirectTaskContext:
             entry["progress"] = progress
         if status is not None:
             entry["status"] = status
+        if message is not None:
+            entry["message"] = message
         if result is not None:
             entry["result"] = result
             
         self.history.append(entry)
         return entry
         
-    async def update(self, progress=None, status=None, result=None):
+    async def update(self, progress=None, status=None, message=None, result=None):
         """Update task progress, status and result.
         
         Records the update in task history with a timestamp and updates the
         task_api's active_tasks for API endpoints.
+        
+        Args:
+            progress: Optional progress value (0-100)
+            status: Optional status string
+            message: Optional status message
+            result: Optional result data
         """
         # Update local state
         if progress is not None:
@@ -113,7 +121,7 @@ class DirectTaskContext:
             self.result = result
             
         # Add to history
-        history_entry = self._add_history_entry(progress, status, result)
+        history_entry = self._add_history_entry(progress, status, message, result)
         
         # Update the task_api's active_tasks for API endpoints
         if self.task_id in self.task_api.active_tasks:
@@ -121,7 +129,9 @@ class DirectTaskContext:
                 self.task_api.active_tasks[self.task_id]["progress"] = progress
             if status is not None:
                 self.task_api.active_tasks[self.task_id]["status"] = status
+            if message is not None:
+                self.task_api.active_tasks[self.task_id]["message"] = message
             if result is not None:
                 self.task_api.active_tasks[self.task_id]["result"] = result
         
-        logger.debug(f"Task {self.task_id} updated: progress={progress}, status={status}, timestamp={history_entry['timestamp']}")
+        logger.debug(f"Task {self.task_id} updated: progress={progress}, status={status}, message={message}, timestamp={history_entry['timestamp']}")

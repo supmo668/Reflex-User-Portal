@@ -18,7 +18,7 @@ from ...models import (
     UserAttribute,
     CollectionResponse
 )
-from .clerk_user import get_local_user
+from .clerk_user import get_local_user, authenticate_clerk_request
 
 
 def get_user_attribute(session: Session, user_id: int) -> Tuple[UserAttribute, bool]:
@@ -174,6 +174,28 @@ async def add_collection_entry(
     """Add an entry to a specific collection - API endpoint"""
     with rx.session() as session:
         collections = add_collection_entry_core(session, current_user.id, collection_name, entry)
+        return CollectionResponse(collections=collections)
+
+
+@router.get("/{user_id}/collections", response_model=CollectionResponse, tags=["admin"])
+async def get_user_collections_by_id(
+    user_id: int,
+    _clerk_user = Depends(authenticate_clerk_request)
+) -> CollectionResponse:
+    """Get all collections for a specific user by ID - Admin only endpoint
+    
+    Args:
+        user_id: ID of the user whose collections to fetch
+        _clerk_user: Authenticated Clerk user (admin access required)
+        
+    Returns:
+        CollectionResponse with the user's collections
+        
+    Raises:
+        HTTPException: If user not found or unauthorized
+    """
+    with rx.session() as session:
+        collections = get_user_collections_core(session, user_id)
         return CollectionResponse(collections=collections)
 
 

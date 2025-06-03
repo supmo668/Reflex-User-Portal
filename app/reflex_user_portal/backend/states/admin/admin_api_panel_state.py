@@ -272,6 +272,12 @@ class QueryAPI(QueryState):
                         try:
                             if key == CONFIG.ADMIN_CONFIG_TABLE_JSON_CONFIG_COL:
                                 converted_value = yaml.safe_load(value)
+                            elif key in ("created_at", "updated_at") and isinstance(value, str):
+                                # Convert datetime strings to datetime objects
+                                if value:  # Only convert if not empty
+                                    converted_value = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                                else:
+                                    converted_value = None
                             else:
                                 converted_value = value
                             setattr(item, key, converted_value)
