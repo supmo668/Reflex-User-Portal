@@ -22,9 +22,8 @@ providers = ['python']
 [phases.export]
     dependsOn = ['init'] # run after init
     cmds = [
-        'FRONTEND_DEPLOY_URL="https://frontend-annotation.up.railway.app"',
-        'API_URL="${API_URL}"',
-        'reflex export --frontend-only --no-zip'
+        'FRONTEND_DEPLOY_URL="${FRONTEND_DEPLOY_URL}"',
+        'reflex export --backend-only --no-zip'
     ]
     # export the backend
 
@@ -41,5 +40,5 @@ providers = ['python']
 
 # start phase
 [start]
-    cmd = 'FRONTEND_DEPLOY_URL="https://frontend-annotation.up.railway.app" API_URL="${API_URL}" reflex run --frontend-only --env ${REFLEX_ENV:-prod} && caddy run 2>&1'
+    cmd = 'FRONTEND_DEPLOY_URL="${FRONTEND_DEPLOY_URL}" reflex run --backend-only --env ${REFLEX_ENV:-prod} && caddy run 2>&1'
     # run the backend and caddy in parallel, this will fail fast if either service crashes allowing railway to restart the deployment

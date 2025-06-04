@@ -1,0 +1,38 @@
+{
+    admin off
+    auto_https off
+    log {
+        format json
+    }
+}
+
+:{$PORT} {
+    log {
+        format json
+    }
+
+    # Serve static files
+    root * .web/_static
+    file_server
+
+    reverse_proxy localhost:3000
+
+    # Proxy API requests to the backend
+    handle / {
+        reverse_proxy ${API_URL} {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Allow for pretty paths with fallback to index.html
+    try_files {path} {path}/ /index.html
+
+    # Rewrite any errors to the corresponding error page
+    handle_errors {
+        rewrite * /{err.status_code}.html
+        file_server
+    }
+}

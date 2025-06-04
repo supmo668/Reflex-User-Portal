@@ -1,0 +1,38 @@
+{
+    admin off
+    auto_https off
+    log {
+        format json
+    }
+}
+
+:{$PORT} {
+    log {
+        format json
+    }
+
+    # WebSocket proxying
+    @websocket {
+        header Connection *Upgrade*
+        header Upgrade websocket
+        path /_event*
+    }
+
+    reverse_proxy @websocket localhost:8000 {
+        header_up Host {host}
+        header_up Connection "Upgrade"
+        header_up Upgrade "websocket"
+
+        # Add CORS headers for WebSocket
+        header_down Access-Control-Allow-Origin "${FRONTEND_DEPLOY_URL}"
+        header_down Access-Control-Allow-Methods "GET, POST, OPTIONS"
+        header_down Access-Control-Allow-Headers "Content-Type"
+    }
+
+    # Proxy all backend API and other routes
+    reverse_proxy / localhost:8000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+    }
+}
