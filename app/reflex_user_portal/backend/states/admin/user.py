@@ -25,7 +25,7 @@ class UserBaseState(rx.State):
     async def is_admin(self) -> bool:
         """Check if current user is admin."""
         if self.user:
-            return self.user.user_type == UserType.ADMIN.value
+            return self.user.user_type == UserType.ADMIN
         return False
     
     async def get_or_create_guest(self) -> User:
@@ -33,14 +33,14 @@ class UserBaseState(rx.State):
         with rx.session() as session:
             # Find existing guest user
             user = session.exec(
-                select(User).where(User.user_type == UserType.GUEST.value)
+                select(User).where(User.user_type == UserType.GUEST)
             ).first()
             if user is None:
                 # Create new guest user with a generated email
                 timestamp = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')
                 user = User(
                     email=f"guest_{timestamp}@temp.com",  # Generate unique email
-                    user_type=UserType.GUEST.value,
+                    user_type=UserType.GUEST,
                     created_at=datetime.now(timezone.utc)
                 )
                 session.add(user)

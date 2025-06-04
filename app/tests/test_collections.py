@@ -34,7 +34,7 @@ def test_user(test_session):
         user = User(
             email="test@default.com",
             clerk_id="test_clerk_id",
-            user_type=UserType.USER.value,
+            user_type=UserType.USER,
             first_name="Test",
             last_name="User",
             created_at=datetime.now(timezone.utc)

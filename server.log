@@ -133,3 +133,210 @@ completely removed in 0.8.0.
 2025-06-03 12:14:11 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Checking parameter: task, annotation: <class 'app.reflex_user_portal.backend.wrapper.models.TaskContext'>, default: no default
 2025-06-03 12:14:11 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - No task_args parameter found or no valid default value
 [12:14:09] Compiling: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 30/30 0:00:01
+WARNING:  WatchFiles detected changes in 'app/reflex_user_portal/backend/states/task/base.py'. Reloading...
+App environment: DEV
+DeprecationWarning: Inferring tailwind usage has been deprecated in version 
+0.7.13. 
+
+If you are using tailwind, add `rx.plugins.TailwindV3Plugin()` to the 
+`plugins=[]` in rxconfig.py.
+
+If you are not using tailwind, set `tailwind` to `None` in rxconfig.py. It will 
+be completely removed in 0.8.0. (rxconfig.py:4)
+Configuring Reflex with database URL: sqlite://<hidden>
+DeprecationWarning: implicit-none-for-component-fields has been deprecated in 
+version 0.7.2. Passing Vars with possible None values to component fields not 
+explicitly marked as Optional is deprecated. Passed 
+reflex___state____state__reflex_clerk___lib___clerk_provider____clerk_state.user
+?.["image_url"] of type typing.Optional[str] to <class 'str'>. It will be 
+completely removed in 0.8.0. 
+(app/reflex_user_portal/components/portal/profile.py:22)
+2025-06-03 12:36:12 - reflex_user_portal.app.reflex_user_portal.backend.states.task - INFO - Discovered task states: ['ExampleTaskState', 'ExampleTaskState2']
+2025-06-03 12:36:12 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Authorizing domains: ['http://localhost:3000', 'http://localhost:3005']
+Configuring Reflex with database URL: sqlite://<hidden>
+Setting up API for state: ExampleTaskState at /api/example_task
+Setting up API for state: ExampleTaskState2 at /api/example_task2
+2025-06-03 12:36:13 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Initializing user routes
+DeprecationWarning: implicit-none-for-component-fields has been deprecated in 
+version 0.7.2. Passing Vars with possible None values to component fields not 
+explicitly marked as Optional is deprecated. Passed 
+reflex___state____state__reflex_clerk___lib___clerk_provider____clerk_state.user
+?.["image_url"] of type typing.Optional[str] to <class 'str'>. It will be 
+completely removed in 0.8.0. 
+(app/reflex_user_portal/components/portal/navbar.py:23)
+2025-06-03 12:36:16 - reflex_user_portal.app.reflex_user_portal.backend.states.task.base - WARNING - config_name not set in subclass
+2025-06-03 12:36:16 - reflex_user_portal.app.reflex_user_portal.backend.states.task - INFO - Found 2 task functions named ['task1', 'task2_show_db_config']
+2025-06-03 12:36:16 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Looking for method: task1 in class ExampleTaskState
+2025-06-03 12:36:16 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Found method: EventHandler(event_actions={}, fn=<function ExampleTaskState.task1 at 0x7f5182a3b060>, state_full_name='reflex___state____state.app___reflex_user_portal___backend___states___task___base____monitor_state.app___reflex_user_portal___backend___states___task___example_task____example_task_state')
+2025-06-03 12:36:16 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Method has fn attribute: <function ExampleTaskState.task1 at 0x7f5182a3b060>
+2025-06-03 12:36:16 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Method signature: (self, task: app.reflex_user_portal.backend.wrapper.models.TaskContext)
+2025-06-03 12:36:16 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Parameter types: [<Parameter "self">, <Parameter "task: app.reflex_user_portal.backend.wrapper.models.TaskContext">]
+2025-06-03 12:36:16 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Checking parameter: self, annotation: <class 'inspect._empty'>, default: no default
+2025-06-03 12:36:16 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Checking parameter: task, annotation: <class 'app.reflex_user_portal.backend.wrapper.models.TaskContext'>, default: no default
+2025-06-03 12:36:16 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - No task_args parameter found or no valid default value
+2025-06-03 12:36:16 - reflex_user_portal.app.reflex_user_portal.backend.states.admin.user_table - DEBUG - Filtering and sorting users
+2025-06-03 12:36:16 - reflex_user_portal.app.reflex_user_portal.backend.states.admin.user_table - DEBUG - Found 2 users after filtering and sorting
+[12:36:13] Compiling: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 30/30 0:00:03
+Starting frontend failed with exit code -1
+$ next dev 
+   ▲ Next.js 15.3.2
+   - Local:        http://localhost:3002
+   - Network:      http://10.255.255.254:3002
+
+ ✓ Starting...
+ ✓ Ready in 34.7s
+error: script "dev" was terminated by signal SIGHUP (Terminal hung up)
+
+
+
+Run with --loglevel debug  for the full log.
+WARNING:  WatchFiles detected changes in 'app/reflex_user_portal/backend/api/clerk_user.py'. Reloading...
+App environment: DEV
+DeprecationWarning: Inferring tailwind usage has been deprecated in version 
+0.7.13. 
+
+If you are using tailwind, add `rx.plugins.TailwindV3Plugin()` to the 
+`plugins=[]` in rxconfig.py.
+
+If you are not using tailwind, set `tailwind` to `None` in rxconfig.py. It will 
+be completely removed in 0.8.0. (rxconfig.py:4)
+Configuring Reflex with database URL: sqlite://<hidden>
+DeprecationWarning: implicit-none-for-component-fields has been deprecated in 
+version 0.7.2. Passing Vars with possible None values to component fields not 
+explicitly marked as Optional is deprecated. Passed 
+reflex___state____state__reflex_clerk___lib___clerk_provider____clerk_state.user
+?.["image_url"] of type typing.Optional[str] to <class 'str'>. It will be 
+completely removed in 0.8.0. 
+(app/reflex_user_portal/components/portal/profile.py:22)
+2025-06-03 17:00:05 - reflex_user_portal.app.reflex_user_portal.backend.states.task - INFO - Discovered task states: ['ExampleTaskState', 'ExampleTaskState2']
+2025-06-03 17:00:11 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Authorizing domains: ['http://localhost:3000', 'http://localhost:3005']
+Configuring Reflex with database URL: sqlite://<hidden>
+Setting up API for state: ExampleTaskState at /api/example_task
+Setting up API for state: ExampleTaskState2 at /api/example_task2
+2025-06-03 17:00:11 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Initializing user routes
+DeprecationWarning: implicit-none-for-component-fields has been deprecated in 
+version 0.7.2. Passing Vars with possible None values to component fields not 
+explicitly marked as Optional is deprecated. Passed 
+reflex___state____state__reflex_clerk___lib___clerk_provider____clerk_state.user
+?.["image_url"] of type typing.Optional[str] to <class 'str'>. It will be 
+completely removed in 0.8.0. 
+(app/reflex_user_portal/components/portal/navbar.py:23)
+2025-06-03 17:00:13 - reflex_user_portal.app.reflex_user_portal.backend.states.task.base - WARNING - config_name not set in subclass
+2025-06-03 17:00:13 - reflex_user_portal.app.reflex_user_portal.backend.states.task - INFO - Found 2 task functions named ['task1', 'task2_show_db_config']
+2025-06-03 17:00:13 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Looking for method: task1 in class ExampleTaskState
+2025-06-03 17:00:13 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Found method: EventHandler(event_actions={}, fn=<function ExampleTaskState.task1 at 0x7f2255b11580>, state_full_name='reflex___state____state.app___reflex_user_portal___backend___states___task___base____monitor_state.app___reflex_user_portal___backend___states___task___example_task____example_task_state')
+2025-06-03 17:00:13 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Method has fn attribute: <function ExampleTaskState.task1 at 0x7f2255b11580>
+2025-06-03 17:00:13 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Method signature: (self, task: app.reflex_user_portal.backend.wrapper.models.TaskContext)
+2025-06-03 17:00:13 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Parameter types: [<Parameter "self">, <Parameter "task: app.reflex_user_portal.backend.wrapper.models.TaskContext">]
+2025-06-03 17:00:13 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Checking parameter: self, annotation: <class 'inspect._empty'>, default: no default
+2025-06-03 17:00:13 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Checking parameter: task, annotation: <class 'app.reflex_user_portal.backend.wrapper.models.TaskContext'>, default: no default
+2025-06-03 17:00:13 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - No task_args parameter found or no valid default value
+2025-06-03 17:00:13 - reflex_user_portal.app.reflex_user_portal.backend.states.admin.user_table - DEBUG - Filtering and sorting users
+2025-06-03 17:00:13 - reflex_user_portal.app.reflex_user_portal.backend.states.admin.user_table - DEBUG - Found 2 users after filtering and sorting
+[17:00:11] Compiling: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 30/30 0:00:01
+WARNING:  WatchFiles detected changes in 'app/config.py', 'alembic/versions/e3be37814b33_.py'. Reloading...
+WARNING:  WatchFiles detected changes in 'app/reflex_user_portal/models/admin/subscription.py'. Reloading...
+WARNING:  WatchFiles detected changes in 'app/reflex_user_portal/pages/portal/profile.py'. Reloading...
+WARNING:  WatchFiles detected changes in 'alembic/versions/7510fe07b66e_.py', 'alembic/versions/baae162d4d6a_.py', 'rxconfig.py'. Reloading...
+App environment: DEV
+DeprecationWarning: Inferring tailwind usage has been deprecated in version 
+0.7.13. 
+
+If you are using tailwind, add `rx.plugins.TailwindV3Plugin()` to the 
+`plugins=[]` in rxconfig.py.
+
+If you are not using tailwind, set `tailwind` to `None` in rxconfig.py. It will 
+be completely removed in 0.8.0. (rxconfig.py:4)
+Configuring Reflex with database URL: sqlite://<hidden>
+DeprecationWarning: implicit-none-for-component-fields has been deprecated in 
+version 0.7.2. Passing Vars with possible None values to component fields not 
+explicitly marked as Optional is deprecated. Passed 
+reflex___state____state__reflex_clerk___lib___clerk_provider____clerk_state.user
+?.["image_url"] of type typing.Optional[str] to <class 'str'>. It will be 
+completely removed in 0.8.0. 
+(app/reflex_user_portal/components/portal/profile.py:22)
+2025-06-04 02:58:53 - reflex_user_portal.app.reflex_user_portal.backend.states.task - INFO - Discovered task states: ['ExampleTaskState', 'ExampleTaskState2']
+2025-06-04 02:58:53 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Authorizing domains: ['http://localhost:3000', 'http://localhost:3005', '']
+Configuring Reflex with database URL: sqlite://<hidden>
+Setting up API for state: ExampleTaskState at /api/example_task
+Setting up API for state: ExampleTaskState2 at /api/example_task2
+2025-06-04 02:58:53 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Initializing user routes
+DeprecationWarning: implicit-none-for-component-fields has been deprecated in 
+version 0.7.2. Passing Vars with possible None values to component fields not 
+explicitly marked as Optional is deprecated. Passed 
+reflex___state____state__reflex_clerk___lib___clerk_provider____clerk_state.user
+?.["image_url"] of type typing.Optional[str] to <class 'str'>. It will be 
+completely removed in 0.8.0. 
+(app/reflex_user_portal/components/portal/navbar.py:23)
+2025-06-04 02:58:55 - reflex_user_portal.app.reflex_user_portal.backend.states.admin.user_table - DEBUG - Filtering and sorting users
+2025-06-04 02:58:55 - reflex_user_portal.app.reflex_user_portal.backend.states.admin.user_table - DEBUG - Found 2 users after filtering and sorting
+2025-06-04 02:58:55 - reflex_user_portal.app.reflex_user_portal.backend.states.task - INFO - Found 2 task functions named ['task1', 'task2_show_db_config']
+2025-06-04 02:58:55 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Looking for method: task1 in class ExampleTaskState
+2025-06-04 02:58:55 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Found method: EventHandler(event_actions={}, fn=<function ExampleTaskState.task1 at 0x7f2f2b7bd940>, state_full_name='reflex___state____state.app___reflex_user_portal___backend___states___task___base____monitor_state.app___reflex_user_portal___backend___states___task___example_task____example_task_state')
+2025-06-04 02:58:55 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Method has fn attribute: <function ExampleTaskState.task1 at 0x7f2f2b7bd940>
+2025-06-04 02:58:55 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Method signature: (self, task: app.reflex_user_portal.backend.wrapper.models.TaskContext)
+2025-06-04 02:58:55 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Parameter types: [<Parameter "self">, <Parameter "task: app.reflex_user_portal.backend.wrapper.models.TaskContext">]
+2025-06-04 02:58:55 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Checking parameter: self, annotation: <class 'inspect._empty'>, default: no default
+2025-06-04 02:58:55 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - Checking parameter: task, annotation: <class 'app.reflex_user_portal.backend.wrapper.models.TaskContext'>, default: no default
+2025-06-04 02:58:55 - reflex_user_portal.app.reflex_user_portal.backend.states.task - DEBUG - No task_args parameter found or no valid default value
+2025-06-04 02:58:55 - reflex_user_portal.app.reflex_user_portal.backend.states.task.base - WARNING - config_name not set in subclass
+[02:58:53] Compiling: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 30/30 0:00:02
+WARNING:  WatchFiles detected changes in 'app/reflex_user_portal/components/portal/navbar.py'. Reloading...
+WARNING:  WatchFiles detected changes in 'app/reflex_user_portal/pages/landing/home.py'. Reloading...
+App environment: DEV
+DeprecationWarning: Inferring tailwind usage has been deprecated in version 
+0.7.13. 
+
+If you are using tailwind, add `rx.plugins.TailwindV3Plugin()` to the 
+`plugins=[]` in rxconfig.py.
+
+If you are not using tailwind, set `tailwind` to `None` in rxconfig.py. It will 
+be completely removed in 0.8.0. (rxconfig.py:4)
+Configuring Reflex with database URL: sqlite://<hidden>
+DeprecationWarning: implicit-none-for-component-fields has been deprecated in 
+version 0.7.2. Passing Vars with possible None values to component fields not 
+explicitly marked as Optional is deprecated. Passed 
+reflex___state____state__reflex_clerk___lib___clerk_provider____clerk_state.user
+?.["image_url"] of type typing.Optional[str] to <class 'str'>. It will be 
+completely removed in 0.8.0. 
+(app/reflex_user_portal/components/portal/profile.py:22)
+2025-06-04 03:00:30 - reflex_user_portal.app.reflex_user_portal.backend.states.task - INFO - Discovered task states: ['ExampleTaskState', 'ExampleTaskState2']
+2025-06-04 03:00:31 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Authorizing domains: ['http://localhost:3000', 'http://localhost:3005', '']
+Configuring Reflex with database URL: sqlite://<hidden>
+Setting up API for state: ExampleTaskState at /api/example_task
+Setting up API for state: ExampleTaskState2 at /api/example_task2
+2025-06-04 03:00:31 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Initializing user routes
+WARNING:  WatchFiles detected changes in 'app/reflex_app.py'. Reloading...
+WARNING:  WatchFiles detected changes in 'app/reflex_user_portal/backend/states/admin/user.py'. Reloading...
+WARNING:  WatchFiles detected changes in 'app/tests/test_collections.py'. Reloading...
+App environment: DEV
+Configuring Reflex with database URL: sqlite://<hidden>
+2025-06-04 15:32:03 - reflex_user_portal.app.reflex_user_portal.backend.states.task - INFO - Discovered task states: ['ExampleTaskState', 'ExampleTaskState2']
+2025-06-04 15:32:03 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Authorizing domains: ['http://localhost:3000', 'http://localhost:3005', '']
+Setting up API for state: ExampleTaskState at /api/example_task
+Setting up API for state: ExampleTaskState2 at /api/example_task2
+2025-06-04 15:32:04 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Initializing user routes
+WARNING:  WatchFiles detected changes in '.web/node_modules/katex/src/metrics/format_json.py', '.web/node_modules/katex/src/metrics/parse_tfm.py', '.web/node_modules/katex/src/metrics/extract_tfms.py', '.web/node_modules/katex/src/metrics/extract_ttfs.py', '.web/node_modules/katex/src/fonts/generate_fonts.py'. Reloading...
+App environment: DEV
+Configuring Reflex with database URL: sqlite://<hidden>
+2025-06-04 15:33:38 - reflex_user_portal.app.reflex_user_portal.backend.states.task - INFO - Discovered task states: ['ExampleTaskState', 'ExampleTaskState2']
+2025-06-04 15:33:38 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Authorizing domains: ['http://localhost:3000', 'http://localhost:3005', '']
+Setting up API for state: ExampleTaskState at /api/example_task
+Setting up API for state: ExampleTaskState2 at /api/example_task2
+2025-06-04 15:33:39 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Initializing user routes
+WARNING:  WatchFiles detected changes in '.web/node_modules/katex/src/metrics/parse_tfm.py', '.web/node_modules/katex/src/metrics/extract_ttfs.py', '.web/node_modules/katex/src/fonts/generate_fonts.py', '.web/node_modules/katex/src/metrics/extract_tfms.py', '.web/node_modules/katex/src/metrics/format_json.py'. Reloading...
+App environment: DEV
+Configuring Reflex with database URL: sqlite://<hidden>
+2025-06-04 15:39:55 - reflex_user_portal.app.reflex_user_portal.backend.states.task - INFO - Discovered task states: ['ExampleTaskState', 'ExampleTaskState2']
+2025-06-04 15:39:55 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Authorizing domains: ['http://localhost:3000', 'http://localhost:3005', '']
+Setting up API for state: ExampleTaskState at /api/example_task
+Setting up API for state: ExampleTaskState2 at /api/example_task2
+2025-06-04 15:39:55 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Initializing user routes
+WARNING:  WatchFiles detected changes in 'app/reflex_user_portal/models/admin/user.py'. Reloading...
+App environment: DEV
+Configuring Reflex with database URL: sqlite://<hidden>
+2025-06-04 15:41:57 - reflex_user_portal.app.reflex_user_portal.backend.states.task - INFO - Discovered task states: ['ExampleTaskState', 'ExampleTaskState2']
+2025-06-04 15:41:58 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Authorizing domains: ['http://localhost:3000', 'http://localhost:3005', '']
+Setting up API for state: ExampleTaskState at /api/example_task
+Setting up API for state: ExampleTaskState2 at /api/example_task2
+2025-06-04 15:41:58 - reflex_user_portal.app.reflex_user_portal.backend.api.clerk_user - INFO - Initializing user routes

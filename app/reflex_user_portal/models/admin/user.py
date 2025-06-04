@@ -13,9 +13,9 @@ from ...models.admin.subscription import Subscription
 
 class UserType(str, Enum):
     """User type enumeration."""
-    ADMIN = "admin"
-    USER = "user"
-    GUEST = "guest"
+    ADMIN: str = "ADMIN"
+    USER: str = "USER"
+    GUEST: str = "GUEST"
 
 class UserAttribute(rx.Model, table=True):
     """

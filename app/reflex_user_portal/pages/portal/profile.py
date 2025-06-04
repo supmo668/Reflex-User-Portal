@@ -6,7 +6,7 @@ from ...templates import portal_template
 from ...backend.states.admin.user import UserAttributeState
 from ...components.portal.profile import profile_content
 
-@portal_template(route="/profile", title="Profile")
+@portal_template(route="/admin/profile", title="Profile")
 def profile() -> rx.Component:
     """The protected profile page.
 

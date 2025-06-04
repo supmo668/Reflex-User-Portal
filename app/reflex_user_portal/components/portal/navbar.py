@@ -46,7 +46,7 @@ def auth_components():
                             rx.spacer(),
                             rx.icon("user", size=16),
                         ),
-                        href="/profile",
+                        href="/admin/profile",
                     ),
                     rx.menu.separator(),
                     rx.menu.item(

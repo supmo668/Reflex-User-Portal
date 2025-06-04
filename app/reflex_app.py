@@ -19,8 +19,9 @@ app = rx.App(
         "https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
     ],
     backend_exception_handler=custom_backend_handler,
-    api_transformer=fastapi
+    # api_transformer=fastapi  # introduced in Reflex>=0.7.0
 )
+app.api_transformer = app.api
 
 # Add pages
 setup_pages(app)

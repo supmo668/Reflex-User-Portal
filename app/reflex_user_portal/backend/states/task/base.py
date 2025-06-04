@@ -40,7 +40,7 @@ class MonitorState(rx.State):
     In both cases, you can call task.update(progress=..., status=...) to update the progress and status,
     which will be reflected in the UI and tracked in the MonitorState.tasks dictionary.
     """
-    tasks: Dict[str, TaskData] = {}    
+    tasks: Dict[str, TaskData] = {}
     current_task_function: str = ""
     # Arguments for the current task. Mapping of task ID to its arguments.
     tasks_argument: Dict[str, Union[Dict[str, Any], BaseModel]] = {}
