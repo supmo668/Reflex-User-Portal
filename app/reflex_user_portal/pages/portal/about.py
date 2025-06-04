@@ -8,7 +8,7 @@ from ... import styles
 from ...templates import portal_template
 
 
-@portal_template(route="/about", title="About")
+@portal_template(route="/admin/about", title="About")
 def about() -> rx.Component:
     """The about page.
 
