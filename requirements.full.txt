@@ -17,7 +17,7 @@ cryptography==44.0.3
 deprecation==2.1.0
 fastapi==0.115.12
 frozenlist==1.6.2
-gotrue==2.12.0
+gotrue==2.11.4
 granian==2.3.2
 greenlet==3.2.2
 h11==0.16.0
@@ -40,11 +40,12 @@ pluggy==1.6.0
 postgrest==1.0.2
 propcache==0.3.1
 psutil==7.0.0
+psycopg2-binary==2.9.10
 pycparser==2.22
 pydantic==2.11.5
 pydantic_core==2.33.2
 Pygments==2.19.1
-PyJWT==2.10.1
+PyJWT==2.9.0
 pytest==8.4.0
 pytest-mock==3.14.1
 python-dateutil==2.9.0.post0
@@ -54,8 +55,8 @@ python-multipart==0.0.20
 python-socketio==5.13.0
 PyYAML==6.0.2
 realtime==2.4.3
-redis==6.2.0
-reflex==0.7.13
+redis==5.3.0
+reflex==0.7.11
 reflex-clerk @ git+https://github.com/supmo668/reflex-clerk.git@e32aa7f58eb87ca1d9567e74d05e54cf4c916c65
 reflex-hosting-cli==0.1.49
 requests==2.32.3

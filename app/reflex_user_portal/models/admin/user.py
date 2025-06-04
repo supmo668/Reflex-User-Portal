@@ -11,7 +11,7 @@ from pydantic import BaseModel, SkipValidation
 from typing import List
 from ...models.admin.subscription import Subscription
 
-class UserType(str, Enum):
+class UserType(Enum):
     """User type enumeration."""
     ADMIN: str = "ADMIN"
     USER: str = "USER"

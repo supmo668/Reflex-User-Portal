@@ -7,8 +7,7 @@ A modern, secure, and customizable user management portal built with [Reflex](ht
 ### Required Environment Variables
 ```bash
 # Application Configuration
-APP_NAME=           # Your application name
-APP_ENV=DEV        # DEV or PROD
+REFLEX-APP_NAME=           # Your application name
 ADMIN_USER_EMAILS=  # Comma-separated list of admin emails
 
 # Authentication (Clerk)

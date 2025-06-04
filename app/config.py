@@ -26,8 +26,8 @@ CLERK_AUTHORIZED_DOMAINS += os.getenv("FRONTEND_DOMAIN", "").split(",")
 
 # Database configuration
 DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_CONN_URI = os.getenv("DB_URL", "").format(DB_PASSWORD=DB_PASSWORD) if DB_PASSWORD else os.getenv("DB_URL", "")
-DB_LOCAL_URI = os.getenv("DB_URL", "sqlite:///app.db")
+DB_CONN_URI = os.getenv("REFLEX_DB_URL", "").format(DB_PASSWORD=DB_PASSWORD) if DB_PASSWORD else os.getenv("REFLEX_DB_URL", "")
+DB_LOCAL_URI = os.getenv("REFLEX_DB_URL", "sqlite:///app.db")
 
 # Use local database in development, otherwise use production database
 DATABASE_URL = DB_LOCAL_URI if APP_ENV == "DEV" else DB_CONN_URI

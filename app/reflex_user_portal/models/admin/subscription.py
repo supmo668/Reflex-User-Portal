@@ -38,9 +38,3 @@ class Subscription(rx.Model, table=True):
     auto_renew: bool = False
     is_active: bool = True
     cancellation_notes: Optional[str] = None
-
-    # def dict(self, *args, **kwargs) -> dict:
-    #     d = super().dict(*args, **kwargs)
-    #     d["created_at"] = self.created_at.replace(microsecond=0).isoformat() if self.created_at else None
-    #     d["updated_at"] = self.updated_at.replace(microsecond=0).isoformat() if self.updated_at else None
-    #     return d

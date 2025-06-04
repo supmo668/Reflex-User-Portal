@@ -22,7 +22,6 @@ app = rx.App(
     # api_transformer=fastapi  # introduced in Reflex>=0.7.0
 )
 app.api_transformer = app.api
-
 # Add pages
 setup_pages(app)
 
