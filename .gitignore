@@ -54,3 +54,7 @@ htmlcov/
 .nox/
 coverage.xml
 *.cover
+
+# database
+*.sqlite3
+*alembic
