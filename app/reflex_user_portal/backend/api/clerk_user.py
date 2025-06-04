@@ -15,7 +15,7 @@ router = APIRouter(
 import reflex as rx
 from clerk_backend_api import Clerk
 from clerk_backend_api.models import User as ClerkUser
-from clerk_backend_api.jwks_helpers import AuthenticateRequestOptions
+from clerk_backend_api import AuthenticateRequestOptions
 
 from ...models.admin.user import User, UserType, UserModel
 from ...utils.logger import get_logger

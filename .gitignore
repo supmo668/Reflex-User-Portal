@@ -1,8 +1,9 @@
 # reflex dev stuff
 *.db
 # Environment files
-.env
+.env*
 !.env.template
+!.env.test.template
 
 # Python
 __pycache__/
