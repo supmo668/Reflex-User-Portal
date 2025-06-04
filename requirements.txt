@@ -7,3 +7,4 @@ python-dotenv==1.1.0
 clerk-backend-api>=3.0.0
 supabase==2.15.2
 requests==2.32.3
+psycopg2-binary==2.9.10

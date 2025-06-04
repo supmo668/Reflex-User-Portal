@@ -9,9 +9,10 @@ import sqlmodel
 
 class SubscriptionFeature(rx.Model, table=True):
     name: str
+
     # impose other subscription limits and constraints
 class Subscription(rx.Model, table=True):
-    user_id: str = sqlmodel.Field(foreign_key="user.id")
+    user_id: int = sqlmodel.Field(foreign_key="user.id")
     user: Optional["User"] = sqlmodel.Relationship(back_populates="subscriptions")
     feature_id: int = sqlmodel.Field(foreign_key="subscriptionfeature.id")
     feature: Optional["SubscriptionFeature"] = sqlmodel.Relationship(back_populates=None)
