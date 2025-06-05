@@ -4,7 +4,7 @@ import logging
 import sys
 from typing import Optional
 
-from ...config import LOG_LEVEL, APP_ENV
+from ...config import LOG_LEVEL
 
 # Create logger
 def get_log_level(level_str: str=None) -> int:
