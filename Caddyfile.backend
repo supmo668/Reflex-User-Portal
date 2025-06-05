@@ -24,7 +24,7 @@
         header_up Upgrade "websocket"
 
         # Add CORS headers for WebSocket
-        header_down Access-Control-Allow-Origin {$FRONTEND_DEPLOY_URL}
+        header_down Access-Control-Allow-Origin "${FRONTEND_DEPLOY_URL}"
         header_down Access-Control-Allow-Methods "GET, POST, OPTIONS"
         header_down Access-Control-Allow-Headers "Content-Type"
     }

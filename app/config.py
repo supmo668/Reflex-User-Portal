@@ -34,11 +34,14 @@ DATABASE_URL = DB_LOCAL_URI if REFLEX_ENV_MODE == "DEV" else DB_CONN_URI
 # API URL
 API_URL = os.getenv("REFLEX_API_URL", os.getenv("API_URL", "http://localhost:8000"))
 
-# Frontend URL (Railway-ready)
-if os.getenv("RAILWAY_PUBLIC_DOMAIN"):
-    FRONTEND_URL = os.getenv("RAILWAY_PUBLIC_DOMAIN")
-else:
-    FRONTEND_URL = os.getenv("REFLEX_DEPLOY_URL", os.getenv("DEPLOY_URL", "http://localhost:3000"))
+# Frontend URL - prioritize FRONTEND_DEPLOY_URL for backend services
+FRONTEND_URL = (
+    os.getenv("FRONTEND_DEPLOY_URL") or  # Railway deploy script sets this
+    os.getenv("RAILWAY_PUBLIC_DOMAIN") or  # Railway auto-generated domain
+    os.getenv("REFLEX_DEPLOY_URL") or  # Legacy fallback
+    os.getenv("DEPLOY_URL") or  # Legacy fallback
+    "http://localhost:3000"  # Development default
+)
 # Ensure FRONTEND_URL starts with http or https
 if FRONTEND_URL and not FRONTEND_URL.startswith("http"):
     FRONTEND_URL = f"https://{FRONTEND_URL}"
