@@ -10,7 +10,7 @@ logger = get_logger(__name__)
 # CORS origins
 cors_origins = [CONFIG.FRONTEND_URL]  # Allow the public domain for CORS
 if frontend_origin := os.getenv("RAILWAY_PUBLIC_DOMAIN"):
-    cors_origins.append(frontend_origin)
+    cors_origins.append(f"https://{frontend_origin}")
 logger.info(f"CORS origins: {cors_origins}")
 
 # Configure Reflex app
