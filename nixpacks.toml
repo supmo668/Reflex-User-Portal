@@ -3,6 +3,7 @@ providers = ['python']
 
 # set up some variables to minimize annoyance
 [variables]
+    PYTHONPATH = "/app/"  # Set the parent app directory in PYTHONPATH
     NEXT_TELEMETRY_DISABLED = '1' # disable next telemetry
     NPM_CONFIG_UPDATE_NOTIFIER = 'false' # the update check is relatively useless in a production environment
     NPM_CONFIG_FUND = 'false' # the fund notification is also relatively useless in a production environment

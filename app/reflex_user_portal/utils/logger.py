@@ -4,7 +4,7 @@ import logging
 import sys
 from typing import Optional
 
-from ...config import LOG_LEVEL
+from app.config import LOG_LEVEL
 
 # Create logger
 def get_log_level(level_str: str=None) -> int:
@@ -21,9 +21,8 @@ def get_log_level(level_str: str=None) -> int:
 
 def get_logger(module:str):
     """Get a logger instance for the specified module."""
-    LOG_LEVEL = get_log_level(LOG_LEVEL)
     logger = logging.getLogger("reflex_user_portal")
-    logger.setLevel(LOG_LEVEL)
+    logger.setLevel(get_log_level(LOG_LEVEL))
     return logger
 
 logger = default_logger = get_logger("reflex_user_portal")
