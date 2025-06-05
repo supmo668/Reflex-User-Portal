@@ -40,5 +40,5 @@ providers = ['python']
 
 # start phase
 [start]
-    cmd = 'FRONTEND_DEPLOY_URL="${FRONTEND_DEPLOY_URL}" reflex run --backend-only --env ${REFLEX_ENV:-prod} && caddy run 2>&1'
+    cmd = 'FRONTEND_DEPLOY_URL="${FRONTEND_DEPLOY_URL}" reflex run --backend-only --env ${REFLEX_ENV_MODE:-prod} && caddy run 2>&1'
     # run the backend and caddy in parallel, this will fail fast if either service crashes allowing railway to restart the deployment

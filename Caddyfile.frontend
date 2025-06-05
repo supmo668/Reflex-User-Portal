@@ -19,7 +19,7 @@
 
     # Proxy API requests to the backend
     handle / {
-        reverse_proxy ${API_URL} {
+        reverse_proxy ${REFLEX_API_URL} {
             header_up Host {host}
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}

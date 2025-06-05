@@ -19,10 +19,14 @@ def get_log_level(level_str: str=None) -> int:
     }
     return levels.get(level_str.upper(), logging.INFO)
 
-LOG_LEVEL = get_log_level(LOG_LEVEL)
+def get_logger(module:str):
+    """Get a logger instance for the specified module."""
+    LOG_LEVEL = get_log_level(LOG_LEVEL)
+    logger = logging.getLogger("reflex_user_portal")
+    logger.setLevel(LOG_LEVEL)
+    return logger
 
-logger = logging.getLogger("reflex_user_portal")
-logger.setLevel(LOG_LEVEL)
+logger = default_logger = get_logger("reflex_user_portal")
 
 # Create console handler with formatting
 console_handler = logging.StreamHandler(sys.stdout)
