@@ -77,11 +77,12 @@ template_container_style = {
 }
 
 template_scroll_area = {
-    "height": f"calc(100vh - {NAVBAR_HEIGHT})",  # Leave space for navbar
-    "margin_top": NAVBAR_HEIGHT,            # Offset content below navbar
+    "height": f"calc(100vh - {NAVBAR_HEIGHT})",
+    "margin_top": NAVBAR_HEIGHT,
+    "margin_left": SIDEBAR_WIDTH,      # <-- Add this line
     "overflow_y": "auto",
     "flex_grow": "1",
-    "min_width": "0",
+    "min_width": "0"
 }
 
 # Add the moved styles here
@@ -91,7 +92,7 @@ template_main_area_style = {
     "display": "flex",
     "align_items": "stretch",
     "position": "relative",
-
+    "flex_grow": "1"
     # REMOVE margin_top and subtraction of NAVBAR_HEIGHT
     # "padding_top": NAVBAR_HEIGHT,
 }

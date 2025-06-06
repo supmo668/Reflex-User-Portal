@@ -14,18 +14,15 @@ navbar: dict[str, str] = {
     "border_bottom": "1px solid rgba(46, 46, 46, 0.51)",
 }
 
-
 def render_navbar():
     return rx.hstack(
         rx.hstack(
             rx.box(
                 rx.text(
                     "REST API Admin Panel",
-                    # font_size="var(--chakra-fontSizes-lg)",
                 ),
             ),
-            display="flex",
-            align_items="center",
+            align="center",
         ),
         rx.hstack(
             rx.button(
@@ -33,6 +30,11 @@ def render_navbar():
                 on_click=BaseState.toggle_query, cursor="pointer"
             ),
             rx.color_mode.button(),
-            align_items="center",
+            align="center",
         ),
+        justify="between",
+        align="center",
+        width="100%",
+        spacing="4",
+        padding="1em 2em",
     )

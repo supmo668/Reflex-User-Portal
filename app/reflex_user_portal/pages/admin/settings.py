@@ -31,12 +31,11 @@ def admin_settings() -> rx.Component:
             render_query_component(),
             # for row entry viewing and editing
             render_output(),
-            width="100%",
             spacing="2",
             padding="2em 1em",
             style={
-                "margin_left": ["0", "0", styles.SIDEBAR_WIDTH],  # Responsive margin for sidebar
-                "max_width": f"calc(100vw - {styles.SIDEBAR_WIDTH})",  # Prevent overflow under sidebar
+                # "margin_left": ["0", "0", styles.SIDEBAR_WIDTH],  # Responsive margin for sidebar
+                # "max_width": f"calc(100vw - {styles.SIDEBAR_WIDTH})",  # Prevent overflow under sidebar
                 "box_sizing": "border-box",
             },
             align_items="center",
@@ -49,5 +48,4 @@ def admin_settings() -> rx.Component:
         ),
         align_items="center",  # Center children inside vstack=
         spacing="4",
-        width="100%",
     )

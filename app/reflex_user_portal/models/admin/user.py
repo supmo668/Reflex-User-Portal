@@ -40,7 +40,7 @@ class User(rx.Model, table=True):
     """Base user model."""
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(unique=True, index=True)
-    clerk_id: str = Field(unique=True, default="")
+    clerk_id: str = Field(default="")
     user_type: UserType = UserType.GUEST
     
     # User information

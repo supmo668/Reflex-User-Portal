@@ -21,7 +21,7 @@ CLERK_PUBLISHABLE_KEY = os.getenv("CLERK_PUBLISHABLE_KEY")
 CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
 CLERK_AUTHORIZED_DOMAINS = os.getenv("CLERK_AUTHORIZED_DOMAINS", "localhost:3000,*").split(",")
     # add railway frontend domain if needed
-CLERK_AUTHORIZED_DOMAINS += [os.getenv("FRONTEND_URL", "")]
+CLERK_AUTHORIZED_DOMAINS += [os.getenv("FRONTEND_DEPLOY_URL", "")]
 
 # Database configuration
 DB_PASSWORD = os.getenv("DB_PASSWORD")
