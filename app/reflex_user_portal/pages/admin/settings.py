@@ -34,8 +34,6 @@ def admin_settings() -> rx.Component:
             spacing="2",
             padding="2em 1em",
             style={
-                # "margin_left": ["0", "0", styles.SIDEBAR_WIDTH],  # Responsive margin for sidebar
-                # "max_width": f"calc(100vw - {styles.SIDEBAR_WIDTH})",  # Prevent overflow under sidebar
                 "box_sizing": "border-box",
             },
             align_items="center",

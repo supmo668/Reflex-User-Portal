@@ -2,7 +2,7 @@
 from typing import Optional, Dict, Any
 from enum import Enum
 from datetime import datetime, timezone
-
+import uuid
 import reflex as rx
 from sqlmodel import Field, Column, JSON, Relationship
 from pydantic import BaseModel, SkipValidation
@@ -40,7 +40,7 @@ class User(rx.Model, table=True):
     """Base user model."""
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(unique=True, index=True)
-    clerk_id: str = Field(default="")
+    clerk_id: str = Field(unique=True, default=uuid.uuid4().hex)
     user_type: UserType = UserType.GUEST
     
     # User information

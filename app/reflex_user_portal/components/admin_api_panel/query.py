@@ -22,7 +22,10 @@ def form_request_item() -> rx.Component:
     """Render the database connection information form."""
     return rx.accordion.root(
         rx.accordion.item(
-            header=rx.text("Database Connection", font_size="var(--chakra-fontSizes-sm)"),
+            header=rx.text(
+                "Database Connection",
+                color="gray.500"  # Ensures color matches form
+            ),
             content=rx.vstack(
                 rx.text(
                     "Database URL:",
