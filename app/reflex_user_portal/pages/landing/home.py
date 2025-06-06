@@ -1,6 +1,6 @@
 import reflex as rx
 
-rx.page(route="/home", title="Home")
+rx.page(route="/", title="Home")
 def home() -> rx.Component:
     return rx.fragment(
         rx.box(
@@ -8,5 +8,5 @@ def home() -> rx.Component:
             font_family='system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
             min_height="100vh",
         ),
-        rx.button("Admin Portal", on_click=lambda: rx.redirect("/admin/overview")),
+        rx.button("Admin Portal", on_click=lambda: rx.redirect("/admin/profile")),
     )
