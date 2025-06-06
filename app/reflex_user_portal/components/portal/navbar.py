@@ -64,13 +64,17 @@ def auth_components():
             ),
             # signed out
             clerk.signed_out(
-                rx.button(
-                    clerk.sign_in_button(),
-                    size="3",
-                    color_scheme="gray",
-                    background="black",
-                    height="40px",  # Fixed height for sign in button
-                    padding="1",
+                clerk.sign_in_button(
+                    rx.button(
+                        "Sign In",
+                        size="3",
+                        color_scheme="gray",
+                        background="black",
+                        height="40px",
+                        padding="1",
+                        # To ensure transparency, you can set background to "transparent" if needed
+                        # background="transparent",
+                    )
                 ),
             ),
         )

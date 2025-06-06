@@ -28,6 +28,16 @@ class UserBaseState(rx.State):
             return self.user.user_type == UserType.ADMIN
         return False
     
+    @rx.var
+    def admin_emails(self) -> list[str]:
+        with rx.session() as session:
+            return [
+                user.email
+                for user in session.exec(
+                    User.select().where(User.user_type == UserType.ADMIN)
+                ).all()
+            ]
+    
     async def get_or_create_guest(self) -> User:
         """Get or create guest user."""
         with rx.session() as session:

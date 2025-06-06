@@ -6,10 +6,12 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+# Default configuration paths for different models
 DEFAULT_CONFIG_PATHS = {
-    "AdminConfig": Path(__file__).parent / "test_config.yaml",
+    "AdminConfig": Path(__file__).parent / "admin_config.yaml",
     "SubscriptionFeature": Path(__file__).parent / "subscription_features.yaml",
-    # Add more config paths here as needed
+    # Add more models and their config paths as needed ...
+    "User": Path(__file__).parent / "initial_users.yaml",
 }
 
 def load_yaml_config(path: str):

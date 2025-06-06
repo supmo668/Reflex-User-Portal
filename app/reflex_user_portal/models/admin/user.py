@@ -35,6 +35,7 @@ class UserAttribute(rx.Model, table=True):
     )
 
 
+
 class User(rx.Model, table=True):
     """Base user model."""
     id: Optional[int] = Field(default=None, primary_key=True)
