@@ -1,6 +1,8 @@
-- email: mymm.psu@gmail.com
+- id: 0
+  email: mymm.psu@gmail.com
   user_type: ADMIN
   clerk_id: ""
-- email: nikhil.yadala@gmail.com
+- id: 1
+  email: nikhil.yadala@gmail.com
   user_type: ADMIN
   clerk_id: ""

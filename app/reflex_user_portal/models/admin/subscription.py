@@ -8,6 +8,7 @@ import sqlalchemy
 import sqlmodel
 
 class SubscriptionFeature(rx.Model, table=True):
+    id: int = sqlmodel.Field(default=None, primary_key=True)
     name: str
 
     # impose other subscription limits and constraints

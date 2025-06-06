@@ -336,9 +336,9 @@ class QueryAPI(QueryState):
                         logger.info("No default config found for %s or is empty.", model_key)
                         continue
                     for entry in default_config_list:
-                        # Assume 'name' is the unique field; adjust as needed for your model
+                        # Assume 'id' is the unique field; adjust as needed for your model
                         exists = session.exec(
-                            model_cls.select().where(model_cls.email == entry["email"])
+                            model_cls.select().where(model_cls.id == entry["id"])
                         ).first()
                         if not exists:
                             session.add(model_cls(**entry))
