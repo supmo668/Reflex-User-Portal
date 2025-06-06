@@ -333,7 +333,7 @@ class QueryAPI(QueryState):
                     logger.debug("Initializing model tables for %s", model_key)
                     default_config_list = DEFAULT_CONFIGS.get(model_key, [])
                     if not default_config_list:
-                        logger.info("No default config found for %s or is empty.", model_key)
+                        logger.debug("No default config found for %s or is empty.", model_key)
                         continue
                     for entry in default_config_list:
                         # Assume 'id' is the unique field; adjust as needed for your model

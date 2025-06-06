@@ -1,4 +1,5 @@
-- name: test_config
+- id: 1
+  name: test_config
   description: Configuration for testing the Reflex User Portal
   author: Matt M.
   version: 0.1

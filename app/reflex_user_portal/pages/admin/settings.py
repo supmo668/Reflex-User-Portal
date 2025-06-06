@@ -39,6 +39,7 @@ def admin_settings() -> rx.Component:
                 "max_width": f"calc(100vw - {styles.SIDEBAR_WIDTH})",  # Prevent overflow under sidebar
                 "box_sizing": "border-box",
             },
+            align_items="center",
         ),
         rx.button(
             "Initialize Defaults",

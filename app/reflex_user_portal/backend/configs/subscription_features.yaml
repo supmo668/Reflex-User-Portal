@@ -1,6 +1,6 @@
-- id: 0
-  name: Free
 - id: 1
-  name: Hobby
+  name: Free
 - id: 2
+  name: Hobby
+- id: 3
   name: Creative
