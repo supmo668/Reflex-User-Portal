@@ -4,7 +4,7 @@ import logging
 import sys
 from typing import Optional
 
-from app.config import LOG_LEVEL
+from ...config import LOG_LEVEL
 
 # Create logger
 def get_log_level(level_str: str=None) -> int:
@@ -19,17 +19,9 @@ def get_log_level(level_str: str=None) -> int:
     }
     return levels.get(level_str.upper(), logging.INFO)
 
-def get_logger(module:str):
-    """Get a logger instance for the specified module."""
-    logger = logging.getLogger("reflex_user_portal")
-    logger.setLevel(get_log_level(LOG_LEVEL))
-    return logger
-
-logger = default_logger = get_logger("reflex_user_portal")
-
 # Create console handler with formatting
 console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(LOG_LEVEL)
+console_handler.setLevel(get_log_level(LOG_LEVEL))  # Convert string to int
 
 # Create formatter
 formatter = logging.Formatter(
@@ -40,18 +32,17 @@ formatter = logging.Formatter(
 # Add formatter to console handler
 console_handler.setFormatter(formatter)
 
-# Add console handler to logger
-logger.addHandler(console_handler)
+def get_logger(module:str="reflex_user_portal") -> logging.Logger:
+    """Get a logger instance for the specified module."""
+    module_logger = logging.getLogger(module)
+    module_logger.setLevel(get_log_level(LOG_LEVEL))
+    
+    # Only add handler if it doesn't already have one to avoid duplicates
+    if not module_logger.handlers:
+        module_logger.addHandler(console_handler)
+        # Prevent propagation to avoid duplicate messages from parent loggers
+        module_logger.propagate = False
+    
+    return module_logger
 
-def get_logger(name: Optional[str] = None) -> logging.Logger:
-    """Get a logger instance.
-
-    Args:
-        name: Optional name for the logger. If not provided, returns root logger.
-
-    Returns:
-        A logger instance.
-    """
-    if name:
-        return logging.getLogger(f"reflex_user_portal.{name}")
-    return logger
+logger = default_logger = get_logger()

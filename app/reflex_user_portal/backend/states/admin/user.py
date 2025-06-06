@@ -104,7 +104,9 @@ class UserAuthState(UserBaseState):
                 user = await self.get_or_create_user(clerk_user=clerk_state.user)
                 with rx.session() as session:
                     # Update user attributes
-                    user.user_type = UserType.ADMIN if clerk_state.user.email_addresses[0].email_address in ADMIN_USER_EMAILS else UserType.USER
+                    admin_emails = ADMIN_USER_EMAILS + [self.admin_emails]
+                    user_email = clerk_state.user.email_addresses[0].email_address
+                    user.user_type = UserType.ADMIN if user_email in admin_emails else UserType.USER
                     user.last_login = datetime.now(timezone.utc)
                     # commit changes
                     session.add(user)

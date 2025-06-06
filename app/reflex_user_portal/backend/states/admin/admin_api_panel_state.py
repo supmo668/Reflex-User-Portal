@@ -13,7 +13,9 @@ from ..... import config as CONFIG
 from ...configs.default_configurations import DEFAULT_CONFIGS
 from .... import styles
 
-logger = logging.getLogger(__name__)
+from ....utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 class BaseState(rx.State):
     query_component_toggle: str = "none"
@@ -136,7 +138,7 @@ class QueryAPI(QueryState):
         yield QueryAPI.refresh_table_data
 
     @rx.event
-    async def init_defaults_and_refresh(self):
+    async def init_defaults_and_refresh_table(self):
         """Initialize default records and refresh table data, then show a toast."""
         yield QueryAPI.ensure_defaults
         yield QueryAPI.refresh_table_data
@@ -151,7 +153,7 @@ class QueryAPI(QueryState):
         """Refresh table data from database."""
         with rx.session() as session:
             model = MODEL_FACTORY.get(self.current_table)
-            print(f"Fetching model: {model}")
+            logger.info(f"Refreshing table data: {model}")
             if model:
                 data = session.query(model).all()
                 self.table_data: list[dict[str, Any]] = [{
@@ -160,7 +162,7 @@ class QueryAPI(QueryState):
                 } for item in data]
                 
                 self.number_of_rows = len(self.table_data)
-                print(f"Found {len(self.table_data)} rows")
+                logger.info(f"Found {len(self.table_data)} rows")
                 # Calculate total pages
                 self.total_pages = (self.number_of_rows + self.current_limit - 1) // self.current_limit
                 
@@ -320,7 +322,7 @@ class QueryAPI(QueryState):
             return
 
     @rx.event
-    def ensure_defaults(self):
+    async def ensure_defaults(self):
         """
         Ensure all tables in MODEL_FACTORY have at least one default record if available.
         """
@@ -328,18 +330,19 @@ class QueryAPI(QueryState):
         try:
             with rx.session() as session:
                 for model_key, model_cls in MODEL_FACTORY.items():
+                    logger.debug("Initializing model tables for %s", model_key)
                     default_config_list = DEFAULT_CONFIGS.get(model_key, [])
                     if not default_config_list:
-                        logger.info(f"No default config found for {model_key} or is empty.")
+                        logger.info("No default config found for %s or is empty.", model_key)
                         continue
-                    count = session.exec(
-                        select(func.count(model_cls.id))
-                    ).one()
-                    if count == 0:
-                        logger.debug(f"Adding default records for {model_key} since it is empty.")
-                        for entry in default_config_list:
+                    for entry in default_config_list:
+                        # Assume 'name' is the unique field; adjust as needed for your model
+                        exists = session.exec(
+                            model_cls.select().where(model_cls.email == entry["email"])
+                        ).first()
+                        if not exists:
                             session.add(model_cls(**entry))
-                        session.commit()
+                    session.commit()
         except Exception as e:
-            logger.error(f"Error ensuring defaults: {str(e)}")
+            logger.error("Error ensuring defaults: %s", str(e))
             raise e

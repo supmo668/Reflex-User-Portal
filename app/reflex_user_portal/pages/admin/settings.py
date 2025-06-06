@@ -27,7 +27,7 @@ def admin_settings() -> rx.Component:
     """
     return rx.vstack(
         render_api_navbar(),
-        rx.hstack(
+        rx.vstack(
             render_query_component(),
             # for row entry viewing and editing
             render_output(),
@@ -43,7 +43,7 @@ def admin_settings() -> rx.Component:
         rx.button(
             "Initialize Defaults",
             size="2",
-            on_click=QueryAPI.init_defaults_and_refresh,
+            on_click=QueryAPI.init_defaults_and_refresh_table,
             cursor="pointer"
         ),
         align_items="center",  # Center children inside vstack=
