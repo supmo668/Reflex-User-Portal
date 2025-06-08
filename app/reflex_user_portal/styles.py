@@ -56,10 +56,13 @@ template_content_style = {
     "padding": "2em 1.5em 2em 1.5em",
     "margin": "0",
     "min_height": "100%",
-    "width": "100%",
+    # Remove or adjust width to allow centering
+    # "width": "100%",  # Comment this out or set to "auto"
     "align_items": "center",
     "justify_content": "center",
     "overflow_y": "auto",
+    "display": "flex",           # Ensure flex layout
+    "flex_direction": "column",  # Stack children vertically
 }
 
 template_container_style = {

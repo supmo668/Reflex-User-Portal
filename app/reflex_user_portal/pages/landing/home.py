@@ -3,14 +3,18 @@ import reflex as rx
 @rx.page(route="/", title="Home")
 def home() -> rx.Component:
     return rx.vstack(
-        rx.fragment(
-            rx.box(
-                rx.heading("Home Page", size="5", justify="center", align="center", width="100%"),
-                font_family='system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
-                min_height="100vh",
-            )
+        rx.heading(
+            "Home Page",
+            size="5",
+            align="center",
+            width="100%",
         ),
         rx.button(
-            "Admin Profile", on_click=lambda: rx.redirect("/admin/profile")
+            "Admin Profile",
+            on_click=rx.redirect("/admin/profile"),
         ),
+        spacing="2",  # Minimal space between heading and button
+        width="100%",
+        align_items="center",
+        justify_content="center",
     )
