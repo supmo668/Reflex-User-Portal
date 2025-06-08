@@ -22,21 +22,26 @@ DB_LOCAL_URI=      # Local development database URI
 
 ### Quick Start
 
-1. Install dependencies:
+1. Install uv package manager:
 ```bash
-pip install reflex reflex-clerk sqlmodel
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-2. Set up environment:
+2. Install dependencies (defined in `pyproject.toml`):
+```bash
+uv sync
+```
+
+3. Set up environment:
 ```bash
 cp .env.template .env
 # Edit .env with your configuration
 ```
 
-3. Initialize and run:
+4. Initialize and run:
 ```bash
-reflex db init
-reflex run
+uv run reflex db init
+uv run reflex run
 ```
 
 ## Core Technical Components

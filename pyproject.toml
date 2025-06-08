@@ -1,0 +1,20 @@
+[project]
+name = "reflex-user-portal"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "authlib==1.6.0",
+    "clerk-backend-api>=3.0.0",
+    "psycopg2-binary==2.9.10",
+    "pytest==8.4.0",
+    "python-dotenv==1.1.0",
+    "reflex==0.7.0",
+    "reflex-clerk",
+    "requests==2.32.3",
+    "supabase==2.15.2",
+]
+
+[tool.uv.sources]
+reflex-clerk = { git = "https://github.com/supmo668/reflex-clerk.git" }
