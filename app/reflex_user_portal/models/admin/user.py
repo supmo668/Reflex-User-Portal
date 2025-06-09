@@ -34,12 +34,11 @@ class UserAttribute(rx.Model, table=True):
         sa_column=Column(JSON)
     )
 
-
 class User(rx.Model, table=True):
     """Base user model."""
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(unique=True, index=True)
-    clerk_id: str = Field(unique=True, default=uuid.uuid4().hex)
+    clerk_id: str = Field(unique=True, default_factory=lambda: uuid.uuid4().hex)
     user_type: str = Field(default="GUEST")  # store as string
     
     # User information

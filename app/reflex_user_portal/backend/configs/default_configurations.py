@@ -32,7 +32,7 @@ def load_yaml_config(path: str):
         else:
             return []
 
-def build_default_configs():
+def build_default_configs()-> dict:
     configs = {}
     for model_key, path in DEFAULT_CONFIG_PATHS.items():
         try:

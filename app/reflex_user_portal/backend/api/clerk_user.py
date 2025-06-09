@@ -16,6 +16,7 @@ import reflex as rx
 from clerk_backend_api import Clerk
 from clerk_backend_api.models import User as ClerkUser
 from clerk_backend_api import AuthenticateRequestOptions
+from clerk_backend_api.models import EmailAddress
 
 from ...models.admin.user import User, UserType, UserModel
 from ...utils.logger import get_logger
@@ -60,21 +61,17 @@ def get_or_create_user(session: rx.session, clerk_user: ClerkUser) -> User:
             return user
         
         # Get primary email safely
-        email = None
         if hasattr(clerk_user, 'email_addresses') and clerk_user.email_addresses:
-            primary_id = getattr(clerk_user, 'primary_email_address_id', None)
+            email_obj: EmailAddress
             for email_obj in clerk_user.email_addresses:
-                if primary_id and email_obj.id == primary_id:
-                    email = email_obj.email_address
+                primary_email_address = email_obj.get('email_address')
+                if primary_email_address:
                     break
-                # If no primary email is set, use the first one
-                if not email:
-                    email = email_obj.email_address
         
         # Create new user
         user = User(
             clerk_id=clerk_user.id,
-            email=email,
+            email=primary_email_address,
             first_name=getattr(clerk_user, 'first_name', None),
             last_name=getattr(clerk_user, 'last_name', None),
             user_type=UserType.USER,

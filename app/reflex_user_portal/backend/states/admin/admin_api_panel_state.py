@@ -1,6 +1,6 @@
 import os
 from typing import Dict, Any, List, Optional
-import logging
+from pathlib import Path
 import yaml, json
 from datetime import datetime, timezone
 
@@ -10,7 +10,7 @@ from supabase import create_client, Client
 
 from ....models import MODEL_FACTORY
 from ..... import config as CONFIG
-from ...configs.default_configurations import DEFAULT_CONFIGS
+from ...configs.default_configurations import DEFAULT_CONFIGS, DEFAULT_CONFIG_PATHS
 from .... import styles
 
 from ....utils.logger import get_logger
@@ -330,16 +330,22 @@ class QueryAPI(QueryState):
         try:
             with rx.session() as session:
                 for model_key, model_cls in MODEL_FACTORY.items():
-                    logger.debug("Initializing model tables for %s", model_key)
                     default_config_list = DEFAULT_CONFIGS.get(model_key, [])
+                    config_path = DEFAULT_CONFIG_PATHS.get(model_key, None)
+                    logger.debug("Initializing model tables for %s from %s", model_key, Path(config_path).name)
                     if not default_config_list:
                         logger.debug("No default config found for %s or is empty.", model_key)
                         continue
                     for entry in default_config_list:
                         # Assume 'id' is the unique field; adjust as needed for your model
-                        exists = session.exec(
-                            model_cls.select().where(model_cls.id == entry["id"])
-                        ).first()
+                        if model_key == "USER":
+                            exists = session.exec(
+                                model_cls.select().where(model_cls.email == entry["email"])
+                            ).first()
+                        else:
+                            exists = session.exec(
+                                model_cls.select().where(model_cls.id == entry["id"])
+                            ).first()
                         if not exists:
                             session.add(model_cls(**entry))
                     session.commit()
