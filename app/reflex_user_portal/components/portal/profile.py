@@ -50,9 +50,9 @@ def profile_card() -> rx.Component:
             border_radius="md",
             padding="4",
         ),
-        clerk.sign_in_button(
+        clerk.sign_out_button(
             rx.button(
-                "Sign In",
+                "Sign Out",
                 size="3",
                 color_scheme="gray",
                 background="black"

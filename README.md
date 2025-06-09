@@ -52,8 +52,9 @@ uv run reflex run
 Location: `models/user.py`
 ```python
 class UserType(str, Enum):
-    ADMIN = "admin"
-    USER = "user"
+    ADMIN = "ADMIN"
+    USER = "USER"
+    GUEST = "GUEST
     # Add custom user types here
 ```
 

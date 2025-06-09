@@ -11,7 +11,7 @@ from pydantic import BaseModel, SkipValidation
 from typing import List
 from ...models.admin.subscription import Subscription
 
-class UserType(Enum):
+class UserType(str, Enum):
     """User type enumeration."""
     ADMIN: str = "ADMIN"
     USER: str = "USER"
@@ -35,13 +35,12 @@ class UserAttribute(rx.Model, table=True):
     )
 
 
-
 class User(rx.Model, table=True):
     """Base user model."""
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(unique=True, index=True)
     clerk_id: str = Field(unique=True, default=uuid.uuid4().hex)
-    user_type: UserType = UserType.GUEST
+    user_type: str = Field(default="GUEST")  # store as string
     
     # User information
     first_name: Optional[str] = None

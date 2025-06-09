@@ -51,9 +51,9 @@ def auth_components():
                     rx.menu.separator(),
                     rx.menu.item(
                         clerk.signed_in(
-                            clerk.sign_in_button(
+                            clerk.sign_out_button(
                                 rx.button(
-                                    "Sign In",
+                                    "Sign Out",
                                     size="3",
                                     color_scheme="gray",
                                     background="black"
