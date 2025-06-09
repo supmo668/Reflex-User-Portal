@@ -1,8 +1,6 @@
 - id: 1
   email: mymm.psu@gmail.com
   user_type: ADMIN
-  clerk_id: ""
 - id: 2
   email: nikhil.yadala@gmail.com
   user_type: ADMIN
-  clerk_id: ""
