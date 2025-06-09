@@ -51,11 +51,13 @@ def auth_components():
                     rx.menu.separator(),
                     rx.menu.item(
                         clerk.signed_in(
-                            rx.button(
-                                clerk.sign_out_button(),
-                                size="3",
-                                color_scheme="gray",
-                                background="black",
+                            clerk.sign_in_button(
+                                rx.button(
+                                    "Sign In",
+                                    size="3",
+                                    color_scheme="gray",
+                                    background="black"
+                                )
                             ),
                         ),
                     ),
