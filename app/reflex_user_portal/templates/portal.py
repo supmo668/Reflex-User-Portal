@@ -16,6 +16,7 @@ from ..utils.logger import get_logger
 from .access_denied import access_denied_page
 from .template_config import NAV_ITEMS
 
+import app.config as CONFIG
 
 logger = get_logger(__name__)
 
@@ -152,7 +153,11 @@ def portal_template(
         )
         def theme_wrap():
             themed_page = rx.theme(
-                clerk.clerk_provider(templated_page()),
+                clerk.clerk_provider(
+                    templated_page(),
+                    publishable_key=CONFIG.CLERK_PUBLISHABLE_KEY,
+                    secret_key=CONFIG.CLERK_SECRET_KEY,
+                ),
                 has_background=True,
                 accent_color=ThemeState.accent_color,
                 gray_color=ThemeState.gray_color,

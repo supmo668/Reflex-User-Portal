@@ -1,9 +1,9 @@
+# must import to initialize the application environment variables
+from . import config as CONFIG
+
 import reflex as rx
 import reflex_clerk as clerk
 from fastapi import FastAPI
-
-
-from . import config as CONFIG
 
 from .reflex_user_portal.pages import setup_pages
 

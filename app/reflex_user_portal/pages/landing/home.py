@@ -27,7 +27,7 @@ def home() -> rx.Component:
                     rx.button(
                         "Subscribe",
                         on_click=OnboardingTaskState.subscribe_to_waitlist,
-                        disabled=(OnboardingTaskState.email == "") | OnboardingTaskState.is_subscribing,
+                        disabled=OnboardingTaskState.is_subscribing,
                         loading=OnboardingTaskState.is_subscribing,
                         color_scheme="blue"
                     ),
