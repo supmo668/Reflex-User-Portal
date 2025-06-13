@@ -34,6 +34,10 @@ DATABASE_URL = DB_LOCAL_URI if REFLEX_ENV_MODE == "DEV" else DB_CONN_URI
 # API URL
 API_URL = os.getenv("REFLEX_API_URL", os.getenv("API_URL", "http://localhost:8000"))
 
+# ConvertKit API configuration
+CONVERTKIT_API_KEY = os.getenv("CONVERTKIT_API_KEY")
+CONVERTKIT_API_BASE = "https://api.kit.com/v4"
+
 # Frontend URL - prioritize FRONTEND_DEPLOY_URL for backend services
 FRONTEND_URL = (
     os.getenv("FRONTEND_DEPLOY_URL") or  # Railway deploy script sets this

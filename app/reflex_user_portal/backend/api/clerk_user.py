@@ -27,11 +27,10 @@ logger = get_logger(__name__)
 
 logger.info("Authorizing domains: %s", CLERK_AUTHORIZED_DOMAINS)
 # Initialize Clerk SDK
-if not CLERK_SECRET_KEY:
-    raise ValueError("CLERK_SECRET_KEY environment variable is not set")
-
 clerk_sdk = Clerk(bearer_auth=CLERK_SECRET_KEY)
 
+if not CLERK_SECRET_KEY:
+    raise ValueError("CLERK_SECRET_KEY is not set.")
 
 def get_or_create_user(session: rx.session, clerk_user: ClerkUser) -> User:
     """Get or create a user from Clerk data.
