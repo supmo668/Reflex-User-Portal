@@ -10,8 +10,8 @@ import reflex as rx
 import requests
 from typing import Dict, Any
 
-from app.reflex_user_portal.utils.logger import get_logger
-from app.config import CONVERTKIT_API_KEY, CONVERTKIT_API_BASE, APP_DISPLAY_NAME
+from .....utils.logger import get_logger
+from ......config import CONVERTKIT_API_KEY, CONVERTKIT_API_BASE, APP_DISPLAY_NAME
 
 logger = get_logger(__name__)
 
