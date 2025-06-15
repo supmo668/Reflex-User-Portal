@@ -8,7 +8,7 @@ if not load_envar:
     warnings.warn("Failed to load environment variables from .env file.")
 
 # App configuration
-APP_DISPLAY_NAME = os.getenv("REFLEX_APP_NAME", "App Portal")
+APP_DISPLAY_NAME = os.getenv("REFLEX_APP_NAME", "AppPortal")
 REFLEX_ENV_MODE = os.getenv("APP_ENV", "DEV").upper()
 LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG" if REFLEX_ENV_MODE.upper() in ["DEV", "TEST", "Env.DEV"] else "INFO").upper()
 print(f"App environment: {REFLEX_ENV_MODE}")

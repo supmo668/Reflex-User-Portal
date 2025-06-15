@@ -18,19 +18,19 @@ app = rx.App(
     stylesheets=[
         "https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
     ],
-    backend_exception_handler=custom_backend_handler,
-    # api_transformer=fastapi  # introduced in Reflex>=0.7.0
+    # backend_exception_handler=custom_backend_handler,
+    api_transformer=fastapi  # introduced in Reflex>0.7.0
 )
-app.api_transformer = app.api
 # Add pages
 setup_pages(app)
 
-clerk.install_pages(
-    app,
-    publishable_key=CONFIG.CLERK_PUBLISHABLE_KEY,
-    signin_route="/sign-in",
-    signup_route="/sign-up"
-)
+# prefer manually set-up for flexible page embedding (in setup_pages)
+# clerk.install_pages(
+#     app,
+#     publishable_key=CONFIG.CLERK_PUBLISHABLE_KEY,
+#     signin_route="/sign-in",
+#     signup_route="/sign-up"
+# )
 
 # External API
 from .reflex_user_portal.backend.api import setup_api

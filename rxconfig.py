@@ -15,7 +15,7 @@ logger.info(f"CORS origins: {cors_origins}")
 
 # Configure Reflex app
 config = rx.Config(
-    app_name=os.getenv("REFLEX_APP_NAME", "Reflex User Portal"),
+    app_name=os.getenv("REFLEX_APP_NAME", "ReflexUserPortal"),
     app_module_import="app.reflex_app",
     cors_allowed_origins=cors_origins,
     db_url=CONFIG.DATABASE_URL,
