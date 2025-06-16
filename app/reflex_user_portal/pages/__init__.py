@@ -1,3 +1,4 @@
+# set up clerk pages 
 from .landing import setup_pages as setup_landing_pages
 from .portal import setup_pages as setup_portal_pages
 from .admin import setup_pages as setup_admin_pages

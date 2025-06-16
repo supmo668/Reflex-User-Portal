@@ -3,10 +3,6 @@
 import reflex as rx
 import reflex_clerk as clerk 
 
-from ...templates import portal_template
-
-
-@portal_template(route="/sign-in", title="Sign In")
 def signin_page() -> rx.Component:
     return (
         rx.center(

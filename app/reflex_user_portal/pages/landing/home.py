@@ -1,7 +1,6 @@
 import reflex as rx
 from ...backend.states.task.kit_subscribe import OnboardingTaskState
 
-@rx.page(route="/", title="Home")
 def home() -> rx.Component:
     return rx.vstack(
         rx.heading(
