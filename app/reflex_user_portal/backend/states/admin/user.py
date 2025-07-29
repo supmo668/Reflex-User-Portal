@@ -7,9 +7,9 @@ from sqlmodel import select
 import reflex_clerk as clerk
 from clerk_backend_api.models import User as ClerkUser
 
-from .....config import ADMIN_USER_EMAILS
-from ....models.admin.user import User, UserType, UserAttribute
-from ....utils.logger import get_logger
+from app.config import ADMIN_USER_EMAILS
+from app.models.admin.user import User, UserType, UserAttribute
+from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

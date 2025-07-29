@@ -5,8 +5,8 @@ import reflex as rx
 from sqlmodel import select, func, asc, desc, or_
 from datetime import datetime, timezone
 
-from ....models.admin.user import User
-from ....utils.logger import get_logger
+from app.models.admin.user import User
+from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
