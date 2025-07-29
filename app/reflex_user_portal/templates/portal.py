@@ -3,7 +3,7 @@
 from typing import Callable, Optional, Union, List
 
 import reflex as rx
-import reflex_clerk as clerk
+import reflex_clerk_api as clerk
 
 from .. import styles
 from ..components.portal.navbar import navbar

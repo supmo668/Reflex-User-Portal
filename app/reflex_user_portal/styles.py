@@ -1,7 +1,8 @@
 """Styles for the app."""
 
 import reflex as rx
-from reflex_clerk.lib.appearance import Appearance, AppearanceVariables
+from reflex_clerk_api.user_components import Appearance
+from reflex_clerk_api.models import Variables as AppearanceVariables
 
 # Colors
 border_radius = "var(--radius-2)"

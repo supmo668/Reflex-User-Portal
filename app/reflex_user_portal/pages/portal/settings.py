@@ -1,7 +1,6 @@
 """The settings page."""
 
 import reflex as rx
-import reflex_clerk as clerk
 
 from ...templates import portal_template
 from ...views.admin_portal.color_picker import primary_color_picker, secondary_color_picker

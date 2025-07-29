@@ -1,7 +1,7 @@
 """Authentication pages using Clerk."""
 
 import reflex as rx
-import reflex_clerk as clerk 
+import reflex_clerk_api as clerk 
 
 def signin_page() -> rx.Component:
     return (

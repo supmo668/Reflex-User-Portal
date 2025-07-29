@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any
 
 import reflex as rx
 from sqlmodel import select
-import reflex_clerk as clerk
+import reflex_clerk_api as clerk
 from clerk_backend_api.models import User as ClerkUser
 
 from app.config import ADMIN_USER_EMAILS
