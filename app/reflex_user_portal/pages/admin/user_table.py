@@ -1,13 +1,13 @@
 """Admin user table page."""
 
 import reflex as rx
-import reflex_clerk as clerk
+import reflex_clerk_api as clerk
 
 from ...templates.portal import portal_template
 
 from ...backend.states.admin.user_table import TableState
-from ...models.admin.user import User
-from ...utils.logger import get_logger
+from app.models.admin.user import User  # TODO: Update to use Clerk-based user management
+from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

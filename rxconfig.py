@@ -18,11 +18,11 @@ config = rx.Config(
     app_name=os.getenv("REFLEX_APP_NAME", "ReflexUserPortal"),
     app_module_import="app.reflex_app",
     cors_allowed_origins=cors_origins,
-    db_url=CONFIG.DATABASE_URL,
-    api_url=CONFIG.API_URL,
+    db_url=CONFIG.REFLEX_DB_URL,
+    api_url=CONFIG.REFLEX_API_URL,
     deploy_url=CONFIG.FRONTEND_URL,
     backend_host=os.getenv("BACKEND_HOST", "0.0.0.0"),
     show_built_with_reflex=False,
     tailwind=None,
 )
-print(f"Configuring Reflex with database URL: {CONFIG.DATABASE_URL.split('://')[0]}://<hidden>")  # Hide password in logs
+print(f"Configuring Reflex with database URL: {CONFIG.REFLEX_DB_URL.split('://')[0]}://<hidden>")  # Hide password in logs

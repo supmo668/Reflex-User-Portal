@@ -7,13 +7,13 @@ Takes no arguments.
 import asyncio
 
 import reflex as rx
-from ....utils.logger import get_logger
+from app.utils.logger import get_logger
 
 from .base import MonitorState
 from ....backend.wrapper.task import monitored_background_task
 from ....backend.wrapper.models import TaskStatus, TaskContext
 
-from ....models.admin.admin_config import AdminConfig
+from app.models.admin.admin_config import AdminConfig
 logger = get_logger(__name__)
 
 class ExampleTaskState(MonitorState):

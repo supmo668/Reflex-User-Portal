@@ -2,7 +2,6 @@
 from . import config as CONFIG
 
 import reflex as rx
-import reflex_clerk as clerk
 from fastapi import FastAPI
 
 from .reflex_user_portal.pages import setup_pages

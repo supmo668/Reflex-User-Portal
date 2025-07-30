@@ -17,22 +17,22 @@ def profile_card() -> rx.Component:
             align="end",
         ),
         rx.cond(
-            clerk.ClerkState.user.has_image,
+            clerk.ClerkUser.has_image,
             rx.avatar(
-                src=clerk.ClerkState.user.image_url,
-                name=clerk.ClerkState.user.first_name,
+                src=clerk.ClerkUser.image_url,
+                name=clerk.ClerkUser.first_name,
                 size="3",
             ),
             rx.avatar(
-                name=clerk.ClerkState.user.first_name,
+                name=clerk.ClerkUser.first_name,
                 size="3",
             ),
         ),
         rx.vstack(
             rx.text("Name", weight="bold"),
             rx.cond(
-                (clerk.ClerkState.user.first_name != "") & (clerk.ClerkState.user.last_name != ""),
-                rx.text(clerk.ClerkState.user.first_name + " " + clerk.ClerkState.user.last_name),
+                (clerk.ClerkUser.first_name != "") & (clerk.ClerkUser.last_name != ""),
+                rx.text(clerk.ClerkUser.first_name + " " + clerk.ClerkUser.last_name),
                 rx.text("Not provided"),
             ),
             border="1px solid var(--gray-200)",
@@ -41,10 +41,7 @@ def profile_card() -> rx.Component:
         ),
         rx.vstack(
             rx.text("Email", weight="bold"),
-            rx.foreach(
-                clerk.ClerkState.user.email_addresses,
-                lambda email: rx.text(email.email_address),
-            ),
+            rx.text(clerk.ClerkUser.email_address),
             border="1px solid var(--gray-200)",
             border_radius="md",
             padding="4",
@@ -78,7 +75,7 @@ def profile_content() -> rx.Component:
         ),
         rx.vstack(
             rx.text("Role", weight="bold"),
-            rx.text(UserAuthState.user.user_type),
+            rx.text(UserAuthState.user_type),
             border="1px solid var(--gray-200)",
             border_radius="md",
             padding="4",

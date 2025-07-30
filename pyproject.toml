@@ -6,10 +6,11 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "authlib==1.6.0",
-    "clerk-backend-api>=3.0.0",
+    "clerk-backend-api>=2.0.0",
     "psycopg2-binary==2.9.10",
     "pytest==8.4.0",
     "python-dotenv==1.1.0",
+    "pyyaml>=6.0.2",
     "reflex==0.8.3",
     "reflex-clerk-api==1.0.1",
     "requests==2.32.3",

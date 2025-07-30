@@ -1,217 +1,171 @@
-"""User state management."""
+"""User state management using Clerk-based authentication and metadata storage."""
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 
 import reflex as rx
-from sqlmodel import select
 import reflex_clerk_api as clerk
-from clerk_backend_api.models import User as ClerkUser
 
-from app.config import ADMIN_USER_EMAILS
-from app.models.admin.user import User, UserType, UserAttribute
-from app.utils.logger import get_logger
+from app.models.admin.user import UserType
+from ....utils.logger import get_logger
+from .clerk_user_extended import ExtendedClerkUser
 
 logger = get_logger(__name__)
 
 
-class UserBaseState(rx.State):
-    """User state for the application."""
+class UserAuthState(ExtendedClerkUser):
+    """User authentication state management using ExtendedClerkUser.
     
-    # User state
-    user: Optional[User] = None
+    This class manages user authentication and data storage entirely through Clerk,
+    eliminating the need for local database synchronization.
+    """
+    
+    # Redirect management
     redirect_after_login: Optional[str] = None
     
-    @rx.var
-    async def is_admin(self) -> bool:
-        """Check if current user is admin."""
-        if self.user:
-            return self.user.user_type == UserType.ADMIN
-        return False
-    
-    @rx.var
-    def admin_emails(self) -> list[str]:
-        with rx.session() as session:
-            return [
-                user.email
-                for user in session.exec(
-                    User.select().where(User.user_type == UserType.ADMIN)
-                ).all()
-            ]
-    
-    async def get_or_create_guest(self) -> User:
-        """Get or create guest user."""
-        with rx.session() as session:
-            # Find existing guest user
-            user = session.exec(
-                select(User).where(User.user_type == UserType.GUEST)
-            ).first()
-            if user is None:
-                # Create new guest user with a generated email
-                timestamp = datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')
-                user = User(
-                    email=f"guest_{timestamp}@temp.com",  # Generate unique email
-                    user_type=UserType.GUEST,
-                    created_at=datetime.now(timezone.utc)
-                )
-                session.add(user)
-                session.commit()
-                session.refresh(user)
-        return user
-    
-    async def get_or_create_user(self, clerk_user: ClerkUser = None) -> User:
-        """Get or create user based on Clerk info."""
-        if not clerk_user:
-            clerk_state = await self.get_state(clerk.ClerkState)
-            clerk_user = clerk_state.user
-        with rx.session() as session:
-            # Find existing user
-            user = session.exec(
-                select(User).where(User.clerk_id == clerk_user.id)
-            ).first()
-            
-            if user is None:
-                # Create new user
-                user = User(
-                    email=clerk_user.primary_email_address_id,
-                    clerk_id=clerk_user.id,
-                    first_name=clerk_user.first_name,
-                    last_name=clerk_user.last_name,
-                    created_at=datetime.now(timezone.utc)
-                )
-        # return local user 
-        return user
-                    
-
-class UserAuthState(UserBaseState):
-    """User authentication state management."""
     @rx.event
     async def sync_auth_state(self):
-        """Handle user sign in.
-        sync Clerk user info to internal user database. handle events on page load:
+        """Handle user authentication state changes using Clerk metadata.
+        
         - User signing in:
-            - Create new user if not exists
-            - Update user attributes (if exists)
-            - handle redirect to pre sign-in
-        - User signing out or browsing as guest(signed-out):
-            - Reset user state as guest
-            - save redirection url
+            - Load user data from Clerk including metadata
+            - Update last login timestamp
+            - Handle redirect to pre-login page
+        - User signing out or browsing as guest:
+            - Reset user state to guest
+            - Save current page for post-login redirect
         """
-        # Fetch clerk state
+        # Get clerk authentication state
         clerk_state = await self.get_state(clerk.ClerkState)
-        logger.debug("Clerk state: %s", clerk_state.is_signed_in)
+        logger.debug("Clerk authentication state: %s", clerk_state.is_signed_in)
+        
         try:
             if clerk_state.is_signed_in:
-                user = await self.get_or_create_user(clerk_user=clerk_state.user)
-                with rx.session() as session:
-                    # Update user attributes
-                    admin_emails = ADMIN_USER_EMAILS + [self.admin_emails]
-                    user_email = clerk_state.user.email_addresses[0].email_address
-                    user.user_type = UserType.ADMIN if user_email in admin_emails else UserType.USER
-                    user.last_login = datetime.now(timezone.utc)
-                    # commit changes
-                    session.add(user)
-                    session.commit()
-                    session.refresh(user)
+                # User is authenticated - load their data from Clerk
+                await self.load_user()
+                
+                # Update last login timestamp in private metadata
+                await self.update_private_metadata({
+                    "last_login": datetime.now(timezone.utc).isoformat(),
+                    "is_active": True
+                })
+                
+                logger.debug(f"User authenticated: {self.email_address} (Type: {self.user_type})")
+                
+                # Handle post-login redirect
+                if self.redirect_after_login:
+                    redirect_url = self.redirect_after_login
+                    self.redirect_after_login = None
+                    return rx.redirect(redirect_url)
                     
-                    # Store role and handle redirect
-                    self.user = user
-                    if self.redirect_after_login is not None:
-                        redirect_url = self.redirect_after_login
-                        # reset redirect
-                        self.redirect_after_login = None
-                        return rx.redirect(redirect_url)
             else:
-                # Not signed in
-                logger.debug("User is not signed in, setting guest user")
-                self.user = await self.get_or_create_guest()
-                self.redirect_after_login = self.router.page.raw_path
+                # User is not authenticated - set to guest state
+                logger.debug("User not authenticated, setting guest state")
+                await self._set_guest_state()
+                
+                # Save current page for post-login redirect
+                if hasattr(self.router, 'page') and self.router.page:
+                    self.redirect_after_login = self.router.page.raw_path
 
         except Exception as e:
-            logger.error("Error handling auth state change: %s", e, exc_info=True)
-            self.user = await self.get_or_create_guest()
+            logger.error("Error in sync_auth_state: %s", e, exc_info=True)
+            # Fallback to guest state on any error
+            await self._set_guest_state()
             self.redirect_after_login = None
             raise Exception("Critical error occurred while handling authentication state.") from e
-
-class UserAttributeState(UserBaseState):
-    """State for managing user attributes and collections."""
     
-    user_collections: Dict[str, Any] = {}
+    async def _set_guest_state(self):
+        """Set the user state to guest mode."""
+        # Reset all user fields to default/empty values
+        self.reset()
+        
+        # Set guest-specific values
+        self.user_type = UserType.GUEST.value
+        self.email_address = ""
+        self.first_name = ""
+        self.last_name = ""
+        self.username = ""
+        self.clerk_id = ""
+        self.is_active = False
+        self.subscription_status = "free"
+        self.subscription_plan = "basic"
+        self.public_metadata = {}
+        self.private_metadata = {}
+        self.settings = {}
+        self.user_collections = {}
     
-    @rx.var
-    async def get_user_attribute(self) -> Optional[UserAttribute]:
-        """Get current user's attribute record."""
-        if not self.user:
-            return None
-            
-        with rx.session() as session:
-            return session.exec(
-                select(UserAttribute).where(
-                    UserAttribute.user_id == self.user.id
-                )
-            ).first()
-
     @rx.event
-    async def init_user_collections(self):
-        """Initialize user collections from database."""
-        user_attr = await self.get_user_attribute
-        if user_attr:
-            self.user_collections = user_attr.user_collections
-
+    async def initialize_new_user_metadata(self):
+        """Initialize metadata for a newly registered user."""
+        try:
+            # Set default public metadata
+            default_public_metadata = {
+                "subscription_status": "free",
+                "subscription_plan": "basic",
+                "settings": {
+                    "theme": "light",
+                    "notifications": True,
+                    "language": "en"
+                }
+            }
+            
+            # Set default private metadata
+            default_private_metadata = {
+                "user_collections": {},
+                "is_active": True,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "last_login": datetime.now(timezone.utc).isoformat()
+            }
+            
+            # Update metadata in Clerk
+            await self.update_public_metadata(default_public_metadata)
+            await self.update_private_metadata(default_private_metadata)
+            
+            logger.debug("Initialized metadata for new user")
+            
+        except Exception as e:
+            logger.error(f"Error initializing new user metadata: {e}")
+    
     @rx.event
-    async def add_to_collection(self, collection_name: str, item: Any):
-        """Add item to a specific collection."""
-        if not self.user:
-            return
+    async def update_user_profile(self, profile_data: Dict[str, Any]):
+        """Update user profile information in public metadata.
+        
+        Args:
+            profile_data: Dictionary containing profile updates
+        """
+        try:
+            # Extract settings if provided
+            if "settings" in profile_data:
+                current_settings = self.settings.copy()
+                current_settings.update(profile_data["settings"])
+                profile_data["settings"] = current_settings
             
-        with rx.session() as session:
-            user_attr = await self.get_user_attribute
-            if not user_attr:
-                # Create new user attribute record
-                user_attr = UserAttribute(
-                    user_id=self.user.id,
-                    user_collections={collection_name: [item]}
-                )
-            else:
-                # Update existing collections
-                if collection_name not in user_attr.user_collections:
-                    user_attr.user_collections[collection_name] = []
-                user_attr.user_collections[collection_name].append(item)
+            await self.update_public_metadata(profile_data)
+            logger.debug(f"Updated user profile: {list(profile_data.keys())}")
             
-            session.add(user_attr)
-            session.commit()
-            session.refresh(user_attr)
-            self.user_collections = user_attr.user_collections
-
+        except Exception as e:
+            logger.error(f"Error updating user profile: {e}")
+            raise
+    
     @rx.event 
-    async def remove_from_collection(self, collection_name: str, item: Any):
-        """Remove item from a specific collection."""
-        if not self.user:
-            return
-            
-        with rx.session() as session:
-            user_attr = await self.get_user_attribute
-            if user_attr and collection_name in user_attr.user_collections:
-                try:
-                    user_attr.user_collections[collection_name].remove(item)
-                    session.add(user_attr)
-                    session.commit()
-                    session.refresh(user_attr)
-                    self.user_collections = user_attr.user_collections
-                except ValueError:
-                    # Item not in collection
-                    pass
-
-    @rx.event
-    async def clear_collection(self, collection_name: str):
-        """Clear all items from a specific collection."""
-        if not self.user:
-            return
-            
-        with rx.session() as session:
-            user_attr = await self.get_user_attribute
-            if user_attr and collection_name in user_attr.user_collections:
-                user_attr.user_collections[collection_name] = []
-                session.add(user_attr)
-                session.commit()
-                session.refresh(user_attr)
-                self.user_collections = user_attr.user_collections
+    async def get_user_data(self) -> Dict[str, Any]:
+        """Get complete user data as a dictionary.
+        
+        Returns:
+            Dictionary containing all user information
+        """
+        return {
+            "clerk_id": self.clerk_id,
+            "email_address": self.email_address,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "username": self.username,
+            "user_type": self.user_type,
+            "subscription_status": self.subscription_status,
+            "subscription_plan": self.subscription_plan,
+            "is_active": self.is_active,
+            "avatar_url": self.avatar_url,
+            "settings": self.settings,
+            "user_collections": self.user_collections,
+            "public_metadata": self.public_metadata,
+            "private_metadata": self.private_metadata
+        }

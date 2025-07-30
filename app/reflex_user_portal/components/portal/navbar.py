@@ -19,14 +19,14 @@ def auth_components():
                         rx.hstack(
                             clerk.signed_in(
                                 rx.cond(
-                                    clerk.ClerkState.user.has_image,
+                                    clerk.ClerkUser.has_image,
                                     rx.avatar(
-                                        src=clerk.ClerkState.user.image_url,
-                                        name=clerk.ClerkState.user.first_name,
+                                        src=clerk.ClerkUser.image_url,
+                                        name=clerk.ClerkUser.first_name,
                                         size="3",
                                     ),
                                     rx.avatar(
-                                        name=clerk.ClerkState.user.first_name,
+                                        name=clerk.ClerkUser.first_name,
                                         size="3",
                                     ),
                                 ),

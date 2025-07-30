@@ -1,7 +1,7 @@
 """Table view component."""
 import reflex as rx
 
-from ...models.admin.user import User
+from app.models.admin.user import User  # TODO: Update to use Clerk-based user management
 from ...backend.states.admin.user_table import TableState
 
 

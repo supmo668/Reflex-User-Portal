@@ -54,7 +54,7 @@ def overview() -> rx.Component:
     """
     name = rx.cond(
         clerk.ClerkState.is_signed_in,
-        clerk.ClerkState.user.first_name,
+        clerk.ClerkUser.first_name,
         "Guest",
     )
     return rx.container(

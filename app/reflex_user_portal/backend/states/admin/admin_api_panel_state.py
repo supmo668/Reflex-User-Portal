@@ -8,7 +8,7 @@ from sqlmodel import select, func
 import reflex as rx
 from supabase import create_client, Client
 
-from ....models import MODEL_FACTORY
+from app.models import MODEL_FACTORY
 from ..... import config as CONFIG
 from ...configs.default_configurations import DEFAULT_CONFIGS, DEFAULT_CONFIG_PATHS
 from .... import styles

@@ -9,7 +9,7 @@ from pydantic import BaseModel, SkipValidation
 
 # Add imports for Subscription and SubscriptionFeature
 from typing import List
-from ...models.admin.subscription import Subscription
+from app.models.admin.subscription import Subscription
 
 class UserType(str, Enum):
     """User type enumeration."""

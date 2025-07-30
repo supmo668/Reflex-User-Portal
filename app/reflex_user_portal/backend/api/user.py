@@ -13,7 +13,7 @@ router = APIRouter(
 import reflex as rx
 from sqlmodel import select, Session
 
-from ...models import (
+from app.models import (
     User,
     UserAttribute,
     CollectionResponse

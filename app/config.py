@@ -29,14 +29,10 @@ DB_CONN_URI = os.getenv("REFLEX_DB_URL", "").format(DB_PASSWORD=DB_PASSWORD) if 
 DB_LOCAL_URI = os.getenv("REFLEX_DB_URL", "sqlite:///app.db")
 
 # if REFLEX_DB_URL not specified, use local database in development. Otherwise, stick to stick to REFLEX_DB_URL
-DATABASE_URL = DB_LOCAL_URI if REFLEX_ENV_MODE == "DEV" else DB_CONN_URI
+REFLEX_DB_URL = DB_LOCAL_URI if REFLEX_ENV_MODE == "DEV" else DB_CONN_URI
 
 # API URL
-API_URL = os.getenv("REFLEX_API_URL", os.getenv("API_URL", "http://localhost:8000"))
-
-# ConvertKit API configuration
-CONVERTKIT_API_KEY = os.getenv("CONVERTKIT_API_KEY")
-CONVERTKIT_API_BASE = "https://api.kit.com/v4"
+REFLEX_API_URL = os.getenv("REFLEX_API_URL", "http://localhost:8000")
 
 # Frontend URL - prioritize FRONTEND_DEPLOY_URL for backend services
 FRONTEND_URL = (

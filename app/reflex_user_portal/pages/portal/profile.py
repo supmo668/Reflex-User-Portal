@@ -3,7 +3,7 @@
 import reflex as rx
 
 from ...templates import portal_template
-from ...backend.states.admin.user import UserAttributeState
+from ...backend.states.admin.user import UserAuthState
 from ...components.portal.profile import profile_content
 
 @portal_template(route="/admin/profile", title="Profile")
@@ -19,13 +19,13 @@ def collection_view():
     return rx.vstack(
         rx.button(
             "Add to Favorites",
-            on_click=lambda: UserAttributeState.add_to_collection(
+            on_click=lambda: UserAuthState.add_to_collection(
                 "favorites", 
                 {"id": 1, "name": "Item 1"}
             )
         ),
         rx.foreach(
-            UserAttributeState.user_collections.get("favorites", []),
+            UserAuthState.user_collections.get("favorites", []),
             lambda item: rx.text(item["name"])
         )
     )

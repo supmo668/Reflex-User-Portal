@@ -13,14 +13,14 @@ router = APIRouter(
 
 
 import reflex as rx
-from clerk_backend_api import Clerk
+from clerk_backend_api import Clerk, UNSET
 from clerk_backend_api.models import User as ClerkUser
 from clerk_backend_api import AuthenticateRequestOptions
 from clerk_backend_api.models import EmailAddress
 
-from ...models.admin.user import User, UserType, UserModel
-from ...utils.logger import get_logger
-from ....config import CLERK_AUTHORIZED_DOMAINS, CLERK_SECRET_KEY
+from app.models.admin.user import User, UserType, UserModel
+from app.utils.logger import get_logger
+from app.config import CLERK_AUTHORIZED_DOMAINS, CLERK_SECRET_KEY
 
 # Initialize components
 logger = get_logger(__name__)
@@ -33,11 +33,11 @@ if not CLERK_SECRET_KEY:
     raise ValueError("CLERK_SECRET_KEY is not set.")
 
 def get_or_create_user(session: rx.session, clerk_user: ClerkUser) -> User:
-    """Get or create a user from Clerk data.
+    """Get or create a user from Clerk data following clerk_provider.py patterns.
     
     Args:
         session: The database session
-        clerk_user: The Clerk user object
+        clerk_user: The Clerk user object from clerk_backend_api.models.User
         
     Returns:
         User: The internal user model
@@ -59,26 +59,47 @@ def get_or_create_user(session: rx.session, clerk_user: ClerkUser) -> User:
             logger.debug("Found existing user: %s", user)
             return user
         
-        # Get primary email safely
-        if hasattr(clerk_user, 'email_addresses') and clerk_user.email_addresses:
-            email_obj: EmailAddress
-            for email_obj in clerk_user.email_addresses:
-                primary_email_address = email_obj.get('email_address')
-                if primary_email_address:
-                    break
+        # Extract user data following clerk_provider.py patterns
+        # Handle first_name with UNSET check
+        first_name = (
+            clerk_user.first_name
+            if clerk_user.first_name and clerk_user.first_name != clerk_backend_api.UNSET
+            else ""
+        )
+        
+        # Handle last_name with UNSET check
+        last_name = (
+            clerk_user.last_name
+            if clerk_user.last_name and clerk_user.last_name != clerk_backend_api.UNSET
+            else ""
+        )
+        
+        # Handle username with UNSET check
+        username = (
+            clerk_user.username
+            if clerk_user.username and clerk_user.username != clerk_backend_api.UNSET
+            else ""
+        )
+        
+        # Extract email address following clerk_provider.py pattern
+        email_address = (
+            clerk_user.email_addresses[0].email_address if clerk_user.email_addresses else ""
+        )
         
         # Create new user
         user = User(
             clerk_id=clerk_user.id,
-            email=primary_email_address,
-            first_name=getattr(clerk_user, 'first_name', None),
-            last_name=getattr(clerk_user, 'last_name', None),
+            email=email_address,
+            first_name=first_name,
+            last_name=last_name,
             user_type=UserType.USER,
             created_at=datetime.now(timezone.utc)
         )
         session.add(user)
         session.commit()
         session.refresh(user)
+        
+        logger.debug("Created new user: %s", user)
         return user
         
     except Exception as e:
